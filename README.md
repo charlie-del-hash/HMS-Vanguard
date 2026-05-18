@@ -1,2 +1,2 @@
-# Affinity
-Statichtml
+# Affinity Test
+Static html
