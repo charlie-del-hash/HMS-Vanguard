@@ -13,19 +13,19 @@
 <meta name="apple-mobile-web-app-title" content="Macro Topics" />
 <meta name="format-detection" content="telephone=no" />
 
-<title>Affinity Macro Topics â 18 May 2026</title>
-<meta name="description" content="Affinity Research Macro Topics â 18 May 2026. Westminster in crisis, oil above $110, the bauxite squeeze, LNG rebalancing, and container rates surge." />
+<title>Affinity Macro Topics — 18 May 2026</title>
+<meta name="description" content="Affinity Research Macro Topics — 18 May 2026. Westminster in crisis, oil above $110, the bauxite squeeze, LNG rebalancing, and container rates surge." />
 
 <!-- Open Graph (used by WhatsApp, iMessage, Slack, LinkedIn, Facebook) -->
 <meta property="og:type" content="article" />
-<meta property="og:title" content="Affinity Macro Topics â 18 May 2026" />
+<meta property="og:title" content="Affinity Macro Topics — 18 May 2026" />
 <meta property="og:description" content="Westminster in crisis, oil above $110, the bauxite squeeze, LNG rebalancing, and container rates surge." />
 <meta property="og:site_name" content="Affinity Research" />
 <meta property="og:locale" content="en_GB" />
 
 <!-- Twitter Cards (also picked up by some apps) -->
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Affinity Macro Topics â 18 May 2026" />
+<meta name="twitter:title" content="Affinity Macro Topics — 18 May 2026" />
 <meta name="twitter:description" content="Westminster in crisis, oil above $110, the bauxite squeeze, LNG markets pivot, and container rates surge." />
 
 <!-- Inline SVG favicon: a single red diamond on cream paper -->
@@ -38,16 +38,16 @@
 <noscript><link href="https://fonts.googleapis.com/css2?family=Sorts+Mill+Goudy:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=IBM+Plex+Mono:wght@400;500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet"></noscript>
 <style>
   /* =====================================================================
-     PALETTE â four themes, switched via [data-theme] on <html>
+     PALETTE — four themes, switched via [data-theme] on <html>
      Default theme uses prefers-color-scheme; explicit theme overrides it.
      ===================================================================== */
 
   :root {
-    /* Base scale multiplier â 5 discrete steps via JS */
+    /* Base scale multiplier — 5 discrete steps via JS */
     --scale: 1;
-    /* Density multiplier â 1 comfortable, 0.92 compact */
+    /* Density multiplier — 1 comfortable, 0.92 compact */
     --density: 1;
-    /* Reading measure â narrow (660) or wide (820) */
+    /* Reading measure — narrow (660) or wide (820) */
     --measure: 660px;
   }
 
@@ -70,7 +70,7 @@
     --hi-band:      rgba(26,122,126,0.14);
     --shadow:       rgba(40,30,20,0.10);
     /* Floating UI surfaces (tooltips, return pill, toast). Always a high-
-       contrast panel popping forward from paper â never the same brightness
+       contrast panel popping forward from paper — never the same brightness
        as body text. In dark themes these brighten rather than dim. */
     --floating-bg:  #1A1A1A;
     --floating-fg:  #FDFCF9;
@@ -103,7 +103,7 @@
   }
 
   /* DARK */
-  /* DARK / TERMINAL â Bloomberg-inspired: amber accent on near-black paper.
+  /* DARK / TERMINAL — Bloomberg-inspired: amber accent on near-black paper.
      Internal key stays "dark" so existing localStorage selections still
      resolve; the user-visible label and palette are now Terminal. */
   [data-theme="dark"] {
@@ -130,7 +130,7 @@
     --hl-edge:      rgba(255,127,0,0.55);
   }
 
-  /* HIGH CONTRAST â for genuine vision needs, distinct from dark */
+  /* HIGH CONTRAST — for genuine vision needs, distinct from dark */
   [data-theme="contrast"] {
     color-scheme: light;
     --paper:        #FFFFFF;
@@ -155,7 +155,7 @@
   }
 
 
-  /* AQUA â Apple-style, c. 2003. Paper stays white; personality is in chrome. */
+  /* AQUA — Apple-style, c. 2003. Paper stays white; personality is in chrome. */
   [data-theme="aqua"] {
     color-scheme: light;
     --paper:        #FBFCFE;
@@ -179,7 +179,7 @@
     --hl-edge:      rgba(42,94,171,0.45);
   }
 
-  /* FRUTIGER â Sky flavour, c. 2007. Cyan-blue accent, soft cloud cover. */
+  /* FRUTIGER — Sky flavour, c. 2007. Cyan-blue accent, soft cloud cover. */
   [data-theme="frutiger"] {
     color-scheme: light;
     --paper:        #FBFEFF;
@@ -203,7 +203,7 @@
     --hl-edge:      rgba(79,184,229,0.45);
   }
 
-  /* AQUA / FRUTIGER on dark OS â only applies when those themes are
+  /* AQUA / FRUTIGER on dark OS — only applies when those themes are
      explicitly selected AND the operating system reports dark preference.
      Reader-driven dark choice via [data-theme="dark"] is unaffected. */
   @media (prefers-color-scheme: dark) {
@@ -314,10 +314,10 @@
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
 
   /* =====================================================================
-     TOOLBAR â sticky top + bottom, with / separators
+     TOOLBAR — sticky top + bottom, with / separators
      ===================================================================== */
 
-  /* Sticky shell â toolbar + progress as one unit so they never separate */
+  /* Sticky shell — toolbar + progress as one unit so they never separate */
   .sticky-shell {
     position: sticky;
     top: 0;
@@ -403,7 +403,7 @@
     margin: 0 2px;
   }
 
-  /* Aa icon â two stacked As of differing sizes */
+  /* Aa icon — two stacked As of differing sizes */
   .aa-icon {
     display: inline-flex; align-items: baseline;
     font-family: 'Sorts Mill Goudy', serif;
@@ -413,7 +413,7 @@
   .aa-icon .big { font-size: 20px; }
   .aa-icon .sm  { font-size: 13px; margin-left: 1px; }
 
-  /* TOC icon â three short horizontal rules */
+  /* TOC icon — three short horizontal rules */
   .toc-icon {
     display: inline-block;
     width: 18px; height: 14px;
@@ -470,7 +470,7 @@
   .soc.more { font-size: 16px; letter-spacing: -1px; }
 
   /* =====================================================================
-     PROGRESS â thin segmented bar under toolbar
+     PROGRESS — thin segmented bar under toolbar
      One row, seven segments, each 1 of 7 pages. Read pages fill faint,
      the active page fills red in proportion to scroll within that page.
      The whole thing is 3px of paint inside a 16px tap target.
@@ -525,7 +525,7 @@
   .seg:hover::before, .seg:focus-visible::before { height: 4px; }
 
   /* =====================================================================
-     STATIC-MODE PROGRESS â scroll-driven animation tied to each
+     STATIC-MODE PROGRESS — scroll-driven animation tied to each
      static-page section's view timeline. As the section scrolls into and
      through the viewport, its segment's underline fills with red.
      Only kicks in when JS hasn't booted (no .seg.active class set).
@@ -598,7 +598,7 @@
 
   /* Breadcrumb is a single slash-divided thread:
      29 April 2026 / Macro / Policy / 1 of 5
-     The page indicator is no longer a right-aligned chip â it sits
+     The page indicator is no longer a right-aligned chip — it sits
      at the end of the thread, sharing the same separator rhythm. */
   .breadcrumb {
     display: flex;
@@ -629,7 +629,7 @@
   }
   h1.headline em { font-style: italic; }
 
-  /* Single italic meta line: "The Policy Desk Â· 29 April 2026"
+  /* Single italic meta line: "The Policy Desk · 29 April 2026"
      Replaces the old separate author-line + timestamp. The desks are
      internal and known to all readers; the bracket date is enough. */
   .meta-line {
@@ -710,7 +710,7 @@
   }
   .body p a:hover { border-bottom-color: var(--ink); }
 
-  /* CROSS-REFERENCES â links that jump to other articles in this issue.
+  /* CROSS-REFERENCES — links that jump to other articles in this issue.
      Visually distinct from inline links: solid red underline, small
      section-arrow glyph, no italic. The arrow signals "this is a real
      navigation, not just an external citation". */
@@ -734,7 +734,7 @@
     border-bottom-color: var(--accent);
   }
 
-  /* HIGHLIGHTS â long-press on mobile, double-click on desktop.
+  /* HIGHLIGHTS — long-press on mobile, double-click on desktop.
      Treatment: subtle paper-tone wash + a small left rule. The
      paragraph remains in the same place; layout does not shift.
      The highlight glyph in the gutter signals it's a marked passage. */
@@ -792,7 +792,7 @@
   }
 
   /* =====================================================================
-     FIGURES â magazine treatment
+     FIGURES — magazine treatment
      ===================================================================== */
 
   .figure { margin: 36px 0; }
@@ -921,7 +921,7 @@
     background:
       linear-gradient(to top, var(--accent-soft) 0%, transparent 60%);
     opacity: 0.6;
-    /* Neutral wave â no directional bias, starts and ends near 50% */
+    /* Neutral wave — no directional bias, starts and ends near 50% */
     clip-path: polygon(
       0 52%, 7% 48%, 14% 42%, 21% 40%, 28% 44%, 35% 50%,
       42% 55%, 50% 52%, 58% 46%, 65% 38%, 72% 36%, 79% 42%,
@@ -1038,7 +1038,7 @@
   }
 
   /* PULL QUOTE */
-  /* PULL QUOTE â hanging opening quote mark in the margin,
+  /* PULL QUOTE — hanging opening quote mark in the margin,
      no top/bottom rules, larger italic, softer sign-off. */
   .pullquote {
     font-family: 'Sorts Mill Goudy', serif;
@@ -1133,7 +1133,7 @@
   }
 
   /* =====================================================================
-     ORNAMENT â a single typographic mark used as end-of-article glyph,
+     ORNAMENT — a single typographic mark used as end-of-article glyph,
      cover section break, and colophon separator. Hairline rules flank
      a solid diamond; scales via width, inherits colour from context.
      ===================================================================== */
@@ -1147,7 +1147,7 @@
   .ornament svg { display: block; }
   .ornament.red { color: var(--accent); }
 
-  /* END MARK â smaller ornament, red, concludes every article */
+  /* END MARK — smaller ornament, red, concludes every article */
   .endmark {
     display: flex;
     justify-content: center;
@@ -1170,7 +1170,7 @@
     color: var(--ink-faint);
     margin-bottom: 12px;
   }
-  /* TOPICS â slash-separated text. The slash motif used elsewhere
+  /* TOPICS — slash-separated text. The slash motif used elsewhere
      (footer, breadcrumb, meta-line) carries through to topic tags.
      Each topic remains an interactive link; on hover the underline
      thickens. The slash is a non-clickable separator. */
@@ -1217,7 +1217,7 @@
     letter-spacing: 0;
   }
 
-  /* PAGE NAVIGATION â bottom of each article */
+  /* PAGE NAVIGATION — bottom of each article */
   .page-nav {
     margin-top: 48px;
     padding-top: 28px;
@@ -1285,7 +1285,7 @@
   }
 
   /* =====================================================================
-     OVERLAYS â Settings sheet & TOC drawer
+     OVERLAYS — Settings sheet & TOC drawer
      ===================================================================== */
 
   .scrim {
@@ -1296,7 +1296,7 @@
   }
   .scrim.show { opacity: 1; pointer-events: auto; }
 
-  /* SETTINGS SHEET â slides up from bottom
+  /* SETTINGS SHEET — slides up from bottom
      Capped at ~70vh so the article behind remains visible: when the user
      changes text size or theme, they should see the change happen on real
      prose, not just on the sheet itself. */
@@ -1373,7 +1373,7 @@
   .sheet-close:hover { background: var(--accent); }
   .sheet-close:active { transform: scale(0.97); }
 
-  /* LIVE PREVIEW â a card showing how text actually renders.
+  /* LIVE PREVIEW — a card showing how text actually renders.
      Responds to all three typography axes (scale, density, theme) and
      demonstrates the highlight treatment when the feature is on. */
   .sheet-preview {
@@ -1396,7 +1396,7 @@
     transition: padding-left 0.22s ease, border-color 0.22s ease, background 0.22s ease;
   }
   /* When highlights are enabled, the preview body line shows what the
-     active highlight state looks like. Pure UI demonstration â no state. */
+     active highlight state looks like. Pure UI demonstration — no state. */
   body[data-hl-on] .sheet-preview .sp-card {
     background: var(--hl);
     border-left: 3px solid var(--accent);
@@ -1440,7 +1440,7 @@
   [data-align="justify"] .sheet-preview .sp-body { text-align: justify; }
   [data-hyphens="on"] .sheet-preview .sp-body { -webkit-hyphens: auto; hyphens: auto; }
 
-  /* SHEET GROUPS â three logical groups (Typography / Appearance /
+  /* SHEET GROUPS — three logical groups (Typography / Appearance /
      Features). Each group shows a small caption and contains one or
      more sections. Visual separation by hairline rule between groups. */
   .sheet-group {
@@ -1471,7 +1471,7 @@
     font-weight: 500;
   }
 
-  /* SIZE PICKER â five A's */
+  /* SIZE PICKER — five A's */
   .size-picker {
     display: flex; gap: 0;
     border: 1px solid var(--rule-strong);
@@ -1502,8 +1502,8 @@
   .size-btn[data-size="1.25"]  { font-size: 26px; }
   .size-btn[data-size="1.4"]   { font-size: 30px; }
 
-  /* THEME PICKER â four swatches */
-  /* THEME CARDS â swatch + label, shown as a 2x2 grid on phones, 4-up
+  /* THEME PICKER — four swatches */
+  /* THEME CARDS — swatch + label, shown as a 2x2 grid on phones, 4-up
      on wider screens. Each card pairs a colour sample with the theme
      name; the active card gets a red ring. */
   .theme-picker {
@@ -1546,7 +1546,7 @@
     flex-shrink: 0;
   }
   /* Each swatch is a tiny half-and-half sample of the theme's
-     paper / ink combination â shows what reading there will feel like. */
+     paper / ink combination — shows what reading there will feel like. */
   .theme-swatch-paper    { background: linear-gradient(135deg, #FDFCF9 0 50%, #1A1A1A 50% 100%); }
   .theme-swatch-sepia    { background: linear-gradient(135deg, #F4E8D0 0 50%, #2D2418 50% 100%); }
   .theme-swatch-dark     { background: linear-gradient(135deg, #15140F 0 50%, #ECE7D8 50% 100%); }
@@ -1601,7 +1601,7 @@
   }
   .toggle-btn:active { transform: scale(0.99); }
 
-  /* SHEET ROW â used for label-on-left, control-on-right rows
+  /* SHEET ROW — used for label-on-left, control-on-right rows
      (e.g. the highlights toggle). Two-line text on the left,
      iOS-style switch on the right. */
   .sheet-row {
@@ -1625,7 +1625,7 @@
     line-height: 1.35;
   }
 
-  /* iOS-STYLE SWITCH â pill with a sliding knob. 51x31 to match
+  /* iOS-STYLE SWITCH — pill with a sliding knob. 51x31 to match
      the system control. Gets a red track when on, neutral when off. */
   .ios-switch {
     appearance: none;
@@ -1693,7 +1693,7 @@
     font-weight: 500;
   }
 
-  /* TOC DRAWER â slides from left, full-screen */
+  /* TOC DRAWER — slides from left, full-screen */
   .toc-drawer {
     position: fixed; left: 0; top: 0; bottom: 0;
     z-index: 100;
@@ -1872,7 +1872,7 @@
     transform-origin: 0 0;
   }
 
-  /* TOC FILTER CHIPS â All / Saved / Highlighted / Unread.
+  /* TOC FILTER CHIPS — All / Saved / Highlighted / Unread.
      Hidden when a search query is active (search overrides filter). */
   .toc-filters {
     display: flex;
@@ -1937,7 +1937,7 @@
   }
 
   /* =====================================================================
-     ARTICLE END ACTIONS â weighted composition
+     ARTICLE END ACTIONS — weighted composition
      Save is the primary action, rendered as a full-width bookmark button.
      Share / Print / Mark-read form a secondary trio beneath it.
      The hierarchy reflects actual use: directors save pieces often,
@@ -2014,7 +2014,7 @@
   }
 
   /* =====================================================================
-     RETURN PILL â appears after a non-linear jump (TOC, dot, inline link)
+     RETURN PILL — appears after a non-linear jump (TOC, dot, inline link)
      Auto-dismisses after 8 seconds. Manually dismissable.
      ===================================================================== */
   .return-pill {
@@ -2091,7 +2091,7 @@
   .return-pill .rp-close:hover { opacity: 1; }
 
   /* =====================================================================
-     PUBLICATION FOOTER â a colophon, not a duplicate toolbar.
+     PUBLICATION FOOTER — a colophon, not a duplicate toolbar.
      Centred composition with the ornament, brand mark, and meta text.
      Feels like the back of a slim weekly.
      ===================================================================== */
@@ -2143,7 +2143,7 @@
   }
 
   /* =====================================================================
-     ASK THE DESK â slide-up sheet, same geometry/feel as the settings
+     ASK THE DESK — slide-up sheet, same geometry/feel as the settings
      sheet (shared overlay machinery, scrim, escape). A quiet line from
      the reader to the research desk. Static <form> works with JS off;
      JS upgrades to an inline confirmation with no page navigation.
@@ -2179,7 +2179,7 @@
     margin: 10px auto 0;
   }
 
-  /* Engraved lens motif echoing the toolbar icon â sets the Holmes tone
+  /* Engraved lens motif echoing the toolbar icon — sets the Holmes tone
      at the head of the sheet without a heavy graphic. */
   .ask-crest {
     display: flex; justify-content: center;
@@ -2257,7 +2257,7 @@
   }
   .ask-error.show { display: block; }
 
-  /* Honeypot â off-screen, never focusable, hidden from AT. */
+  /* Honeypot — off-screen, never focusable, hidden from AT. */
   .ask-hp {
     position: absolute !important;
     left: -9999px; top: auto;
@@ -2298,7 +2298,7 @@
   }
   .ask-cancel:hover { color: var(--ink); }
 
-  /* Confirmation â replaces the form in JS mode. */
+  /* Confirmation — replaces the form in JS mode. */
   .ask-confirm {
     display: none;
     text-align: center;
@@ -2326,7 +2326,7 @@
   }
   .ask-confirm .ac-text strong { font-style: normal; color: var(--ink); }
 
-  /* PRINT â produces a clean PDF when the user prints (or uses
+  /* PRINT — produces a clean PDF when the user prints (or uses
      Print to PDF). Adds an Affinity-branded header so the output
      never starts cold mid-headline.  */
   .print-header { display: none; }
@@ -2381,7 +2381,7 @@
       -webkit-print-color-adjust: exact;
     }
 
-    /* Cross-references should print as honest text â no caret arrow,
+    /* Cross-references should print as honest text — no caret arrow,
        just an italicised "see [section]" footer-style cue. */
     .body p a.xref {
       color: #000 !important;
@@ -2425,7 +2425,7 @@
   }
 
   /* =====================================================================
-     STATIC FALLBACK MODE â when JS doesn't run (email, WhatsApp, iOS
+     STATIC FALLBACK MODE — when JS doesn't run (email, WhatsApp, iOS
      Files preview), all six articles are rendered stacked, with the
      progress bar acting as a skip-to-section nav and per-piece
      "next / top of issue" links between them.
@@ -2469,10 +2469,10 @@
   }
 
   /* =====================================================================
-     v6 REFINEMENTS â slash-spine additions
+     v6 REFINEMENTS — slash-spine additions
      ===================================================================== */
 
-  /* PROGRESS LABELS â a slash-separated category strip below the thin
+  /* PROGRESS LABELS — a slash-separated category strip below the thin
      bar. The bar still shows the visual fill; the strip names where
      you are. Active label gains weight + accent colour. On the narrowest
      phones the strip hides (the tooltip remains for hover/focus); on
@@ -2515,7 +2515,7 @@
     pointer-events: none;
   }
 
-  /* STATIC COVER â only meaningful when JS hasn't replaced #page-content.
+  /* STATIC COVER — only meaningful when JS hasn't replaced #page-content.
      Acts as a real front page for fallback readers (email, iOS Files,
      WhatsApp preview): masthead, issue meta, and a slash-separated
      index of the six sections that anchor-link directly into each. */
@@ -2602,7 +2602,7 @@
     top: -2px;
   }
 
-  /* STATIC DIVIDER â between articles in fallback mode, replaces the
+  /* STATIC DIVIDER — between articles in fallback mode, replaces the
      bare 1px section border with a typographic ornament + a slash
      "you are here" strip. Stronger end-of-piece signal than a hairline. */
   .static-divider {
@@ -2646,7 +2646,7 @@
     margin: 0 10px;
   }
 
-  /* STATIC NAV â three-link slash strip at the bottom of every static
+  /* STATIC NAV — three-link slash strip at the bottom of every static
      piece: previous / current / next. Replaces the prior 1- or 2-link
      row. The current piece is non-clickable text; previous and next
      are arrows that anchor-jump. The composition reads as a single
@@ -2682,7 +2682,7 @@
   }
   /* Primary (next) gets red emphasis instead of a filled box. A single
      red character of meaning is enough to mark the call-to-action
-     within a slash strip â no rectangle required. */
+     within a slash strip — no rectangle required. */
   .static-nav-link.primary {
     color: var(--accent);
     text-decoration-color: var(--accent-line);
@@ -2708,7 +2708,7 @@
   }
   /* Slash separators between prev / here / next.
      The selectors target ANY adjacent pair of nav-link / nav-here, so
-     prevâhere, hereânext, and the rare prevânext (no current) all get
+     prev→here, here→next, and the rare prev→next (no current) all get
      the same separator. */
   .static-nav-link + .static-nav-here::before,
   .static-nav-here + .static-nav-link::before,
@@ -2735,7 +2735,7 @@
   }
   .static-nav-top:hover { color: var(--ink); }
 
-  /* PAGE-NAV LOCATION STRIP â at the top of the prev/next cards in JS
+  /* PAGE-NAV LOCATION STRIP — at the top of the prev/next cards in JS
      mode, a faint "Tankers / 1 of 6" line orients the cards to the
      issue. Same slash rhythm as the breadcrumb. */
   .page-nav-here {
@@ -2774,7 +2774,7 @@
   /* Belt-and-braces: if a divider survives somehow in JS mode, hide it. */
   body:not(.no-js) .static-divider { display: none; }
 
-  /* Print â switch the print-header separator to a slash to match
+  /* Print — switch the print-header separator to a slash to match
      the screen voice. */
   @media print {
     .print-header .ph-meta {
@@ -2784,7 +2784,7 @@
 
 
   /* =====================================================================
-     AESTHETIC THEMES â Aqua, Frutiger, and Terminal chrome decoration.
+     AESTHETIC THEMES — Aqua, Frutiger, and Terminal chrome decoration.
 
      Each theme commits to one signature gesture and three or four
      supporting details. Editorial body type, measure, rhythm, and the
@@ -2792,22 +2792,22 @@
      exclusively in chrome surfaces (toolbar, sheet, drawer, cover,
      colophon, breadcrumb strip).
 
-     All rules are theme-scoped â when the theme isn't active, none of
+     All rules are theme-scoped — when the theme isn't active, none of
      these rules paint or contribute to cascade cost. Pinstripes, blur,
-     and gradients sit on small fixed surfaces only â never on the
-     full-bleed body â so scroll performance is unchanged.
+     and gradients sit on small fixed surfaces only — never on the
+     full-bleed body — so scroll performance is unchanged.
 
-     Aqua    â OS X toolbar c. 2003. Polished gradient, pinstripes, gel
+     Aqua    — OS X toolbar c. 2003. Polished gradient, pinstripes, gel
                buttons, soft drop shadow under the article body.
-     Frutiger â Vista Aero Glass c. 2007. Translucent backdrop-filter
+     Frutiger — Vista Aero Glass c. 2007. Translucent backdrop-filter
                surfaces, top-edge highlight, sky-and-cloud cover.
-     Terminal â Bloomberg c. 2010, simple and refined. IBM Plex Mono on
+     Terminal — Bloomberg c. 2010, simple and refined. IBM Plex Mono on
                chrome only, amber on near-black, sharp 0-radius corners,
                bracketed data-feed breadcrumb. Editorial body remains in
-               EB Garamond â the refinement that keeps it readable.
+               EB Garamond — the refinement that keeps it readable.
      ===================================================================== */
 
-  /* ======================== AQUA â OS X toolbar ======================== */
+  /* ======================== AQUA — OS X toolbar ======================== */
 
   [data-theme="aqua"] .sticky-shell {
     background:
@@ -2819,14 +2819,14 @@
       repeating-linear-gradient(to bottom,
         transparent 0px, transparent 2px,
         rgba(20,40,80,0.04) 2px, rgba(20,40,80,0.04) 3px),
-      /* 3. Main polished gradient â pearl top to soft grey bottom */
+      /* 3. Main polished gradient — pearl top to soft grey bottom */
       linear-gradient(to bottom, #F5F7FA 0%, #E0E5EC 50%, #C8D0DA 100%);
     border-bottom: 1px solid #9CA8B6;
   }
 
   [data-theme="aqua"] .tb-btn {
-    /* Aqua gel button â top half lighter, bottom half darker, sharp 1px
-       highlight at top edge, ambient shadow below. No explicit margin â
+    /* Aqua gel button — top half lighter, bottom half darker, sharp 1px
+       highlight at top edge, ambient shadow below. No explicit margin —
        the gel construction lifts visually without growing toolbar height. */
     background:
       linear-gradient(to bottom,
@@ -2864,7 +2864,7 @@
     box-shadow: 0 1px 3px rgba(20,40,80,0.08);
   }
 
-  /* Progress bar â gloss highlight, AND var(--fill) preserved so the
+  /* Progress bar — gloss highlight, AND var(--fill) preserved so the
      bar still fills as the user scrolls within an article. */
   [data-theme="aqua"] .seg.active::before {
     background:
@@ -2879,7 +2879,7 @@
   }
 
   [data-theme="aqua"] .art-primary {
-    /* Save lozenge picks up gel construction too â top-half lighter. */
+    /* Save lozenge picks up gel construction too — top-half lighter. */
     border-radius: 14px;
     background-image: linear-gradient(to bottom,
       rgba(255,255,255,0.30) 0%, rgba(255,255,255,0) 50%);
@@ -2893,7 +2893,7 @@
     text-underline-offset: 3px;
   }
 
-  /* OS dark for Aqua â same construction, slate stops. */
+  /* OS dark for Aqua — same construction, slate stops. */
   @media (prefers-color-scheme: dark) {
     [data-theme="aqua"] .sticky-shell {
       background:
@@ -2930,7 +2930,7 @@
     }
   }
 
-  /* ================== FRUTIGER â Vista Aero Glass ================== */
+  /* ================== FRUTIGER — Vista Aero Glass ================== */
 
   [data-theme="frutiger"] .sticky-shell {
     background: rgba(251,254,255,0.65);
@@ -2968,7 +2968,7 @@
       /* Bottom-right cloud */
       radial-gradient(ellipse 240px 70px at 82% 88%,
         rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 70%),
-      /* Aero sky â paper top, cyan-blue mid-left fading to mint-green
+      /* Aero sky — paper top, cyan-blue mid-left fading to mint-green
          mid-right, then back to paper. Diagonal echoes the wallpaper. */
       linear-gradient(135deg,
         #FBFEFF 0%,
@@ -2984,7 +2984,7 @@
 
   [data-theme="frutiger"] .tb-btn {
     /* Aero gel: smooth top-to-bottom wash from cyan-blue into mint
-       green â no hard split. A 1px inner ring + soft outer shadow
+       green — no hard split. A 1px inner ring + soft outer shadow
        lift it clear of the paper so the button reads cleanly without
        glaring. */
     color: #1B3F4A;
@@ -3015,7 +3015,7 @@
   }
 
   [data-theme="frutiger"] .toolbar-brand .dot {
-    /* Blueâgreen text-gradient â same palette as buttons and cover. */
+    /* Blue→green text-gradient — same palette as buttons and cover. */
     background: linear-gradient(135deg, #4FB8E5 0%, #5BC8A8 100%);
     -webkit-background-clip: text;
     background-clip: text;
@@ -3024,7 +3024,7 @@
     filter: drop-shadow(0 0 4px rgba(91,200,168,0.45));
   }
 
-  /* Frutiger progress â gloss highlight + blueâgreen fill that grows
+  /* Frutiger progress — gloss highlight + blue→green fill that grows
      with --fill. As the bar fills, cyan transitions into mint at the
      leading edge, mirroring the wallpaper. */
   [data-theme="frutiger"] .seg.active::before {
@@ -3049,7 +3049,7 @@
   }
 
   [data-theme="frutiger"] .pullquote::before {
-    /* Giant opening quote also picks up the blueâgreen wash. */
+    /* Giant opening quote also picks up the blue→green wash. */
     background: linear-gradient(135deg, #4FB8E5 0%, #5BC8A8 100%);
     -webkit-background-clip: text;
     background-clip: text;
@@ -3062,7 +3062,7 @@
     filter: drop-shadow(0 0 6px rgba(79,184,229,0.45));
   }
 
-  /* OS dark for Frutiger â glass darkens, construction holds. */
+  /* OS dark for Frutiger — glass darkens, construction holds. */
   @media (prefers-color-scheme: dark) {
     [data-theme="frutiger"] .sticky-shell {
       background: rgba(15,26,34,0.65);
@@ -3131,9 +3131,9 @@
     }
   }
 
-  /* ====================== TERMINAL â Bloomberg ====================== */
+  /* ====================== TERMINAL — Bloomberg ====================== */
 
-  /* Chrome elements switch to monospace â but editorial headlines, body,
+  /* Chrome elements switch to monospace — but editorial headlines, body,
      and cover title stay in EB Garamond / Sorts Mill Goudy for readability. */
   [data-theme="dark"] .toolbar,
   [data-theme="dark"] .toolbar-brand,
@@ -3186,7 +3186,7 @@
     border-radius: 0;
   }
 
-  /* The signature gesture â breadcrumb as a Bloomberg data-feed strip:
+  /* The signature gesture — breadcrumb as a Bloomberg data-feed strip:
      amber on near-black, bracketed, uppercase, mono. */
   [data-theme="dark"] .breadcrumb {
     display: inline-block;
@@ -3247,7 +3247,7 @@
     color: var(--accent);
   }
   [data-theme="dark"] .topic + .topic::before {
-    /* drop the dot separator â uppercase chips read better alone */
+    /* drop the dot separator — uppercase chips read better alone */
     content: none;
   }
 
@@ -3288,7 +3288,7 @@
   [data-theme="dark"] .price-delta.up   { color: var(--up); }
   [data-theme="dark"] .price-delta.down { color: var(--down); }
 
-  /* Terminal progress â sharp amber bar, no gloss, var(--fill) preserved. */
+  /* Terminal progress — sharp amber bar, no gloss, var(--fill) preserved. */
   [data-theme="dark"] .seg.active::before {
     background: linear-gradient(to right,
       var(--accent) 0%,
@@ -3348,7 +3348,7 @@
   }
   .theme-card[data-theme="frutiger"] .theme-name { color: #1A1A1A; }
 
-  /* Calm the active state â 1px inner border + soft outer glow instead
+  /* Calm the active state — 1px inner border + soft outer glow instead
      of a 2px solid border, so the active card doesn't shout against its
      calmer neighbours. */
   .theme-card.active {
@@ -3364,12 +3364,12 @@
   .theme-swatch-frutiger { background: linear-gradient(135deg, #FBFEFF 0 50%, #4FB8E5 50% 100%); }
 
   /* =====================================================================
-     TEMPLATE ADDITIONS â components ported from the Hormuz Sitrep so the
+     TEMPLATE ADDITIONS — components ported from the Hormuz Sitrep so the
      macro brief gets a heavier editorial scaffolding (endnotes, structured
      sources, takeaways, share-anchors) without the data-widget footprint.
      ===================================================================== */
 
-  /* Skip-to-content (a11y) â invisible until focused. */
+  /* Skip-to-content (a11y) — invisible until focused. */
   .skip-link {
     position: absolute; left: -9999px; top: 0;
     background: var(--accent); color: var(--paper);
@@ -3383,7 +3383,7 @@
   }
   .skip-link:focus { left: 0; }
 
-  /* Section share anchor â hover-revealed Â§ button at right of each section
+  /* Section share anchor — hover-revealed § button at right of each section
      heading. Click copies a deep link to that subsection. */
   .body section[aria-labelledby] { position: relative; }
   .sec-share {
@@ -3398,7 +3398,7 @@
   .body section:hover .sec-share { opacity: 0.6; }
   .sec-share:hover, .sec-share:focus-visible { color: var(--accent); opacity: 1; }
 
-  /* Analysis section â the "Key takeaway" / "What it means" block.
+  /* Analysis section — the "Key takeaway" / "What it means" block.
      Single paragraph, left-rule accent, slightly larger leading. The bold
      lead-in carries the framing; the rest of the paragraph carries it home. */
   .analysis-section {
@@ -3429,7 +3429,7 @@
     color: var(--ink);
   }
 
-  /* Inline reference superscript â links into the tbc-endnotes block. */
+  /* Inline reference superscript — links into the tbc-endnotes block. */
   .tbc-ref {
     color: var(--accent);
     font-family: 'Jost', system-ui, sans-serif;
@@ -3443,7 +3443,7 @@
   }
   .tbc-ref:hover { text-decoration: underline; }
 
-  /* TBC endnotes â "Items to confirm" / footnote register at the end of an
+  /* TBC endnotes — "Items to confirm" / footnote register at the end of an
      article. Numbered list, accent-tinted background, back-references. */
   .tbc-endnotes {
     margin: 2em 0 0.9em;
@@ -3488,7 +3488,7 @@
   }
   .tbc-endnotes .back-ref:hover { text-decoration: underline; }
 
-  /* Sources panel â collapsible, per-article. Badge legend differentiates
+  /* Sources panel — collapsible, per-article. Badge legend differentiates
      official / wire / secondary sources at a glance. Closed by default;
      readers who want provenance can expand it. */
   .sources-panel {
@@ -3578,7 +3578,7 @@
   /* Reading-experience toggles (driven by data-* attributes on <html>).
      These piggyback on the existing settings sheet. */
 
-  /* TYPEFACE â swap the editorial serif. UI chrome (Jost), terminal
+  /* TYPEFACE — swap the editorial serif. UI chrome (Jost), terminal
      mono (IBM Plex Mono), and the small caps in headers stay put;
      we only retarget the reader-facing prose. Default is Goudy. */
   [data-typeface="garamond"] body,
@@ -3669,7 +3669,7 @@
     hyphenate-limit-lines: 2;
   }
 
-  /* Focus mode â dim non-hovered paragraphs to keep attention on one. */
+  /* Focus mode — dim non-hovered paragraphs to keep attention on one. */
   [data-focus="on"] .body p {
     opacity: 0.32;
     transition: opacity 0.35s ease;
@@ -3684,7 +3684,7 @@
   [data-focus="on"] .pullquote:hover,
   [data-focus="on"] .analysis-section:hover { opacity: 1; }
 
-  /* Reading ruler â horizontal line that follows the cursor across prose. */
+  /* Reading ruler — horizontal line that follows the cursor across prose. */
   [data-ruler="on"] .body { cursor: crosshair; }
   .reading-ruler {
     position: fixed;
@@ -3723,7 +3723,7 @@
 <div class="reading-ruler" id="reading-ruler" aria-hidden="true"></div>
 
 <!-- ============================================================
-     STICKY HEADER â toolbar + progress as one cohesive unit.
+     STICKY HEADER — toolbar + progress as one cohesive unit.
      Single sticky container so the two never separate or leave a
      scrolling-through-the-gap artifact on iOS.
      ============================================================ -->
@@ -3741,7 +3741,7 @@
     <div class="toolbar-actions">
       <button class="tb-btn" id="open-ask" aria-label="Ask the research desk">
         <span class="tb-ico" aria-hidden="true">
-          <!-- Sherlock-inspired: an antique inquirer's lens â double-ring
+          <!-- Sherlock-inspired: an antique inquirer's lens — double-ring
                rim, slender raked handle. Reads as both "Holmes" and
                "put a question to us". Pure line, inherits theme ink. -->
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
@@ -3765,8 +3765,8 @@
     </div>
   </header>
 
-  <!-- Thin segmented progress bar â one segment per section.
-       âï¸ UPDATE per issue: add/remove segments + matching .pl-link
+  <!-- Thin segmented progress bar — one segment per section.
+       ✏️ UPDATE per issue: add/remove segments + matching .pl-link
        entries below to match the sections in this edition. Keep
        data-goto indices (0-based) and data-page-id in sync. -->
   <div class="progress">
@@ -3801,7 +3801,7 @@
      PAGE CONTENT (rendered by JS; static fallback below)
      ============================================================ -->
 <main id="page-content">
-<!-- âï¸ UPDATE per issue: static-cover headline, meta, and index -->
+<!-- ✏️ UPDATE per issue: static-cover headline, meta, and index -->
 <header class="static-cover">
   <div class="static-cover-eyebrow">Affinity<span class="dot" style="color:var(--accent);">.</span> Research &thinsp;/&thinsp; Macro Topics</div>
   <h1 class="static-cover-title">Westminster in crisis, oil above $110, and the <em>bauxite trade</em> enters uncharted waters.</h1>
@@ -4341,7 +4341,7 @@
 </main>
 
 <!-- ============================================================
-     FOOTER â colophon. Ornament, brand mark, publication meta.
+     FOOTER — colophon. Ornament, brand mark, publication meta.
      ============================================================ -->
 <footer class="pub-footer">
   <div class="pub-footer-ornament" id="footer-ornament"><svg viewBox="0 0 120 10" width="120" height="10" aria-hidden="true">
@@ -4373,7 +4373,7 @@
     <button class="toc-close" id="close-toc" aria-label="Close">Close</button>
   </div>
   <div class="toc-search">
-    <input type="search" id="toc-search-input" placeholder="Search this issueâ¦" autocomplete="off" />
+    <input type="search" id="toc-search-input" placeholder="Search this issue…" autocomplete="off" />
     <span class="search-icon"></span>
   </div>
   <div class="toc-filters" role="tablist" aria-label="Filter">
@@ -4579,19 +4579,19 @@
 </aside>
 
 <!-- ============================================================
-     ASK THE DESK â sheet overlay.
+     ASK THE DESK — sheet overlay.
      Static-first: a real form that POSTs to the form service even
      with JS off (iOS Files preview, forwarded copies). JS upgrades
      it to an inline confirmation with no page navigation.
 
-     âï¸ UPDATE per issue: data-issue-id / data-issue-title below, and
+     ✏️ UPDATE per issue: data-issue-id / data-issue-title below, and
         drop the Web3Forms access key into the hidden access_key input
         (the single placeholder that gates live submissions).
      ============================================================ -->
 <aside class="ask-sheet" id="ask-sheet" aria-hidden="true"
        aria-labelledby="ask-title"
        data-issue-id="macro-topics-template"
-       data-issue-title="Macro Topics â 18 May 2026">
+       data-issue-title="Macro Topics — 18 May 2026">
   <div class="sheet-handle" aria-hidden="true"></div>
 
   <div class="sheet-head">
@@ -4623,11 +4623,11 @@
     <form id="ask-form" method="POST" action="https://api.web3forms.com/submit"
           autocomplete="on" novalidate>
 
-      <!-- âï¸ Web3Forms access key â replace placeholder to go live. -->
+      <!-- ✏️ Web3Forms access key — replace placeholder to go live. -->
       <input type="hidden" name="access_key" value="YOUR_WEB3FORMS_ACCESS_KEY">
       <input type="hidden" name="subject"
-             value="Ask the Desk â Macro Topics, 18 May 2026">
-      <input type="hidden" name="from_name" value="Affinity Reader â Ask the Desk">
+             value="Ask the Desk — Macro Topics, 18 May 2026">
+      <input type="hidden" name="from_name" value="Affinity Reader — Ask the Desk">
       <!-- Context: stamped per issue + at submit time by enhancement JS. -->
       <input type="hidden" name="issue_id" id="ask-issue-id" value="">
       <input type="hidden" name="issue_title" id="ask-issue-title" value="">
@@ -4661,9 +4661,9 @@
         <textarea class="ask-textarea" name="question" id="ask-question"
                   required maxlength="1500"
                   aria-describedby="ask-q-count ask-q-err"
-                  placeholder="e.g. On the containers piece â is the Drewry figure inclusive of the trans-Pacific spot correction?"></textarea>
+                  placeholder="e.g. On the containers piece — is the Drewry figure inclusive of the trans-Pacific spot correction?"></textarea>
         <div class="ask-meta">
-          <span class="ask-help">Be as specific as you like â section, figure, claim.</span>
+          <span class="ask-help">Be as specific as you like — section, figure, claim.</span>
           <span class="ask-count" id="ask-q-count">0 / 1500</span>
         </div>
         <div class="ask-error" id="ask-q-err" role="alert">
@@ -4715,11 +4715,11 @@
 document.body.classList.remove('no-js');
 
 /* =====================================================================
-   PAGE CONTENT â seven pages of a maritime weekly
+   PAGE CONTENT — seven pages of a maritime weekly
    ===================================================================== */
 
 /* =====================================================================
-   ISSUE METADATA â set these once per edition.
+   ISSUE METADATA — set these once per edition.
    ===================================================================== */
 const ISSUE_DATE_LONG  = 'Sunday, 18 May 2026';
 const ISSUE_DATE_SHORT = '18 May';
@@ -5005,7 +5005,7 @@ const PAGES = [
 ];
 
 /* =====================================================================
-   STATE â persisted in localStorage
+   STATE — persisted in localStorage
    ===================================================================== */
 
 const DEFAULTS = {
@@ -5071,7 +5071,7 @@ function applySettings() {
   } else {
     root.removeAttribute('data-theme');
   }
-  // Update theme-color meta â covers all six themes so iOS Safari's
+  // Update theme-color meta — covers all six themes so iOS Safari's
   // status bar tints correctly under each.
   const themeColor = state.theme === 'dark'     ? '#0A0A0A'
                    : state.theme === 'sepia'    ? '#F4E8D0'
@@ -5081,7 +5081,7 @@ function applySettings() {
                    : '#FDFCF9';
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', themeColor);
 
-  // Prose controls â drive CSS via data-* attributes on <html>.
+  // Prose controls — drive CSS via data-* attributes on <html>.
   root.setAttribute('data-typeface', state.typeface || 'goudy');
   root.setAttribute('data-dropcap', state.dropcap || 'large');
   root.setAttribute('data-para',    state.para    || 'spaced');
@@ -5288,7 +5288,7 @@ function renderArticleActions(p) {
 }
 
 /* =====================================================================
-   SVG ORNAMENTS â a single typographic mark reused across the product.
+   SVG ORNAMENTS — a single typographic mark reused across the product.
    One solid diamond flanked by hairline rules. Scales via width.
    The compact variant (no rules) serves as the article end mark.
    ===================================================================== */
@@ -5365,31 +5365,31 @@ function renderPage(idx, opts = {}) {
 
   document.getElementById('page-content').innerHTML = html;
 
-  // Wire up nav cards (sequential â does NOT push history)
+  // Wire up nav cards (sequential — does NOT push history)
   document.querySelectorAll('.article [data-goto]').forEach(el => {
     el.addEventListener('click', (e) => {
       e.preventDefault();
       const targetIdx = parseInt(el.dataset.goto, 10);
       // Cover contents jumps are always real navigation but from the cover
-      // they're sequential enough â don't push history
+      // they're sequential enough — don't push history
       goToPage(targetIdx);
     });
   });
-  // Wire up topic tags â opens TOC pre-filled with that topic as a query
+  // Wire up topic tags — opens TOC pre-filled with that topic as a query
   document.querySelectorAll('.article .topic').forEach(el => {
     el.addEventListener('click', (e) => {
       e.preventDefault();
       openTOCWithSearch(el.textContent.trim());
     });
   });
-  // Wire up article actions â these patch DOM in place, no full rerender
+  // Wire up article actions — these patch DOM in place, no full rerender
   document.querySelectorAll('.art-primary, .art-act').forEach(el => {
     el.addEventListener('click', () => handleArticleAction(el.dataset.act, p.id));
   });
-  // Wire up paragraph highlights â long-press on touch, double-click on desktop.
+  // Wire up paragraph highlights — long-press on touch, double-click on desktop.
   // Cover-page editor's-note paragraphs are excluded (they're meta, not body).
   wireHighlights(p.id);
-  // Wire up inline cross-references â open TOC search or jump to another page.
+  // Wire up inline cross-references — open TOC search or jump to another page.
   document.querySelectorAll('.article .xref').forEach(el => {
     el.addEventListener('click', (e) => {
       e.preventDefault();
@@ -5440,7 +5440,7 @@ function goToPage(idx, opts = {}) {
 
    Why long-press not single-tap: a single tap would compete with link
    activation, accidental scroll, and reading itself. Long-press is the
-   honest "I am marking this" gesture â it's what every native iOS
+   honest "I am marking this" gesture — it's what every native iOS
    reading app uses.
    ===================================================================== */
 
@@ -5484,14 +5484,14 @@ function wireHighlights(pageId) {
   // disable / enable round-trip without losing their anchor.
   paragraphs.forEach((p, idx) => { p.dataset.pidx = idx; });
 
-  // Feature off â no class, no listeners, no visual state. The highlight
+  // Feature off → no class, no listeners, no visual state. The highlight
   // data is preserved in state.highlights but invisible until re-enabled.
   if (!state.highlightsEnabled) return;
 
   paragraphs.forEach((p) => p.classList.add('highlightable'));
   applyHighlightStates(pageId);
 
-  // Long-press handler â works on both touch and mouse for parity
+  // Long-press handler — works on both touch and mouse for parity
   let pressTimer = null;
   let pressTarget = null;
   let pressStartXY = null;
@@ -5544,7 +5544,7 @@ function wireHighlights(pageId) {
     p.addEventListener('touchmove', moveCheck, { passive: true });
     p.addEventListener('touchend', cancelPress);
     p.addEventListener('touchcancel', cancelPress);
-    // Mouse â long-press AND double-click both work on desktop
+    // Mouse — long-press AND double-click both work on desktop
     p.addEventListener('mousedown', (e) => {
       // Ignore if user is starting a text selection (with shift) or click on a link
       if (e.target.tagName === 'A' || e.shiftKey) return;
@@ -5563,7 +5563,7 @@ function wireHighlights(pageId) {
         renderTOC(document.getElementById('toc-search-input').value);
       }
     });
-    // Suppress click after a long-press fired â otherwise embedded link
+    // Suppress click after a long-press fired — otherwise embedded link
     // activations can race against the highlight toggle
     p.addEventListener('click', (e) => {
       if (pressFired) {
@@ -5622,7 +5622,7 @@ function handleArticleAction(act, pageId) {
 }
 
 /* =====================================================================
-   RETURN PILL â stack-based history (browser-like back behaviour)
+   RETURN PILL — stack-based history (browser-like back behaviour)
    Every non-sequential jump pushes the source page onto a stack. The
    pill always shows the top of the stack; tapping pops one level.
    Sequential next/previous navigation does NOT push (otherwise the
@@ -5664,7 +5664,7 @@ function clearReturnStack() {
 document.getElementById('rp-go').addEventListener('click', () => {
   if (!returnStack.length) return;
   const t = returnStack.pop();
-  // Going via the pill is itself navigation â but it should not push
+  // Going via the pill is itself navigation — but it should not push
   // the current page back on (otherwise we'd loop forever)
   goToPage(t, { suppressHistory: true });
 });
@@ -5673,12 +5673,12 @@ document.getElementById('rp-close').addEventListener('click', () => {
 });
 
 /* =====================================================================
-   PROGRESS â segmented bar (one segment per page)
+   PROGRESS — segmented bar (one segment per page)
    ===================================================================== */
 
 
 /* =====================================================================
-   LAYOUT â paged (one article at a time) vs continuous (all stacked).
+   LAYOUT — paged (one article at a time) vs continuous (all stacked).
    Continuous mode replaces #page-content with all five sections; the
    CSS view-timeline animations drive each progress segment independently
    as the user scrolls past its section. Paged mode is the original
@@ -5767,7 +5767,7 @@ function renderContinuous() {
     wireHighlights(p.id);
   });
 
-  // In continuous mode no segment is "the active page" â clear the active
+  // In continuous mode no segment is "the active page" — clear the active
   // class so the CSS @supports view-timeline animation can paint each
   // segment as its section scrolls into view.
   document.querySelectorAll('.seg').forEach(s => s.classList.remove('active'));
@@ -5858,7 +5858,7 @@ function tease(text, maxWords = 16) {
   return words.slice(0, maxWords).join(' ') + '\u2026';
 }
 
-/* TOC FILTER â applied alongside search.
+/* TOC FILTER — applied alongside search.
    Search wins: when query is non-empty, filters are visually suppressed
    and the search runs against ALL pages. Filters operate on the
    already-search-narrowed set. */
@@ -5877,11 +5877,11 @@ function renderTOC(filter = '') {
   const filtersEl = document.querySelector('.toc-filters');
   const q = filter.trim().toLowerCase();
 
-  // When a search query is active, hide the filter chips entirely â
+  // When a search query is active, hide the filter chips entirely —
   // search overrides filter for clarity.
   if (filtersEl) filtersEl.classList.toggle('suppressed', !!q);
 
-  // Update counts (computed against full PAGES â independent of search)
+  // Update counts (computed against full PAGES — independent of search)
   document.getElementById('toc-count-all').textContent = PAGES.length;
   document.getElementById('toc-count-saved').textContent = state.saved.length;
   document.getElementById('toc-count-highlighted').textContent =
@@ -5950,7 +5950,7 @@ function renderTOC(filter = '') {
   });
 }
 
-// Filter chips â click to switch
+// Filter chips — click to switch
 document.querySelectorAll('.toc-filter').forEach(b => {
   b.addEventListener('click', () => {
     tocFilter = b.dataset.filter;
@@ -5970,7 +5970,7 @@ document.getElementById('close-toc').addEventListener('click', () => {
 });
 
 /* =====================================================================
-   OVERLAYS â open/close
+   OVERLAYS — open/close
    ===================================================================== */
 
 const scrim = document.getElementById('scrim');
@@ -6011,7 +6011,7 @@ function closeOverlays() {
   tocDrawer.setAttribute('aria-hidden', 'true');
 }
 
-/* ===== ASK THE DESK â progressive enhancement ====================
+/* ===== ASK THE DESK — progressive enhancement ====================
    The form already works as a plain POST with JS off. Here we add:
    open/close via the shared scrim, per-issue + live context fields,
    client validation, a character counter, and a fetch submit that
@@ -6027,7 +6027,7 @@ const askQErr    = document.getElementById('ask-q-err');
 const askQCount  = document.getElementById('ask-q-count');
 
 function openAsk() {
-  // Stamp issue identity from the sheet's data-* (âï¸ per-issue edit point)
+  // Stamp issue identity from the sheet's data-* (✏️ per-issue edit point)
   document.getElementById('ask-issue-id').value =
     askSheet.getAttribute('data-issue-id') || '';
   document.getElementById('ask-issue-title').value =
@@ -6110,7 +6110,7 @@ if (askSheet) {
       askSubmit.disabled = false;
       askSubmit.textContent = 'Send to the desk';
       askQErr.textContent =
-        'Could not send just now â please try again, or email the desk directly.';
+        'Could not send just now — please try again, or email the desk directly.';
       askQErr.classList.add('show');
     }
   });
@@ -6156,7 +6156,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 /* =====================================================================
-   SETTINGS UI â wire up pickers
+   SETTINGS UI — wire up pickers
    ===================================================================== */
 
 function syncSettingsUI() {
@@ -6166,7 +6166,7 @@ function syncSettingsUI() {
     b.classList.toggle('active', on);
     b.setAttribute('aria-checked', on);
   });
-  // Theme â single source of truth, theme-card with embedded swatch + label
+  // Theme — single source of truth, theme-card with embedded swatch + label
   document.querySelectorAll('.theme-card').forEach(b => {
     const on = b.dataset.theme === (state.theme || 'paper');
     b.classList.toggle('active', on);
@@ -6284,7 +6284,7 @@ document.getElementById('width-picker').addEventListener('click', (e) => {
   });
 });
 
-// Highlights switch â re-wires the current page so the gesture goes
+// Highlights switch — re-wires the current page so the gesture goes
 // live (or goes dead) without a full page rerender.
 document.getElementById('highlights-switch').addEventListener('click', () => {
   state.highlightsEnabled = !state.highlightsEnabled;
@@ -6328,7 +6328,7 @@ resetBtn.addEventListener('click', () => {
     resetArmTimer = setTimeout(disarmReset, 4000);
     return;
   }
-  // Second tap â execute (preserves saved/read/highlights data)
+  // Second tap — execute (preserves saved/read/highlights data)
   state.scale = DEFAULTS.scale;
   state.theme = DEFAULTS.theme;
   state.density = DEFAULTS.density;
@@ -6357,7 +6357,7 @@ resetBtn.addEventListener('click', () => {
 document.getElementById('close-settings').addEventListener('click', disarmReset);
 
 /* =====================================================================
-   SHARE â Web Share API on iOS, fallback to copy
+   SHARE — Web Share API on iOS, fallback to copy
    ===================================================================== */
 
 function doShare() {
@@ -6399,7 +6399,7 @@ function showToast(msg) {
 }
 
 /* =====================================================================
-   SWIPE â left/right between pages on touch devices
+   SWIPE — left/right between pages on touch devices
    Restricted to the middle ~80% of the viewport so it doesn't conflict
    with iOS Safari's swipe-to-go-back edge gesture.
    ===================================================================== */
@@ -6462,7 +6462,7 @@ document.getElementById('brand-home').addEventListener('click', (e) => {
 });
 
 /* =====================================================================
-   TEMPLATE ADDITIONS â wire up the new prose toggles, sec-share buttons,
+   TEMPLATE ADDITIONS — wire up the new prose toggles, sec-share buttons,
    collapsible sources panel, focus-mode touch fallback, and reading ruler.
    ===================================================================== */
 
@@ -6474,7 +6474,7 @@ if (dropcapPicker) dropcapPicker.addEventListener('click', (e) => {
   applySettings(); syncSettingsUI(); saveState();
 });
 
-// Typeface picker â swap the editorial serif (Goudy / Garamond / Sans)
+// Typeface picker — swap the editorial serif (Goudy / Garamond / Sans)
 const typefacePicker = document.getElementById('typeface-picker');
 if (typefacePicker) typefacePicker.addEventListener('click', (e) => {
   const btn = e.target.closest('.toggle-btn'); if (!btn) return;
@@ -6528,7 +6528,7 @@ if (rulerSwitch) rulerSwitch.addEventListener('click', () => {
   showToast(state.ruler ? 'Ruler on' : 'Ruler off');
 });
 
-// Reading ruler â horizontal line follows the cursor through the prose.
+// Reading ruler — horizontal line follows the cursor through the prose.
 (function () {
   const rule = document.getElementById('reading-ruler');
   if (!rule) return;
@@ -6545,7 +6545,7 @@ if (rulerSwitch) rulerSwitch.addEventListener('click', () => {
   document.addEventListener('mouseleave', () => { rule.style.display = 'none'; }, { passive: true });
 })();
 
-// Focus mode â touch fallback. On touch devices, hover doesn't fire, so
+// Focus mode — touch fallback. On touch devices, hover doesn't fire, so
 // tap-to-focus toggles a class on the tapped paragraph. Tapping outside
 // any prose element clears focus so nothing stays stuck.
 (function () {
@@ -6554,7 +6554,7 @@ if (rulerSwitch) rulerSwitch.addEventListener('click', () => {
     if (!state.focusMode) return;
     const target = e.target.closest('.article .body p, .article .body .pullquote, .article .body .analysis-section');
     if (!target) {
-      // Tapped outside prose â clear all focus
+      // Tapped outside prose — clear all focus
       document.querySelectorAll('.focus-active').forEach(el => el.classList.remove('focus-active'));
       return;
     }
@@ -6565,7 +6565,7 @@ if (rulerSwitch) rulerSwitch.addEventListener('click', () => {
   });
 })();
 
-// Section share â click the &sect; button to copy a deep link to the
+// Section share — click the &sect; button to copy a deep link to the
 // section. Uses navigator.share if available, otherwise clipboard.
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('.sec-share');
@@ -6585,7 +6585,7 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Sources panel â collapsible. Click the header to toggle.
+// Sources panel — collapsible. Click the header to toggle.
 document.addEventListener('click', (e) => {
   const hdr = e.target.closest('.sources-header');
   if (!hdr) return;
