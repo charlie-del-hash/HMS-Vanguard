@@ -13,21 +13,20 @@
 <meta name="apple-mobile-web-app-title" content="Macro Topics" />
 <meta name="format-detection" content="telephone=no" />
 
-<title>Affinity Macro Topics — Template</title>
-<!-- ✏️ UPDATE per issue: description, og:title, og:description, twitter:title, twitter:description -->
-<meta name="description" content="Affinity Research Macro Topics — text-only template. Drop-in scaffolding for a weekly macro brief: cover, paged articles, endnotes, sources panel, settings sheet." />
+<title>Affinity Macro Topics â 18 May 2026</title>
+<meta name="description" content="Affinity Research Macro Topics â 18 May 2026. Westminster in crisis, oil above $110, the bauxite squeeze, LNG rebalancing, and container rates surge." />
 
 <!-- Open Graph (used by WhatsApp, iMessage, Slack, LinkedIn, Facebook) -->
 <meta property="og:type" content="article" />
-<meta property="og:title" content="Affinity Macro Topics — Template" />
-<meta property="og:description" content="Text-only template for the weekly macro brief: cover, paged articles, endnotes, structured sources." />
+<meta property="og:title" content="Affinity Macro Topics â 18 May 2026" />
+<meta property="og:description" content="Westminster in crisis, oil above $110, the bauxite squeeze, LNG rebalancing, and container rates surge." />
 <meta property="og:site_name" content="Affinity Research" />
 <meta property="og:locale" content="en_GB" />
 
 <!-- Twitter Cards (also picked up by some apps) -->
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Affinity Macro Topics — Template" />
-<meta name="twitter:description" content="Text-only macro brief template." />
+<meta name="twitter:title" content="Affinity Macro Topics â 18 May 2026" />
+<meta name="twitter:description" content="Westminster in crisis, oil above $110, the bauxite squeeze, LNG markets pivot, and container rates surge." />
 
 <!-- Inline SVG favicon: a single red diamond on cream paper -->
 <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23FDFCF9'/><polygon points='16,7 25,16 16,25 7,16' fill='%231A7A7E'/></svg>" />
@@ -39,16 +38,16 @@
 <noscript><link href="https://fonts.googleapis.com/css2?family=Sorts+Mill+Goudy:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=IBM+Plex+Mono:wght@400;500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet"></noscript>
 <style>
   /* =====================================================================
-     PALETTE — four themes, switched via [data-theme] on <html>
+     PALETTE â four themes, switched via [data-theme] on <html>
      Default theme uses prefers-color-scheme; explicit theme overrides it.
      ===================================================================== */
 
   :root {
-    /* Base scale multiplier — 5 discrete steps via JS */
+    /* Base scale multiplier â 5 discrete steps via JS */
     --scale: 1;
-    /* Density multiplier — 1 comfortable, 0.92 compact */
+    /* Density multiplier â 1 comfortable, 0.92 compact */
     --density: 1;
-    /* Reading measure — narrow (660) or wide (820) */
+    /* Reading measure â narrow (660) or wide (820) */
     --measure: 660px;
   }
 
@@ -71,7 +70,7 @@
     --hi-band:      rgba(26,122,126,0.14);
     --shadow:       rgba(40,30,20,0.10);
     /* Floating UI surfaces (tooltips, return pill, toast). Always a high-
-       contrast panel popping forward from paper — never the same brightness
+       contrast panel popping forward from paper â never the same brightness
        as body text. In dark themes these brighten rather than dim. */
     --floating-bg:  #1A1A1A;
     --floating-fg:  #FDFCF9;
@@ -104,7 +103,7 @@
   }
 
   /* DARK */
-  /* DARK / TERMINAL — Bloomberg-inspired: amber accent on near-black paper.
+  /* DARK / TERMINAL â Bloomberg-inspired: amber accent on near-black paper.
      Internal key stays "dark" so existing localStorage selections still
      resolve; the user-visible label and palette are now Terminal. */
   [data-theme="dark"] {
@@ -131,7 +130,7 @@
     --hl-edge:      rgba(255,127,0,0.55);
   }
 
-  /* HIGH CONTRAST — for genuine vision needs, distinct from dark */
+  /* HIGH CONTRAST â for genuine vision needs, distinct from dark */
   [data-theme="contrast"] {
     color-scheme: light;
     --paper:        #FFFFFF;
@@ -156,7 +155,7 @@
   }
 
 
-  /* AQUA — Apple-style, c. 2003. Paper stays white; personality is in chrome. */
+  /* AQUA â Apple-style, c. 2003. Paper stays white; personality is in chrome. */
   [data-theme="aqua"] {
     color-scheme: light;
     --paper:        #FBFCFE;
@@ -180,7 +179,7 @@
     --hl-edge:      rgba(42,94,171,0.45);
   }
 
-  /* FRUTIGER — Sky flavour, c. 2007. Cyan-blue accent, soft cloud cover. */
+  /* FRUTIGER â Sky flavour, c. 2007. Cyan-blue accent, soft cloud cover. */
   [data-theme="frutiger"] {
     color-scheme: light;
     --paper:        #FBFEFF;
@@ -204,7 +203,7 @@
     --hl-edge:      rgba(79,184,229,0.45);
   }
 
-  /* AQUA / FRUTIGER on dark OS — only applies when those themes are
+  /* AQUA / FRUTIGER on dark OS â only applies when those themes are
      explicitly selected AND the operating system reports dark preference.
      Reader-driven dark choice via [data-theme="dark"] is unaffected. */
   @media (prefers-color-scheme: dark) {
@@ -315,10 +314,10 @@
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
 
   /* =====================================================================
-     TOOLBAR — sticky top + bottom, with / separators
+     TOOLBAR â sticky top + bottom, with / separators
      ===================================================================== */
 
-  /* Sticky shell — toolbar + progress as one unit so they never separate */
+  /* Sticky shell â toolbar + progress as one unit so they never separate */
   .sticky-shell {
     position: sticky;
     top: 0;
@@ -390,6 +389,11 @@
   @media (min-width: 600px) {
     .tb-btn .label { display: inline; }
   }
+  .tb-ico {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px;
+  }
+  .tb-ico svg { display: block; }
   .tb-sep {
     color: var(--rule-strong);
     font-weight: 300;
@@ -399,7 +403,7 @@
     margin: 0 2px;
   }
 
-  /* Aa icon — two stacked As of differing sizes */
+  /* Aa icon â two stacked As of differing sizes */
   .aa-icon {
     display: inline-flex; align-items: baseline;
     font-family: 'Sorts Mill Goudy', serif;
@@ -409,7 +413,7 @@
   .aa-icon .big { font-size: 20px; }
   .aa-icon .sm  { font-size: 13px; margin-left: 1px; }
 
-  /* TOC icon — three short horizontal rules */
+  /* TOC icon â three short horizontal rules */
   .toc-icon {
     display: inline-block;
     width: 18px; height: 14px;
@@ -466,7 +470,7 @@
   .soc.more { font-size: 16px; letter-spacing: -1px; }
 
   /* =====================================================================
-     PROGRESS — thin segmented bar under toolbar
+     PROGRESS â thin segmented bar under toolbar
      One row, seven segments, each 1 of 7 pages. Read pages fill faint,
      the active page fills red in proportion to scroll within that page.
      The whole thing is 3px of paint inside a 16px tap target.
@@ -521,7 +525,7 @@
   .seg:hover::before, .seg:focus-visible::before { height: 4px; }
 
   /* =====================================================================
-     STATIC-MODE PROGRESS — scroll-driven animation tied to each
+     STATIC-MODE PROGRESS â scroll-driven animation tied to each
      static-page section's view timeline. As the section scrolls into and
      through the viewport, its segment's underline fills with red.
      Only kicks in when JS hasn't booted (no .seg.active class set).
@@ -594,7 +598,7 @@
 
   /* Breadcrumb is a single slash-divided thread:
      29 April 2026 / Macro / Policy / 1 of 5
-     The page indicator is no longer a right-aligned chip — it sits
+     The page indicator is no longer a right-aligned chip â it sits
      at the end of the thread, sharing the same separator rhythm. */
   .breadcrumb {
     display: flex;
@@ -625,7 +629,7 @@
   }
   h1.headline em { font-style: italic; }
 
-  /* Single italic meta line: "The Policy Desk · 29 April 2026"
+  /* Single italic meta line: "The Policy Desk Â· 29 April 2026"
      Replaces the old separate author-line + timestamp. The desks are
      internal and known to all readers; the bracket date is enough. */
   .meta-line {
@@ -706,7 +710,7 @@
   }
   .body p a:hover { border-bottom-color: var(--ink); }
 
-  /* CROSS-REFERENCES — links that jump to other articles in this issue.
+  /* CROSS-REFERENCES â links that jump to other articles in this issue.
      Visually distinct from inline links: solid red underline, small
      section-arrow glyph, no italic. The arrow signals "this is a real
      navigation, not just an external citation". */
@@ -730,7 +734,7 @@
     border-bottom-color: var(--accent);
   }
 
-  /* HIGHLIGHTS — long-press on mobile, double-click on desktop.
+  /* HIGHLIGHTS â long-press on mobile, double-click on desktop.
      Treatment: subtle paper-tone wash + a small left rule. The
      paragraph remains in the same place; layout does not shift.
      The highlight glyph in the gutter signals it's a marked passage. */
@@ -788,7 +792,7 @@
   }
 
   /* =====================================================================
-     FIGURES — magazine treatment
+     FIGURES â magazine treatment
      ===================================================================== */
 
   .figure { margin: 36px 0; }
@@ -917,7 +921,7 @@
     background:
       linear-gradient(to top, var(--accent-soft) 0%, transparent 60%);
     opacity: 0.6;
-    /* Neutral wave — no directional bias, starts and ends near 50% */
+    /* Neutral wave â no directional bias, starts and ends near 50% */
     clip-path: polygon(
       0 52%, 7% 48%, 14% 42%, 21% 40%, 28% 44%, 35% 50%,
       42% 55%, 50% 52%, 58% 46%, 65% 38%, 72% 36%, 79% 42%,
@@ -1034,7 +1038,7 @@
   }
 
   /* PULL QUOTE */
-  /* PULL QUOTE — hanging opening quote mark in the margin,
+  /* PULL QUOTE â hanging opening quote mark in the margin,
      no top/bottom rules, larger italic, softer sign-off. */
   .pullquote {
     font-family: 'Sorts Mill Goudy', serif;
@@ -1129,7 +1133,7 @@
   }
 
   /* =====================================================================
-     ORNAMENT — a single typographic mark used as end-of-article glyph,
+     ORNAMENT â a single typographic mark used as end-of-article glyph,
      cover section break, and colophon separator. Hairline rules flank
      a solid diamond; scales via width, inherits colour from context.
      ===================================================================== */
@@ -1143,7 +1147,7 @@
   .ornament svg { display: block; }
   .ornament.red { color: var(--accent); }
 
-  /* END MARK — smaller ornament, red, concludes every article */
+  /* END MARK â smaller ornament, red, concludes every article */
   .endmark {
     display: flex;
     justify-content: center;
@@ -1166,7 +1170,7 @@
     color: var(--ink-faint);
     margin-bottom: 12px;
   }
-  /* TOPICS — slash-separated text. The slash motif used elsewhere
+  /* TOPICS â slash-separated text. The slash motif used elsewhere
      (footer, breadcrumb, meta-line) carries through to topic tags.
      Each topic remains an interactive link; on hover the underline
      thickens. The slash is a non-clickable separator. */
@@ -1213,7 +1217,7 @@
     letter-spacing: 0;
   }
 
-  /* PAGE NAVIGATION — bottom of each article */
+  /* PAGE NAVIGATION â bottom of each article */
   .page-nav {
     margin-top: 48px;
     padding-top: 28px;
@@ -1281,7 +1285,7 @@
   }
 
   /* =====================================================================
-     OVERLAYS — Settings sheet & TOC drawer
+     OVERLAYS â Settings sheet & TOC drawer
      ===================================================================== */
 
   .scrim {
@@ -1292,7 +1296,7 @@
   }
   .scrim.show { opacity: 1; pointer-events: auto; }
 
-  /* SETTINGS SHEET — slides up from bottom
+  /* SETTINGS SHEET â slides up from bottom
      Capped at ~70vh so the article behind remains visible: when the user
      changes text size or theme, they should see the change happen on real
      prose, not just on the sheet itself. */
@@ -1369,7 +1373,7 @@
   .sheet-close:hover { background: var(--accent); }
   .sheet-close:active { transform: scale(0.97); }
 
-  /* LIVE PREVIEW — a card showing how text actually renders.
+  /* LIVE PREVIEW â a card showing how text actually renders.
      Responds to all three typography axes (scale, density, theme) and
      demonstrates the highlight treatment when the feature is on. */
   .sheet-preview {
@@ -1392,7 +1396,7 @@
     transition: padding-left 0.22s ease, border-color 0.22s ease, background 0.22s ease;
   }
   /* When highlights are enabled, the preview body line shows what the
-     active highlight state looks like. Pure UI demonstration — no state. */
+     active highlight state looks like. Pure UI demonstration â no state. */
   body[data-hl-on] .sheet-preview .sp-card {
     background: var(--hl);
     border-left: 3px solid var(--accent);
@@ -1436,7 +1440,7 @@
   [data-align="justify"] .sheet-preview .sp-body { text-align: justify; }
   [data-hyphens="on"] .sheet-preview .sp-body { -webkit-hyphens: auto; hyphens: auto; }
 
-  /* SHEET GROUPS — three logical groups (Typography / Appearance /
+  /* SHEET GROUPS â three logical groups (Typography / Appearance /
      Features). Each group shows a small caption and contains one or
      more sections. Visual separation by hairline rule between groups. */
   .sheet-group {
@@ -1467,7 +1471,7 @@
     font-weight: 500;
   }
 
-  /* SIZE PICKER — five A's */
+  /* SIZE PICKER â five A's */
   .size-picker {
     display: flex; gap: 0;
     border: 1px solid var(--rule-strong);
@@ -1498,8 +1502,8 @@
   .size-btn[data-size="1.25"]  { font-size: 26px; }
   .size-btn[data-size="1.4"]   { font-size: 30px; }
 
-  /* THEME PICKER — four swatches */
-  /* THEME CARDS — swatch + label, shown as a 2x2 grid on phones, 4-up
+  /* THEME PICKER â four swatches */
+  /* THEME CARDS â swatch + label, shown as a 2x2 grid on phones, 4-up
      on wider screens. Each card pairs a colour sample with the theme
      name; the active card gets a red ring. */
   .theme-picker {
@@ -1542,7 +1546,7 @@
     flex-shrink: 0;
   }
   /* Each swatch is a tiny half-and-half sample of the theme's
-     paper / ink combination — shows what reading there will feel like. */
+     paper / ink combination â shows what reading there will feel like. */
   .theme-swatch-paper    { background: linear-gradient(135deg, #FDFCF9 0 50%, #1A1A1A 50% 100%); }
   .theme-swatch-sepia    { background: linear-gradient(135deg, #F4E8D0 0 50%, #2D2418 50% 100%); }
   .theme-swatch-dark     { background: linear-gradient(135deg, #15140F 0 50%, #ECE7D8 50% 100%); }
@@ -1597,7 +1601,7 @@
   }
   .toggle-btn:active { transform: scale(0.99); }
 
-  /* SHEET ROW — used for label-on-left, control-on-right rows
+  /* SHEET ROW â used for label-on-left, control-on-right rows
      (e.g. the highlights toggle). Two-line text on the left,
      iOS-style switch on the right. */
   .sheet-row {
@@ -1621,7 +1625,7 @@
     line-height: 1.35;
   }
 
-  /* iOS-STYLE SWITCH — pill with a sliding knob. 51x31 to match
+  /* iOS-STYLE SWITCH â pill with a sliding knob. 51x31 to match
      the system control. Gets a red track when on, neutral when off. */
   .ios-switch {
     appearance: none;
@@ -1689,7 +1693,7 @@
     font-weight: 500;
   }
 
-  /* TOC DRAWER — slides from left, full-screen */
+  /* TOC DRAWER â slides from left, full-screen */
   .toc-drawer {
     position: fixed; left: 0; top: 0; bottom: 0;
     z-index: 100;
@@ -1868,7 +1872,7 @@
     transform-origin: 0 0;
   }
 
-  /* TOC FILTER CHIPS — All / Saved / Highlighted / Unread.
+  /* TOC FILTER CHIPS â All / Saved / Highlighted / Unread.
      Hidden when a search query is active (search overrides filter). */
   .toc-filters {
     display: flex;
@@ -1933,7 +1937,7 @@
   }
 
   /* =====================================================================
-     ARTICLE END ACTIONS — weighted composition
+     ARTICLE END ACTIONS â weighted composition
      Save is the primary action, rendered as a full-width bookmark button.
      Share / Print / Mark-read form a secondary trio beneath it.
      The hierarchy reflects actual use: directors save pieces often,
@@ -2010,7 +2014,7 @@
   }
 
   /* =====================================================================
-     RETURN PILL — appears after a non-linear jump (TOC, dot, inline link)
+     RETURN PILL â appears after a non-linear jump (TOC, dot, inline link)
      Auto-dismisses after 8 seconds. Manually dismissable.
      ===================================================================== */
   .return-pill {
@@ -2087,7 +2091,7 @@
   .return-pill .rp-close:hover { opacity: 1; }
 
   /* =====================================================================
-     PUBLICATION FOOTER — a colophon, not a duplicate toolbar.
+     PUBLICATION FOOTER â a colophon, not a duplicate toolbar.
      Centred composition with the ornament, brand mark, and meta text.
      Feels like the back of a slim weekly.
      ===================================================================== */
@@ -2138,7 +2142,191 @@
     opacity: 0.7;
   }
 
-  /* PRINT — produces a clean PDF when the user prints (or uses
+  /* =====================================================================
+     ASK THE DESK â slide-up sheet, same geometry/feel as the settings
+     sheet (shared overlay machinery, scrim, escape). A quiet line from
+     the reader to the research desk. Static <form> works with JS off;
+     JS upgrades to an inline confirmation with no page navigation.
+     ===================================================================== */
+  .ask-sheet {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    z-index: 100;
+    background: var(--paper);
+    border-top: 1px solid var(--rule-strong);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -8px 40px var(--shadow);
+    transform: translateY(100%);
+    transition: transform 0.32s cubic-bezier(.2,.8,.2,1);
+    max-height: 80vh;
+    overflow-y: auto;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .ask-sheet.show { transform: translateY(0); }
+  @media (min-width: 720px) {
+    .ask-sheet {
+      left: 50%; right: auto; bottom: 5vh;
+      transform: translate(-50%, calc(100% + 5vh));
+      width: 480px;
+      border-radius: 12px;
+      border: 1px solid var(--rule-strong);
+    }
+    .ask-sheet.show { transform: translate(-50%, 0); }
+  }
+  .ask-sheet .sheet-handle {
+    width: 40px; height: 4px;
+    background: var(--rule-strong);
+    border-radius: 2px;
+    margin: 10px auto 0;
+  }
+
+  /* Engraved lens motif echoing the toolbar icon â sets the Holmes tone
+     at the head of the sheet without a heavy graphic. */
+  .ask-crest {
+    display: flex; justify-content: center;
+    padding: 18px 0 2px;
+    color: var(--ink-faint);
+  }
+  .ask-crest svg { display: block; }
+
+  .ask-body { padding: 4px 22px 24px; }
+  .ask-intro {
+    font-family: 'Sorts Mill Goudy', serif;
+    font-style: italic;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    text-align: center;
+    margin: 0 auto 22px;
+    max-width: 30em;
+  }
+
+  .ask-field { margin-bottom: 16px; }
+  .ask-label {
+    display: block;
+    font-family: 'Jost', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 500;
+    margin-bottom: 7px;
+  }
+  .ask-input, .ask-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    background: var(--paper-tint);
+    border: 1px solid var(--rule-strong);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--ink);
+    font-family: 'Sorts Mill Goudy', serif;
+    font-size: 16px;            /* 16px prevents iOS input zoom */
+    line-height: 1.5;
+    transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+  }
+  .ask-input::placeholder, .ask-textarea::placeholder {
+    color: var(--ink-faint); font-style: italic;
+  }
+  .ask-input:focus, .ask-textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--paper);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .ask-textarea { min-height: 116px; resize: vertical; }
+  .ask-input[aria-invalid="true"], .ask-textarea[aria-invalid="true"] {
+    border-color: var(--down);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--down) 16%, transparent);
+  }
+  .ask-meta {
+    display: flex; justify-content: space-between; align-items: baseline;
+    gap: 12px; margin-top: 6px;
+  }
+  .ask-help, .ask-count {
+    font-family: 'Jost', sans-serif;
+    font-size: 11px;
+    color: var(--ink-faint);
+    line-height: 1.4;
+  }
+  .ask-error {
+    font-family: 'Jost', sans-serif;
+    font-size: 12px;
+    color: var(--down);
+    margin-top: 6px;
+    display: none;
+  }
+  .ask-error.show { display: block; }
+
+  /* Honeypot â off-screen, never focusable, hidden from AT. */
+  .ask-hp {
+    position: absolute !important;
+    left: -9999px; top: auto;
+    width: 1px; height: 1px; overflow: hidden;
+  }
+
+  .ask-actions {
+    display: flex; align-items: center; gap: 14px;
+    margin-top: 22px;
+  }
+  .ask-submit {
+    flex: 1;
+    font-family: 'Jost', sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: var(--paper);
+    background: var(--ink);
+    border: none;
+    border-radius: 999px;
+    min-height: 48px;
+    cursor: pointer;
+    transition: background 0.16s ease, transform 0.1s ease, opacity 0.16s ease;
+  }
+  .ask-submit:hover { background: var(--accent); }
+  .ask-submit:active { transform: scale(0.985); }
+  .ask-submit[disabled] { opacity: 0.6; cursor: progress; }
+  .ask-cancel {
+    font-family: 'Jost', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    background: none; border: none;
+    cursor: pointer;
+    padding: 8px 4px;
+  }
+  .ask-cancel:hover { color: var(--ink); }
+
+  /* Confirmation â replaces the form in JS mode. */
+  .ask-confirm {
+    display: none;
+    text-align: center;
+    padding: 24px 22px 36px;
+  }
+  .ask-confirm.show { display: block; }
+  .ask-confirm .ac-mark {
+    color: var(--accent);
+    margin: 0 auto 16px;
+  }
+  .ask-confirm .ac-title {
+    font-family: 'Sorts Mill Goudy', serif;
+    font-size: 22px;
+    color: var(--ink);
+    margin: 0 0 8px;
+  }
+  .ask-confirm .ac-text {
+    font-family: 'Sorts Mill Goudy', serif;
+    font-style: italic;
+    font-size: 15px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0 auto;
+    max-width: 28em;
+  }
+  .ask-confirm .ac-text strong { font-style: normal; color: var(--ink); }
+
+  /* PRINT â produces a clean PDF when the user prints (or uses
      Print to PDF). Adds an Affinity-branded header so the output
      never starts cold mid-headline.  */
   .print-header { display: none; }
@@ -2146,7 +2334,7 @@
     @page {
       margin: 18mm 16mm 18mm 16mm;
     }
-    .toolbar, .progress, .scrim, .settings-sheet, .toc-drawer, .page-nav, .article-actions, .return-pill, .pub-footer, .topics, .toast { display: none !important; }
+    .toolbar, .progress, .scrim, .settings-sheet, .ask-sheet, .toc-drawer, .page-nav, .article-actions, .return-pill, .pub-footer, .topics, .toast { display: none !important; }
     .seg-tip { display: none !important; }
     body { background: #fff; color: #000; font-size: 10.5pt; line-height: 1.45; }
     .article { max-width: none; padding: 0; }
@@ -2193,7 +2381,7 @@
       -webkit-print-color-adjust: exact;
     }
 
-    /* Cross-references should print as honest text — no caret arrow,
+    /* Cross-references should print as honest text â no caret arrow,
        just an italicised "see [section]" footer-style cue. */
     .body p a.xref {
       color: #000 !important;
@@ -2237,7 +2425,7 @@
   }
 
   /* =====================================================================
-     STATIC FALLBACK MODE — when JS doesn't run (email, WhatsApp, iOS
+     STATIC FALLBACK MODE â when JS doesn't run (email, WhatsApp, iOS
      Files preview), all six articles are rendered stacked, with the
      progress bar acting as a skip-to-section nav and per-piece
      "next / top of issue" links between them.
@@ -2281,10 +2469,10 @@
   }
 
   /* =====================================================================
-     v6 REFINEMENTS — slash-spine additions
+     v6 REFINEMENTS â slash-spine additions
      ===================================================================== */
 
-  /* PROGRESS LABELS — a slash-separated category strip below the thin
+  /* PROGRESS LABELS â a slash-separated category strip below the thin
      bar. The bar still shows the visual fill; the strip names where
      you are. Active label gains weight + accent colour. On the narrowest
      phones the strip hides (the tooltip remains for hover/focus); on
@@ -2327,7 +2515,7 @@
     pointer-events: none;
   }
 
-  /* STATIC COVER — only meaningful when JS hasn't replaced #page-content.
+  /* STATIC COVER â only meaningful when JS hasn't replaced #page-content.
      Acts as a real front page for fallback readers (email, iOS Files,
      WhatsApp preview): masthead, issue meta, and a slash-separated
      index of the six sections that anchor-link directly into each. */
@@ -2414,7 +2602,7 @@
     top: -2px;
   }
 
-  /* STATIC DIVIDER — between articles in fallback mode, replaces the
+  /* STATIC DIVIDER â between articles in fallback mode, replaces the
      bare 1px section border with a typographic ornament + a slash
      "you are here" strip. Stronger end-of-piece signal than a hairline. */
   .static-divider {
@@ -2458,7 +2646,7 @@
     margin: 0 10px;
   }
 
-  /* STATIC NAV — three-link slash strip at the bottom of every static
+  /* STATIC NAV â three-link slash strip at the bottom of every static
      piece: previous / current / next. Replaces the prior 1- or 2-link
      row. The current piece is non-clickable text; previous and next
      are arrows that anchor-jump. The composition reads as a single
@@ -2494,7 +2682,7 @@
   }
   /* Primary (next) gets red emphasis instead of a filled box. A single
      red character of meaning is enough to mark the call-to-action
-     within a slash strip — no rectangle required. */
+     within a slash strip â no rectangle required. */
   .static-nav-link.primary {
     color: var(--accent);
     text-decoration-color: var(--accent-line);
@@ -2520,7 +2708,7 @@
   }
   /* Slash separators between prev / here / next.
      The selectors target ANY adjacent pair of nav-link / nav-here, so
-     prev→here, here→next, and the rare prev→next (no current) all get
+     prevâhere, hereânext, and the rare prevânext (no current) all get
      the same separator. */
   .static-nav-link + .static-nav-here::before,
   .static-nav-here + .static-nav-link::before,
@@ -2547,7 +2735,7 @@
   }
   .static-nav-top:hover { color: var(--ink); }
 
-  /* PAGE-NAV LOCATION STRIP — at the top of the prev/next cards in JS
+  /* PAGE-NAV LOCATION STRIP â at the top of the prev/next cards in JS
      mode, a faint "Tankers / 1 of 6" line orients the cards to the
      issue. Same slash rhythm as the breadcrumb. */
   .page-nav-here {
@@ -2586,7 +2774,7 @@
   /* Belt-and-braces: if a divider survives somehow in JS mode, hide it. */
   body:not(.no-js) .static-divider { display: none; }
 
-  /* Print — switch the print-header separator to a slash to match
+  /* Print â switch the print-header separator to a slash to match
      the screen voice. */
   @media print {
     .print-header .ph-meta {
@@ -2596,7 +2784,7 @@
 
 
   /* =====================================================================
-     AESTHETIC THEMES — Aqua, Frutiger, and Terminal chrome decoration.
+     AESTHETIC THEMES â Aqua, Frutiger, and Terminal chrome decoration.
 
      Each theme commits to one signature gesture and three or four
      supporting details. Editorial body type, measure, rhythm, and the
@@ -2604,22 +2792,22 @@
      exclusively in chrome surfaces (toolbar, sheet, drawer, cover,
      colophon, breadcrumb strip).
 
-     All rules are theme-scoped — when the theme isn't active, none of
+     All rules are theme-scoped â when the theme isn't active, none of
      these rules paint or contribute to cascade cost. Pinstripes, blur,
-     and gradients sit on small fixed surfaces only — never on the
-     full-bleed body — so scroll performance is unchanged.
+     and gradients sit on small fixed surfaces only â never on the
+     full-bleed body â so scroll performance is unchanged.
 
-     Aqua    — OS X toolbar c. 2003. Polished gradient, pinstripes, gel
+     Aqua    â OS X toolbar c. 2003. Polished gradient, pinstripes, gel
                buttons, soft drop shadow under the article body.
-     Frutiger — Vista Aero Glass c. 2007. Translucent backdrop-filter
+     Frutiger â Vista Aero Glass c. 2007. Translucent backdrop-filter
                surfaces, top-edge highlight, sky-and-cloud cover.
-     Terminal — Bloomberg c. 2010, simple and refined. IBM Plex Mono on
+     Terminal â Bloomberg c. 2010, simple and refined. IBM Plex Mono on
                chrome only, amber on near-black, sharp 0-radius corners,
                bracketed data-feed breadcrumb. Editorial body remains in
-               EB Garamond — the refinement that keeps it readable.
+               EB Garamond â the refinement that keeps it readable.
      ===================================================================== */
 
-  /* ======================== AQUA — OS X toolbar ======================== */
+  /* ======================== AQUA â OS X toolbar ======================== */
 
   [data-theme="aqua"] .sticky-shell {
     background:
@@ -2631,14 +2819,14 @@
       repeating-linear-gradient(to bottom,
         transparent 0px, transparent 2px,
         rgba(20,40,80,0.04) 2px, rgba(20,40,80,0.04) 3px),
-      /* 3. Main polished gradient — pearl top to soft grey bottom */
+      /* 3. Main polished gradient â pearl top to soft grey bottom */
       linear-gradient(to bottom, #F5F7FA 0%, #E0E5EC 50%, #C8D0DA 100%);
     border-bottom: 1px solid #9CA8B6;
   }
 
   [data-theme="aqua"] .tb-btn {
-    /* Aqua gel button — top half lighter, bottom half darker, sharp 1px
-       highlight at top edge, ambient shadow below. No explicit margin —
+    /* Aqua gel button â top half lighter, bottom half darker, sharp 1px
+       highlight at top edge, ambient shadow below. No explicit margin â
        the gel construction lifts visually without growing toolbar height. */
     background:
       linear-gradient(to bottom,
@@ -2676,7 +2864,7 @@
     box-shadow: 0 1px 3px rgba(20,40,80,0.08);
   }
 
-  /* Progress bar — gloss highlight, AND var(--fill) preserved so the
+  /* Progress bar â gloss highlight, AND var(--fill) preserved so the
      bar still fills as the user scrolls within an article. */
   [data-theme="aqua"] .seg.active::before {
     background:
@@ -2691,7 +2879,7 @@
   }
 
   [data-theme="aqua"] .art-primary {
-    /* Save lozenge picks up gel construction too — top-half lighter. */
+    /* Save lozenge picks up gel construction too â top-half lighter. */
     border-radius: 14px;
     background-image: linear-gradient(to bottom,
       rgba(255,255,255,0.30) 0%, rgba(255,255,255,0) 50%);
@@ -2705,7 +2893,7 @@
     text-underline-offset: 3px;
   }
 
-  /* OS dark for Aqua — same construction, slate stops. */
+  /* OS dark for Aqua â same construction, slate stops. */
   @media (prefers-color-scheme: dark) {
     [data-theme="aqua"] .sticky-shell {
       background:
@@ -2742,7 +2930,7 @@
     }
   }
 
-  /* ================== FRUTIGER — Vista Aero Glass ================== */
+  /* ================== FRUTIGER â Vista Aero Glass ================== */
 
   [data-theme="frutiger"] .sticky-shell {
     background: rgba(251,254,255,0.65);
@@ -2780,7 +2968,7 @@
       /* Bottom-right cloud */
       radial-gradient(ellipse 240px 70px at 82% 88%,
         rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 70%),
-      /* Aero sky — paper top, cyan-blue mid-left fading to mint-green
+      /* Aero sky â paper top, cyan-blue mid-left fading to mint-green
          mid-right, then back to paper. Diagonal echoes the wallpaper. */
       linear-gradient(135deg,
         #FBFEFF 0%,
@@ -2796,7 +2984,7 @@
 
   [data-theme="frutiger"] .tb-btn {
     /* Aero gel: smooth top-to-bottom wash from cyan-blue into mint
-       green — no hard split. A 1px inner ring + soft outer shadow
+       green â no hard split. A 1px inner ring + soft outer shadow
        lift it clear of the paper so the button reads cleanly without
        glaring. */
     color: #1B3F4A;
@@ -2827,7 +3015,7 @@
   }
 
   [data-theme="frutiger"] .toolbar-brand .dot {
-    /* Blue→green text-gradient — same palette as buttons and cover. */
+    /* Blueâgreen text-gradient â same palette as buttons and cover. */
     background: linear-gradient(135deg, #4FB8E5 0%, #5BC8A8 100%);
     -webkit-background-clip: text;
     background-clip: text;
@@ -2836,7 +3024,7 @@
     filter: drop-shadow(0 0 4px rgba(91,200,168,0.45));
   }
 
-  /* Frutiger progress — gloss highlight + blue→green fill that grows
+  /* Frutiger progress â gloss highlight + blueâgreen fill that grows
      with --fill. As the bar fills, cyan transitions into mint at the
      leading edge, mirroring the wallpaper. */
   [data-theme="frutiger"] .seg.active::before {
@@ -2861,7 +3049,7 @@
   }
 
   [data-theme="frutiger"] .pullquote::before {
-    /* Giant opening quote also picks up the blue→green wash. */
+    /* Giant opening quote also picks up the blueâgreen wash. */
     background: linear-gradient(135deg, #4FB8E5 0%, #5BC8A8 100%);
     -webkit-background-clip: text;
     background-clip: text;
@@ -2874,7 +3062,7 @@
     filter: drop-shadow(0 0 6px rgba(79,184,229,0.45));
   }
 
-  /* OS dark for Frutiger — glass darkens, construction holds. */
+  /* OS dark for Frutiger â glass darkens, construction holds. */
   @media (prefers-color-scheme: dark) {
     [data-theme="frutiger"] .sticky-shell {
       background: rgba(15,26,34,0.65);
@@ -2943,9 +3131,9 @@
     }
   }
 
-  /* ====================== TERMINAL — Bloomberg ====================== */
+  /* ====================== TERMINAL â Bloomberg ====================== */
 
-  /* Chrome elements switch to monospace — but editorial headlines, body,
+  /* Chrome elements switch to monospace â but editorial headlines, body,
      and cover title stay in EB Garamond / Sorts Mill Goudy for readability. */
   [data-theme="dark"] .toolbar,
   [data-theme="dark"] .toolbar-brand,
@@ -2998,7 +3186,7 @@
     border-radius: 0;
   }
 
-  /* The signature gesture — breadcrumb as a Bloomberg data-feed strip:
+  /* The signature gesture â breadcrumb as a Bloomberg data-feed strip:
      amber on near-black, bracketed, uppercase, mono. */
   [data-theme="dark"] .breadcrumb {
     display: inline-block;
@@ -3059,7 +3247,7 @@
     color: var(--accent);
   }
   [data-theme="dark"] .topic + .topic::before {
-    /* drop the dot separator — uppercase chips read better alone */
+    /* drop the dot separator â uppercase chips read better alone */
     content: none;
   }
 
@@ -3100,7 +3288,7 @@
   [data-theme="dark"] .price-delta.up   { color: var(--up); }
   [data-theme="dark"] .price-delta.down { color: var(--down); }
 
-  /* Terminal progress — sharp amber bar, no gloss, var(--fill) preserved. */
+  /* Terminal progress â sharp amber bar, no gloss, var(--fill) preserved. */
   [data-theme="dark"] .seg.active::before {
     background: linear-gradient(to right,
       var(--accent) 0%,
@@ -3160,7 +3348,7 @@
   }
   .theme-card[data-theme="frutiger"] .theme-name { color: #1A1A1A; }
 
-  /* Calm the active state — 1px inner border + soft outer glow instead
+  /* Calm the active state â 1px inner border + soft outer glow instead
      of a 2px solid border, so the active card doesn't shout against its
      calmer neighbours. */
   .theme-card.active {
@@ -3176,12 +3364,12 @@
   .theme-swatch-frutiger { background: linear-gradient(135deg, #FBFEFF 0 50%, #4FB8E5 50% 100%); }
 
   /* =====================================================================
-     TEMPLATE ADDITIONS — components ported from the Hormuz Sitrep so the
+     TEMPLATE ADDITIONS â components ported from the Hormuz Sitrep so the
      macro brief gets a heavier editorial scaffolding (endnotes, structured
      sources, takeaways, share-anchors) without the data-widget footprint.
      ===================================================================== */
 
-  /* Skip-to-content (a11y) — invisible until focused. */
+  /* Skip-to-content (a11y) â invisible until focused. */
   .skip-link {
     position: absolute; left: -9999px; top: 0;
     background: var(--accent); color: var(--paper);
@@ -3195,7 +3383,7 @@
   }
   .skip-link:focus { left: 0; }
 
-  /* Section share anchor — hover-revealed § button at right of each section
+  /* Section share anchor â hover-revealed Â§ button at right of each section
      heading. Click copies a deep link to that subsection. */
   .body section[aria-labelledby] { position: relative; }
   .sec-share {
@@ -3210,7 +3398,7 @@
   .body section:hover .sec-share { opacity: 0.6; }
   .sec-share:hover, .sec-share:focus-visible { color: var(--accent); opacity: 1; }
 
-  /* Analysis section — the "Key takeaway" / "What it means" block.
+  /* Analysis section â the "Key takeaway" / "What it means" block.
      Single paragraph, left-rule accent, slightly larger leading. The bold
      lead-in carries the framing; the rest of the paragraph carries it home. */
   .analysis-section {
@@ -3241,7 +3429,7 @@
     color: var(--ink);
   }
 
-  /* Inline reference superscript — links into the tbc-endnotes block. */
+  /* Inline reference superscript â links into the tbc-endnotes block. */
   .tbc-ref {
     color: var(--accent);
     font-family: 'Jost', system-ui, sans-serif;
@@ -3255,7 +3443,7 @@
   }
   .tbc-ref:hover { text-decoration: underline; }
 
-  /* TBC endnotes — "Items to confirm" / footnote register at the end of an
+  /* TBC endnotes â "Items to confirm" / footnote register at the end of an
      article. Numbered list, accent-tinted background, back-references. */
   .tbc-endnotes {
     margin: 2em 0 0.9em;
@@ -3300,7 +3488,7 @@
   }
   .tbc-endnotes .back-ref:hover { text-decoration: underline; }
 
-  /* Sources panel — collapsible, per-article. Badge legend differentiates
+  /* Sources panel â collapsible, per-article. Badge legend differentiates
      official / wire / secondary sources at a glance. Closed by default;
      readers who want provenance can expand it. */
   .sources-panel {
@@ -3390,7 +3578,7 @@
   /* Reading-experience toggles (driven by data-* attributes on <html>).
      These piggyback on the existing settings sheet. */
 
-  /* TYPEFACE — swap the editorial serif. UI chrome (Jost), terminal
+  /* TYPEFACE â swap the editorial serif. UI chrome (Jost), terminal
      mono (IBM Plex Mono), and the small caps in headers stay put;
      we only retarget the reader-facing prose. Default is Goudy. */
   [data-typeface="garamond"] body,
@@ -3481,7 +3669,7 @@
     hyphenate-limit-lines: 2;
   }
 
-  /* Focus mode — dim non-hovered paragraphs to keep attention on one. */
+  /* Focus mode â dim non-hovered paragraphs to keep attention on one. */
   [data-focus="on"] .body p {
     opacity: 0.32;
     transition: opacity 0.35s ease;
@@ -3496,7 +3684,7 @@
   [data-focus="on"] .pullquote:hover,
   [data-focus="on"] .analysis-section:hover { opacity: 1; }
 
-  /* Reading ruler — horizontal line that follows the cursor across prose. */
+  /* Reading ruler â horizontal line that follows the cursor across prose. */
   [data-ruler="on"] .body { cursor: crosshair; }
   .reading-ruler {
     position: fixed;
@@ -3535,7 +3723,7 @@
 <div class="reading-ruler" id="reading-ruler" aria-hidden="true"></div>
 
 <!-- ============================================================
-     STICKY HEADER — toolbar + progress as one cohesive unit.
+     STICKY HEADER â toolbar + progress as one cohesive unit.
      Single sticky container so the two never separate or leave a
      scrolling-through-the-gap artifact on iOS.
      ============================================================ -->
@@ -3551,6 +3739,25 @@
     </a>
 
     <div class="toolbar-actions">
+      <button class="tb-btn" id="open-ask" aria-label="Ask the research desk">
+        <span class="tb-ico" aria-hidden="true">
+          <!-- Sherlock-inspired: an antique inquirer's lens â double-ring
+               rim, slender raked handle. Reads as both "Holmes" and
+               "put a question to us". Pure line, inherits theme ink. -->
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+               stroke="currentColor" stroke-width="1.5"
+               stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="10.2" cy="10.2" r="6.1"></circle>
+            <circle cx="10.2" cy="10.2" r="3.5" stroke-width="1.1"
+                    opacity="0.55"></circle>
+            <line x1="14.7" y1="14.7" x2="20.4" y2="20.4"></line>
+            <line x1="13.5" y1="16.4" x2="16.4" y2="13.5" stroke-width="2.4"
+                  opacity="0.9"></line>
+          </svg>
+        </span>
+        <span class="label">Ask</span>
+      </button>
+      <span class="tb-sep" aria-hidden="true">|</span>
       <button class="tb-btn" id="open-settings" aria-label="Reading settings">
         <span class="aa-icon"><span class="big">A</span><span class="sm">a</span></span>
         <span class="label">Text</span>
@@ -3558,8 +3765,8 @@
     </div>
   </header>
 
-  <!-- Thin segmented progress bar — one segment per section.
-       ✏️ UPDATE per issue: add/remove segments + matching .pl-link
+  <!-- Thin segmented progress bar â one segment per section.
+       âï¸ UPDATE per issue: add/remove segments + matching .pl-link
        entries below to match the sections in this edition. Keep
        data-goto indices (0-based) and data-page-id in sync. -->
   <div class="progress">
@@ -3594,12 +3801,12 @@
      PAGE CONTENT (rendered by JS; static fallback below)
      ============================================================ -->
 <main id="page-content">
-<!-- ✏️ UPDATE per issue: static-cover headline, meta, and index -->
+<!-- âï¸ UPDATE per issue: static-cover headline, meta, and index -->
 <header class="static-cover">
   <div class="static-cover-eyebrow">Affinity<span class="dot" style="color:var(--accent);">.</span> Research &thinsp;/&thinsp; Macro Topics</div>
-  <h1 class="static-cover-title">Edition headline goes here &mdash; the <em>one line</em> that frames the week.</h1>
+  <h1 class="static-cover-title">Westminster in crisis, oil above $110, and the <em>bauxite trade</em> enters uncharted waters.</h1>
   <div class="static-cover-meta">
-    [Day, DD Month YYYY]
+    Sunday, 18 May 2026
     <span class="meta-sep">/</span>
     Five pieces
     <span class="meta-sep">/</span>
@@ -3621,57 +3828,65 @@
     <article class="article">
       <div class="print-header" aria-hidden="true">
         <div class="ph-brand">Affinity<span class="dot">.</span> Research</div>
-        <div class="ph-meta">Macro Topics / Policy / [Day, DD Month YYYY]</div>
+        <div class="ph-meta">Macro Topics / Policy / Sunday, 18 May 2026</div>
       </div>
       <div class="breadcrumb">
-        <span class="crumb-issue">[DD Month]</span><span class="sep">/</span><a href="#">Macro</a><span class="sep">/</span><a href="#">Policy</a><span class="sep">/</span><span class="page-indicator"><b>1</b>&thinsp;of&thinsp;5</span>
+        <span class="crumb-issue">18 May</span><span class="sep">/</span><a href="#">Macro</a><span class="sep">/</span><a href="#">Policy</a><span class="sep">/</span><span class="page-indicator"><b>1</b>&thinsp;of&thinsp;5</span>
       </div>
-      <h1 class="headline">The Policy headline goes <em>here</em>, and wraps to two lines comfortably</h1>
+      <h1 class="headline">Westminster Calling</h1>
       <div class="meta-line">
-        <span class="desk">The Policy Desk</span><span class="meta-sep">/</span><span class="meta-date">[DD Month YYYY]</span>
+        <span class="desk">The Policy Desk</span><span class="meta-sep">/</span><span class="meta-date">18 May 2026</span>
       </div>
       <div class="article-opener-rule" aria-hidden="true"></div>
-      <p class="standfirst">A single sentence that frames the piece. Two clauses, separated by a semicolon or em-dash; this is what the reader sees first, after the headline.</p>
+      <p class="standfirst">Leadership challenge on the horizon for Starmer after local election disaster.</p>
       <div class="body">
 
       <section aria-labelledby="sec-policy-1">
-        <h2 id="sec-policy-1" class="sr-only">The opening</h2>
+        <h2 id="sec-policy-1" class="sr-only">The crisis</h2>
         <button class="sec-share" data-share-anchor="sec-policy-1" aria-label="Copy link to this section">&sect;</button>
-      <p class="opener" data-pidx="0">The opening paragraph carries a drop-cap. Keep it short to medium length &mdash; one to two ideas, scene-set the piece, do not bury the lede. The drop cap can be toggled off, small, or large in the reading settings, so do not write around it.</p>
-      <p data-pidx="1">The second paragraph carries the reader from the scene-set into the substance. Cite a figure or a name if it earns its place. Where a claim is provisional or worth flagging for follow-up &mdash; a wire report not yet confirmed, a figure pending revision &mdash; add an inline reference like this one,<a href="#tbc-policy-1" class="tbc-ref" id="tbc-policy-1-ref">1</a> which links to the &ldquo;Items to confirm&rdquo; block at the foot of the piece.</p>
+      <p class="opener" data-pidx="0">Britain might once have been renowned for political stability, but those days are long gone. Contrasting with the country&rsquo;s first Prime Minister Robert Walpole, who served for almost 21 years in the 18th century, the UK has had six Prime Ministers in just the past decade. The way things are looking right now, London is on course for a seventh.</p>
+      <p data-pidx="1">For all his successes on the international stage, UK Prime Minister Sir Keir Starmer has proven unpopular domestically. Labour has suffered, dropping from 39 per cent in polls at the 2024 election to 18 per cent today. But Starmer&rsquo;s personal approval rating sits at &minus;46 per cent, down from 20.5 per cent two years ago. Politicians might take polls with a pinch of salt, but this month has displayed public displeasure with Labour. May&rsquo;s local elections were always going to hurt the party, but few appreciated just how disastrous they would be. Labour lost 1,500 councillors and 38 councils across England, and it was annihilated in Wales. Former strongholds like Sunderland flipped to Reform, whilst in London, the party lost Lewisham and Hackney to the Green Party. Even the beleaguered Conservatives managed to poach Westminster back.</p>
+      <p data-pidx="2">Some argue that the local elections were effectively a referendum on Starmer&rsquo;s leadership, so he has shouldered much of the blame. Labour MPs are increasingly concluding that a change of leader will improve their fortunes, and at the time of writing, 91 lawmakers have urged him to resign. Labour MP Catherine West even went so far as to call for Cabinet members to challenge Starmer&rsquo;s leadership, threatening she would run against him as a &ldquo;stalking horse&rdquo; otherwise. The PM hoped to use the days after the vote for a fresh start, but his post-weekend &ldquo;reset&rdquo; speech, alongside Wednesday&rsquo;s King&rsquo;s Speech, were far overshadowed by leadership speculation.</p>
       </section>
 
       <section aria-labelledby="sec-policy-2">
-        <h2 id="sec-policy-2" class="sub">Sub-section heading</h2>
+        <h2 id="sec-policy-2" class="sub">Hanging on</h2>
         <button class="sec-share" data-share-anchor="sec-policy-2" aria-label="Copy link to this section">&sect;</button>
-      <p data-pidx="2">Sub-headings break a piece into legible chunks. Three to five sub-sections is the right shape for a roughly 600&ndash;900 word piece. Each sub-section can carry its own share anchor (the &sect; appears on hover at the right edge), so a reader can send a colleague the exact subsection that matters to them.</p>
-      <p data-pidx="3">Use plain text for figures: &ldquo;Brent closed Wednesday at $108.36 a barrel, up 2.9 per cent on the week.&rdquo; A numeric callout that earns more weight should go in an analysis block (below) rather than a chart &mdash; this is a text-only template.</p>
-
-      <div class="analysis-section">
-        <span class="as-label">What it means</span>
-        <p><strong>The takeaway, in one paragraph.</strong> The analysis block carries the editorial judgement that the prose has been building toward. One paragraph is the right shape: a bold lead-in for the headline judgement, then the supporting reasoning in plain text. Use this where you would otherwise be tempted to draw a chart.</p>
-      </div>
-
-      <blockquote class="pullquote">
-        A pull-quote drawn from the prose, set in italic display type and accent-coloured.
-        <cite>Attribution &mdash; speaker, role</cite>
-      </blockquote>
+      <p data-pidx="3">Despite escalating calls for his departure, Starmer has insisted that he will not throw in the towel, emphasising his intentions to see out his five-year mandate in full. The PM&rsquo;s allies argue that getting on with the day job is far more important, and having blamed constant leadership changes under the Conservatives for many of Britain&rsquo;s current woes, Labour would be unwise to emulate such antics. Moreover, as the Iran war sends energy prices and inflation skyward, many believe that the country needs a steady hand to manage the crisis. These arguments make sense, but with Starmer having lost the support of so many in his party, it looks like it will be difficult for him to continue until 2029. He might not be going gently, but that good night is likely coming.</p>
       </section>
 
       <section aria-labelledby="sec-policy-3">
-        <h2 id="sec-policy-3" class="sub">A second sub-section</h2>
+        <h2 id="sec-policy-3" class="sub">The contenders</h2>
         <button class="sec-share" data-share-anchor="sec-policy-3" aria-label="Copy link to this section">&sect;</button>
-      <p data-pidx="4">Cross-references to other pieces are written like this: <a href="#page-oil" class="xref" data-xref="oil">the Oil desk explains why the headline number does not yet show in the freight curve</a>. The xref machinery turns the link into a labelled jump and surfaces a &ldquo;Return to&rdquo; pill so the reader can come back without losing place.</p>
-      <p data-pidx="5">Close the piece with a paragraph that lands the argument. The endmark diamond below signals that the piece is over; the topics and the &ldquo;Items to confirm&rdquo; block follow.</p>
+      <p data-pidx="4">With Starmer&rsquo;s days looking numbered, the obvious next question is who might replace him. No one has launched a formal leadership challenge yet, but among the main contenders are former Health Secretary Wes Streeting as well as Manchester Mayor Andy Burnham, respectively considered to be on the right and left flanks of the party. Labour Party rules stipulate that the leader needs to be a Member of Parliament, so Burnham would first need to be elected to the Commons before receiving the support of 81 MPs to run for the leadership.</p>
+      <p data-pidx="5">This, of course, limits Burnham in launching immediate action and would prima facie bolster Streeting&rsquo;s odds. Yet the Ilford North MP is conscious that being seen as the one who toppled Starmer could weaken his chances. Indeed, Streeting has said that he hopes that Burnham will make it to the leadership challenge. It is therefore a stalemate right now, but Labour MP Josh Simons&rsquo;s triggering a by-election on Thursday moves things one step forward. The election for the Greater Manchester seat of Makerfield is expected to be held on 18 June.</p>
+      <p data-pidx="6">The move was explicitly designed to get Burnham into Parliament, and having been allowed to run for selection as the party&rsquo;s candidate, the self-styled &ldquo;King of the North&rdquo; looks to be on his way to Westminster. Burnham is popular locally, but considering Labour&rsquo;s local election performance, his victory is hardly a foregone conclusion. Reform UK has pledged to throw the kitchen sink at Makerfield, and should it win, Burnham&rsquo;s electoral gambit will look spectacularly ill-judged.</p>
       </section>
 
-      </div>
+      <section aria-labelledby="sec-policy-4">
+        <h2 id="sec-policy-4" class="sub">Policy platforms and market reaction</h2>
+        <button class="sec-share" data-share-anchor="sec-policy-4" aria-label="Copy link to this section">&sect;</button>
+      <p data-pidx="7">Regarding their policy platforms, both sides have made some overtures towards Brussels. On Saturday, Streeting told reporters that he believed Brexit to have been a &ldquo;catastrophic mistake&rdquo; and that he hoped to rejoin the EU. Burnham initially expressed hopes that the UK would rejoin but backtracked after criticism from other Labour lawmakers who are weary of reopening the Brexit debate &mdash; especially considering how such sentiment might go down in leave-voting Makerfield.</p>
+      <p data-pidx="8">Markets are also conscious that a leftward lurch after Starmer&rsquo;s departure could see the government weaken its commitment to fiscal rules, and Burnham&rsquo;s comments last year that London should not be &ldquo;in hock to the bond markets&rdquo; do not exactly inspire confidence. Unsurprisingly, then, amid mounting likelihood that Burnham will throw his hat into the ring, 10-year bond yields rose 0.19 per cent on Friday to 5.18 per cent &mdash; their highest since 2008.</p>
 
-      <div class="tbc-endnotes">
-        <span class="tbc-endnotes-label">Items to confirm</span>
-        <ol>
-          <li id="tbc-policy-1">Brief description of the provisional claim, with the source not yet matched. <a href="#tbc-policy-1-ref" class="back-ref">&crarr;</a></li>
-        </ol>
+      <blockquote class="pullquote">
+        He might not be going gently, but that good night is likely coming.
+        <cite>Affinity Research</cite>
+      </blockquote>
+
+      <p data-pidx="9">Things are even more drastic for 30-year bond yields, which rose 0.2 per cent to their highest since 1998. Britain already faces the highest borrowing costs in the G7, so adding fuel to the fire by jettisoning spending restraints could spell disaster. At the same time, sterling fell 0.6 per cent against the dollar to USD 1.332, marking a monthly low and extending an 0.9 per cent fall on Thursday. Now, Burnham has tempered these earlier sentiments, telling ITV News at the weekend that he supported the UK&rsquo;s current fiscal rules and that the UK needed a plan to get debt under control. It will take more than that for markets to feel fully comfortable, though!</p>
+      </section>
+
+      <section aria-labelledby="sec-policy-5">
+        <h2 id="sec-policy-5" class="sub">What it means</h2>
+        <button class="sec-share" data-share-anchor="sec-policy-5" aria-label="Copy link to this section">&sect;</button>
+
+      <div class="analysis-section">
+        <span class="as-label">Outlook</span>
+        <p><strong>Protracted leadership uncertainty at the worst possible time.</strong> Starmer might be hanging on for now, and he has pledged to fight any leadership challenge which comes his way. While businesses and consumers might not be happy with parts of his programme, changing leadership could make things worse. As the Iran war&rsquo;s economic consequences become ever more apparent, protracted uncertainty about who is in charge might look indulgent. Inflation and high energy costs will hit everyone, but without proper leadership to guide the UK through the crisis, it could well be harder hit than most. Is that a price worth paying?</p>
+      </div>
+      </section>
+
       </div>
 
       <div class="endmark"><svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true">
@@ -3681,7 +3896,7 @@
       <div class="topics">
         <div class="topics-label">Topics in this report</div>
         <div class="topics-list">
-          <a href="#" class="topic">Policy</a><a href="#" class="topic">Topic two</a><a href="#" class="topic">Topic three</a>
+          <a href="#" class="topic">UK Politics</a><a href="#" class="topic">Labour</a><a href="#" class="topic">Starmer</a><a href="#" class="topic">Sterling</a>
         </div>
       </div>
 
@@ -3690,17 +3905,15 @@
           <h3>Sources</h3>
           <span class="sources-toggle">&#9656;</span>
         </button>
-        <p class="sources-meta">3 source clusters &middot; click to expand</p>
+        <p class="sources-meta">2 source clusters &middot; click to expand</p>
         <div class="sources-body" id="sources-policy-body">
           <div class="badge-legend">
-            <span><span class="badge-dot official"></span> Official / primary</span>
             <span><span class="badge-dot wire"></span> Wire / broadsheet</span>
             <span><span class="badge-dot secondary"></span> Secondary / specialist</span>
           </div>
           <ul>
-            <li class="src-official"><strong>Primary source cluster:</strong> <a href="#" target="_blank" rel="noopener">Press release</a>; <a href="#" target="_blank" rel="noopener">Filing</a></li>
-            <li class="src-wire"><strong>Wire / broadsheet:</strong> <a href="#" target="_blank" rel="noopener">Reuters</a>; <a href="#" target="_blank" rel="noopener">Bloomberg</a></li>
-            <li class="src-secondary"><strong>Secondary:</strong> <a href="#" target="_blank" rel="noopener">Specialist publication</a></li>
+            <li class="src-wire"><strong>Wire / broadsheet:</strong> Reuters; Financial Times; BBC; Politico</li>
+            <li class="src-secondary"><strong>Secondary:</strong> Sky News; ITV News</li>
           </ul>
         </div>
       </div>
@@ -3738,77 +3951,52 @@
     <article class="article">
       <div class="print-header" aria-hidden="true">
         <div class="ph-brand">Affinity<span class="dot">.</span> Research</div>
-        <div class="ph-meta">Macro Topics / Oil / [Day, DD Month YYYY]</div>
+        <div class="ph-meta">Macro Topics / Oil / Sunday, 18 May 2026</div>
       </div>
       <div class="breadcrumb">
-        <span class="crumb-issue">[DD Month]</span><span class="sep">/</span><a href="#">Macro</a><span class="sep">/</span><a href="#">Oil</a><span class="sep">/</span><span class="page-indicator"><b>2</b>&thinsp;of&thinsp;5</span>
+        <span class="crumb-issue">18 May</span><span class="sep">/</span><a href="#">Macro</a><span class="sep">/</span><a href="#">Oil</a><span class="sep">/</span><span class="page-indicator"><b>2</b>&thinsp;of&thinsp;5</span>
       </div>
-      <h1 class="headline">The Oil headline goes <em>here</em> &mdash; demonstrates the prices table</h1>
+      <h1 class="headline">No End in Sight</h1>
       <div class="meta-line">
-        <span class="desk">The Oil Desk</span><span class="meta-sep">/</span><span class="meta-date">[DD Month YYYY]</span>
+        <span class="desk">The Oil Desk</span><span class="meta-sep">/</span><span class="meta-date">18 May 2026</span>
       </div>
       <div class="article-opener-rule" aria-hidden="true"></div>
-      <p class="standfirst">This piece demonstrates the prices table and KPI grid. Both are structured data components that sit within the article flow.</p>
+      <p class="standfirst">Tensions rise in the Middle East, boosting oil prices; and Trump&rsquo;s unremarkable trip to Beijing nevertheless assuages fears of a growing rift.</p>
       <div class="body">
 
       <section aria-labelledby="sec-oil-1">
-        <h2 id="sec-oil-1" class="sr-only">Opening</h2>
+        <h2 id="sec-oil-1" class="sr-only">Stalling negotiations</h2>
         <button class="sec-share" data-share-anchor="sec-oil-1" aria-label="Copy link to this section">&sect;</button>
-      <p class="opener" data-pidx="0">The Oil piece opens with the week&rsquo;s top-line energy story. One or two paragraphs to set the scene before the structured data appears. The drop-cap anchors the reader; the price data follows.</p>
-      <p data-pidx="1">A second paragraph bridges the scene-set to the first data component &mdash; the prices table. Brief context frames the numbers so they read as a narrative, not a spreadsheet.</p>
-
-        <figure class="figure">
-          <div class="figure-label"><span class="num">i.</span> Crude benchmarks this week</div>
-          <div class="figure-caption">Spot prices, USD per barrel, at time of writing.</div>
-          <div class="prices">
-            <div class="prices-row head">
-              <div>Benchmark</div>
-              <div style="text-align:right">Latest</div>
-              <div style="text-align:right">&Delta; wow</div>
-            </div>
-            <div class="prices-row">
-              <div class="price-name">Brent<small>Monday peak</small></div>
-              <div class="price-val">108.36</div>
-              <div class="price-delta up">+2.9%</div>
-            </div>
-            <div class="prices-row">
-              <div class="price-name">WTI<small>At time of writing</small></div>
-              <div class="price-val">96.43</div>
-              <div class="price-delta flat">&mdash;</div>
-            </div>
-          </div>
-          <div class="figure-source">Sources &mdash; Reuters; Affinity Research.</div>
-        </figure>
-
+      <p class="opener" data-pidx="0">Negotiations between the US and Iran via Pakistan are continuing this week, but there are no suggestions that they have been successful. The issue of enrichment and uranium materials is still a roadblock, as neither country seems willing to compromise on this point.</p>
+      <p data-pidx="1">There are reports that the US and Israel are conducting the most intense preparations for further attacks on Iran since the current ceasefire was agreed last month, and there have already been some more attacks. On 17 May, the UAE&rsquo;s only nuclear power plant was hit by a drone. The strike at the Barakah plant started a fire at an electrical generator within the compound.</p>
+      <p data-pidx="2">Later on Sunday, Saudi Arabia said that it had destroyed three drones entering its airspace from Iraq, and Riyadh spokesman Major General Al-Maliki said that his defence ministry &ldquo;reserves the right to respond at the appropriate time and place&rdquo;. Iraq has previously launched drones at other Gulf countries, including Kuwait, despite the ceasefire.</p>
+      <p data-pidx="3">Oil prices rose early on Monday in response to the attacks and continued stalling. Brent rose by 2.03 per cent to USD 111.50 per barrel, and WTI jumped by 2.59 per cent to USD 108.20 per barrel. At the time of writing, the two benchmarks sit at USD 110.00 per barrel and USD 106.20 per barrel, respectively.</p>
       </section>
 
       <section aria-labelledby="sec-oil-2">
-        <h2 id="sec-oil-2" class="sub">The supply ledger</h2>
+        <h2 id="sec-oil-2" class="sub">Trump in Beijing</h2>
         <button class="sec-share" data-share-anchor="sec-oil-2" aria-label="Copy link to this section">&sect;</button>
-      <p data-pidx="2">The KPI grid summarises the macro picture in four numerals. Each cell has a large value and a label. The grid sits within a figure wrapper with the same label/caption/source cadence as other data components.</p>
-
-        <figure class="figure">
-          <div class="figure-label"><span class="num">ii.</span> Key metrics</div>
-          <div class="figure-caption">Four figures that frame the picture.</div>
-          <div class="kpi-row">
-            <div class="kpi"><div class="kpi-val">108<small>$/bbl</small></div><div class="kpi-label">Brent crude, week high</div></div>
-            <div class="kpi"><div class="kpi-val">9<small>weeks</small></div><div class="kpi-label">Duration of the stand-off</div></div>
-            <div class="kpi"><div class="kpi-val">5,000<small>crew</small></div><div class="kpi-label">Aboard carrier group</div></div>
-            <div class="kpi"><div class="kpi-val">2<small>years</small></div><div class="kpi-label">IEA normalisation estimate</div></div>
-          </div>
-        </figure>
-
-      <div class="analysis-section">
-        <span class="as-label">Risk</span>
-        <p><strong>Supply tightness is the defining variable.</strong> The analysis block appears after the KPI grid. It carries the editorial judgement that the numbers above imply. Keep it single-paragraph and concrete.</p>
-      </div>
+      <p data-pidx="4">There had been some optimism leading up to US President Donald Trump&rsquo;s visit to China last week, because it had been announced that one of the many topics to be discussed was the war in the Middle East. As the conflict has dragged on, China has become more vocal about its wish for peace, and many analysts had therefore hoped that Chinese President Xi Jinping would be able to push Trump towards some sort of deal &mdash; at the very least a method to increase flows through the Strait of Hormuz &mdash; while he was in Beijing.</p>
 
       <blockquote class="pullquote">
-        Every day 10&ndash;13 million barrels of oil fail to get to the international market.
-        <cite>PVM Oil Associates</cite>
+        For Iran, the Clock is Ticking, and they better get moving, FAST, or there won&rsquo;t be anything left of them. TIME IS OF THE ESSENCE!
+        <cite>Donald Trump, on social media</cite>
       </blockquote>
 
-      <p data-pidx="3">The closing paragraph lands the argument. Where the piece connects to others in this edition, use a cross-reference: <a href="#page-gas" class="xref" data-xref="gas">the Gas desk explains the downstream effects on LNG pricing</a>.</p>
+      <p data-pidx="5">But this was not to be, and after returning to Washington, Trump hurled further threats at Iran on social media. The message is by no means the first of its kind, but the renewed intimidation does nothing to indicate a change of attitude.</p>
+      </section>
+
+      <section aria-labelledby="sec-oil-3">
+        <h2 id="sec-oil-3" class="sub">The trade angle</h2>
+        <button class="sec-share" data-share-anchor="sec-oil-3" aria-label="Copy link to this section">&sect;</button>
+      <p data-pidx="6">The trip to China was notable for another reason. In Trump&rsquo;s tariff blitz last year, China was the hardest hit; at this point last year, Beijing faced 145 per cent tariffs and had retaliated with its own. A truce was established in October, but it was not definitive, and it was expected that Trump and Xi would talk about the trade barriers on last week&rsquo;s visit.</p>
+      <p data-pidx="7">But, despite referencing trade agreements broadly, Trump told reporters on Air Force One that the two leaders had not discussed tariffs at all. Instead, he said, they had agreed to establish a &ldquo;Board of Trade&rdquo; to manage the economic relationship without having to resume tariff negotiations, but no details were provided.</p>
+      <p data-pidx="8">On Saturday, China&rsquo;s commerce ministry offered a somewhat contradictory account. It issued a statement saying that Washington and Beijing had come to a preliminary agreement to reduce some tariffs, also confirming some agricultural and aircraft deals which Trump had already touted.</p>
+
+      <div class="analysis-section">
+        <span class="as-label">What it means</span>
+        <p><strong>A ceiling on trade-war risk has been restored &mdash; for now.</strong> Whatever the details are, the high tariffs which caused oil prices to sink last year seem less likely to reemerge than they did previously. After Trump&rsquo;s trip, a China expert from the Center for Strategic and International Studies said of US-China relations that &ldquo;compared to where we were a year ago&hellip; we&rsquo;ve had a counterrevolution and we&rsquo;re back at stability&rdquo;. If the situation remains like this, one possible limit to future spikes in oil prices has been neutralised. And <a href="#page-gas" class="xref" data-xref="gas">the Gas desk reports on the downstream LNG implications of Trump&rsquo;s &ldquo;everything energy&rdquo; claims</a>.</p>
+      </div>
       </section>
 
       </div>
@@ -3820,7 +4008,7 @@
       <div class="topics">
         <div class="topics-label">Topics in this report</div>
         <div class="topics-list">
-          <a href="#" class="topic">Oil</a><a href="#" class="topic">Brent</a><a href="#" class="topic">WTI</a>
+          <a href="#" class="topic">Oil</a><a href="#" class="topic">Middle East</a><a href="#" class="topic">Iran</a><a href="#" class="topic">US-China</a>
         </div>
       </div>
 
@@ -3832,12 +4020,12 @@
         <p class="sources-meta">2 source clusters &middot; click to expand</p>
         <div class="sources-body" id="sources-oil-body">
           <div class="badge-legend">
-            <span><span class="badge-dot official"></span> Official / primary</span>
             <span><span class="badge-dot wire"></span> Wire / broadsheet</span>
+            <span><span class="badge-dot secondary"></span> Secondary / specialist</span>
           </div>
           <ul>
-            <li class="src-wire"><strong>Wire / broadsheet:</strong> <a href="#" target="_blank" rel="noopener">Reuters</a>; <a href="#" target="_blank" rel="noopener">Bloomberg</a></li>
-            <li class="src-official"><strong>Official:</strong> <a href="#" target="_blank" rel="noopener">IEA monthly report</a></li>
+            <li class="src-wire"><strong>Wire / broadsheet:</strong> Reuters; Financial Times; BBC; Politico</li>
+            <li class="src-secondary"><strong>Secondary:</strong> OilPrice.com; Sky News</li>
           </ul>
         </div>
       </div>
@@ -3866,92 +4054,46 @@
     <article class="article">
       <div class="print-header" aria-hidden="true">
         <div class="ph-brand">Affinity<span class="dot">.</span> Research</div>
-        <div class="ph-meta">Macro Topics / Dry Cargo / [Day, DD Month YYYY]</div>
+        <div class="ph-meta">Macro Topics / Dry Cargo / Sunday, 18 May 2026</div>
       </div>
       <div class="breadcrumb">
-        <span class="crumb-issue">[DD Month]</span><span class="sep">/</span><a href="#">Macro</a><span class="sep">/</span><a href="#">Dry Cargo</a><span class="sep">/</span><span class="page-indicator"><b>3</b>&thinsp;of&thinsp;5</span>
+        <span class="crumb-issue">18 May</span><span class="sep">/</span><a href="#">Macro</a><span class="sep">/</span><a href="#">Dry Cargo</a><span class="sep">/</span><span class="page-indicator"><b>3</b>&thinsp;of&thinsp;5</span>
       </div>
-      <h1 class="headline">Dry Cargo headline &mdash; demonstrates the <em>orders list</em></h1>
+      <h1 class="headline">The Great Bauxite Squeeze</h1>
       <div class="meta-line">
-        <span class="desk">The Dry Cargo Desk</span><span class="meta-sep">/</span><span class="meta-date">[DD Month YYYY]</span>
+        <span class="desk">The Dry Cargo Desk</span><span class="meta-sep">/</span><span class="meta-date">18 May 2026</span>
       </div>
       <div class="article-opener-rule" aria-hidden="true"></div>
-      <p class="standfirst">This piece demonstrates the orders/items list component and a chart placeholder. Both live inside figure wrappers with label, caption, and source.</p>
+      <p class="standfirst">Guinea risks, weaker Chinese demand, and Middle East disruption are shaking the bauxite trade and Capesize markets.</p>
       <div class="body">
 
       <section aria-labelledby="sec-drycargo-1">
-        <h2 id="sec-drycargo-1" class="sr-only">Opening</h2>
+        <h2 id="sec-drycargo-1" class="sr-only">The bauxite trade</h2>
         <button class="sec-share" data-share-anchor="sec-drycargo-1" aria-label="Copy link to this section">&sect;</button>
-      <p class="opener" data-pidx="0">The Dry Cargo piece opens with the week&rsquo;s top freight or commodity story. One paragraph to orient the reader before the data components demonstrate the orders list and chart placeholder.</p>
-      <p data-pidx="1">The orders list (below) can carry newbuilding orders, S&amp;P fixtures, or any structured deal data. Each order has a vessel name, a class tag, descriptive text, and key-value meta fields. The chart placeholder (further down) reserves space for future charting support.<a href="#tbc-drycargo-1" class="tbc-ref" id="tbc-drycargo-1-ref">1</a></p>
-
-        <figure class="figure">
-          <div class="figure-label"><span class="num">i.</span> Notable orders this week</div>
-          <div class="figure-caption">Selected newbuilding and S&amp;P activity.</div>
-          <div class="orders">
-            <div class="order">
-              <div class="order-head">
-                <div class="order-name">Vessel Name <em>hull 1234</em></div>
-                <div class="order-class">NEWBUILDING</div>
-              </div>
-              <p class="order-text">Brief description of the order and its significance. <strong>Key terms</strong> can be italicised for emphasis.</p>
-              <div class="order-meta">
-                <span>DWT <b>180,000</b></span>
-                <span>Yard <b>Hyundai HI</b></span>
-                <span>Delivery <b>Q3 2028</b></span>
-              </div>
-            </div>
-            <div class="order">
-              <div class="order-head">
-                <div class="order-name">Another Vessel <em>ex-Name</em></div>
-                <div class="order-class">S&amp;P</div>
-              </div>
-              <p class="order-text">Second order demonstrates how multiple items stack. Each is separated by a hairline rule; the rhythm keeps the list scannable.</p>
-              <div class="order-meta">
-                <span>DWT <b>82,000</b></span>
-                <span>Built <b>2019</b></span>
-                <span>Price <b>$34.5M</b></span>
-              </div>
-            </div>
-          </div>
-          <div class="figure-source">Sources &mdash; Clarksons; broker reports.</div>
-        </figure>
-
+      <p class="opener" data-pidx="0">Global bauxite trade is an important component of dry bulk shipping, particularly for long-distance routes linking West Africa and Asia. In recent years, growth in seaborne flows has been supported mainly by rising exports from Guinea to China, which have underpinned strong demand for Capesize vessels due to the long voyage distances involved.</p>
+      <p data-pidx="1">However, the outlook for the market is becoming more uncertain. Structural factors such as changing supply conditions in Guinea, evolving Chinese demand for aluminium, and persistently weak pricing are all beginning to reshape expectations for future trade flows. At the same time, geopolitical instability and disruptions along key shipping routes are adding further volatility to logistics and freight markets. As a result, the bauxite trade is entering a more complex phase in which policy decisions, demand constraints and supply chain fragility are increasingly influencing both volumes and shipping dynamics.</p>
+      <p data-pidx="2">Guinea&rsquo;s exports to China more than doubled between 2020 and 2025, reaching around 178 Mn T and underpinning strong Capesize demand due to the roughly 100-day round voyage time on the West Africa&ndash;China route.</p>
       </section>
 
       <section aria-labelledby="sec-drycargo-2">
-        <h2 id="sec-drycargo-2" class="sub">Rate watch</h2>
+        <h2 id="sec-drycargo-2" class="sub">Export caps and oversupply</h2>
         <button class="sec-share" data-share-anchor="sec-drycargo-2" aria-label="Copy link to this section">&sect;</button>
-      <p data-pidx="2">The chart placeholder below reserves a visual slot for a rate chart or index graph. In this text-only template it renders as a gridded frame with a decorative area fill and axis labels. Replace with a real chart when charting support is added.</p>
-
-        <figure class="figure">
-          <div class="figure-label"><span class="num">ii.</span> Baltic Capesize Index</div>
-          <div class="figure-caption">Daily BCI, last twelve months.</div>
-          <div class="chart-frame">
-            <div class="chart-placeholder">
-              <span class="ph-label">Chart placeholder</span>
-              <div class="ph-axis-y"><span>4,000</span><span>3,000</span><span>2,000</span><span>1,000</span><span>0</span></div>
-              <div class="ph-axis-x"><span>May</span><span>Jul</span><span>Sep</span><span>Nov</span><span>Jan</span><span>Mar</span><span>May</span></div>
-            </div>
-          </div>
-          <div class="figure-source">Source &mdash; Baltic Exchange.</div>
-        </figure>
-
-      <div class="analysis-section">
-        <span class="as-label">What we are watching</span>
-        <p><strong>The BCI pattern suggests a trough is forming.</strong> Use a different analysis-block label to suit the piece &mdash; &ldquo;Key takeaway&rdquo;, &ldquo;Affinity view&rdquo;, &ldquo;Risk&rdquo;. The block itself stays single-paragraph.</p>
-      </div>
-
-      <p data-pidx="3">The closing paragraph lands the argument. A well-placed cross-reference connects to related coverage elsewhere in the issue.</p>
+      <p data-pidx="3">Despite this growth, the market is increasingly challenged by oversupply, weaker aluminium demand and geopolitical instability. Guinea, the world&rsquo;s largest bauxite exporter, is considering export restrictions in 2026 to stabilise prices and protect smaller miners whose margins have been squeezed by falling prices. A proposed export cap of 150 Mn T would represent a reduction of about 15 per cent from 2025 levels and could release around 46 Capesize vessels back into the market, equivalent to nearly 80 per cent of the Capesize fleet scheduled for delivery in 2026. Such a move would likely place significant downward pressure on freight rates, particularly if implemented during the second half of the year.</p>
+      <p data-pidx="4">However, some market participants believe a 150 Mn T cap may prove too restrictive. Guinea&rsquo;s bauxite exports rose by 25 per cent year-on-year in the first quarter of 2026 to 60.9 Mn T, driven largely by sustained Chinese demand. Chinese-linked producers dominated shipments, with Soci&eacute;t&eacute; Mini&egrave;re de Bok&eacute; exporting 18 Mn T and Chalco increasing volumes by 35 per cent to 8 Mn T. Other key contributors included AGB2A/SDM, CBG and AMC. Given the strong start to the year, many analysts see a more realistic export range of 170&ndash;190 Mn T for 2026.</p>
+      <p data-pidx="5">Chinese aluminium production has now reached the country&rsquo;s official ceiling of 44.2 Mn T, limiting long-term growth in bauxite demand. At the same time, bauxite prices have fallen to around USD 32&ndash;38 per T, their lowest levels since 2022, increasing pressure on Guinean authorities to intervene. Beyond export caps, the government is also considering tax reforms designed to encourage investment in rail infrastructure, ports and domestic refining capacity.</p>
       </section>
 
-      </div>
+      <section aria-labelledby="sec-drycargo-3">
+        <h2 id="sec-drycargo-3" class="sub">Strait of Hormuz disruption</h2>
+        <button class="sec-share" data-share-anchor="sec-drycargo-3" aria-label="Copy link to this section">&sect;</button>
+      <p data-pidx="6">The market is also being disrupted by instability around the Strait of Hormuz, which has forced Gulf aluminium producers to adopt costly and complex emergency logistics solutions. With direct shipments of alumina and bauxite disrupted, cargoes are being transhipped through Indian anchorages onto smaller vessels for delivery to the UAE before being transported overland to smelters. While the system has allowed operations to continue, it remains inefficient, expensive and highly vulnerable to weather conditions, particularly during the Indian monsoon season when handling bauxite and alumina becomes significantly more difficult.</p>
 
-      <div class="tbc-endnotes">
-        <span class="tbc-endnotes-label">Items to confirm</span>
-        <ol>
-          <li id="tbc-drycargo-1">Provisional order details pending broker confirmation. <a href="#tbc-drycargo-1-ref" class="back-ref">&crarr;</a></li>
-        </ol>
+      <div class="analysis-section">
+        <span class="as-label">Outlook</span>
+        <p><strong>A triple squeeze is reshaping the market.</strong> Together, the prospect of Guinean export controls, slowing Chinese aluminium growth and Middle Eastern supply chain disruption is creating significant uncertainty for both global aluminium markets and dry bulk shipping. The second half of 2026 will be decisive.</p>
+      </div>
+      </section>
+
       </div>
 
       <div class="endmark"><svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true">
@@ -3961,7 +4103,7 @@
       <div class="topics">
         <div class="topics-label">Topics in this report</div>
         <div class="topics-list">
-          <a href="#" class="topic">Dry Cargo</a><a href="#" class="topic">Newbuilding</a><a href="#" class="topic">S&amp;P</a>
+          <a href="#" class="topic">Dry Cargo</a><a href="#" class="topic">Bauxite</a><a href="#" class="topic">Capesize</a><a href="#" class="topic">Guinea</a>
         </div>
       </div>
 
@@ -3977,8 +4119,8 @@
             <span><span class="badge-dot secondary"></span> Secondary / specialist</span>
           </div>
           <ul>
-            <li class="src-wire"><strong>Wire:</strong> <a href="#" target="_blank" rel="noopener">TradeWinds</a></li>
-            <li class="src-secondary"><strong>Secondary:</strong> <a href="#" target="_blank" rel="noopener">Clarksons Research</a>; <a href="#" target="_blank" rel="noopener">Baltic Exchange</a></li>
+            <li class="src-wire"><strong>Wire:</strong> Reuters</li>
+            <li class="src-secondary"><strong>Secondary:</strong> Splash</li>
           </ul>
         </div>
       </div>
@@ -4007,53 +4149,49 @@
     <article class="article">
       <div class="print-header" aria-hidden="true">
         <div class="ph-brand">Affinity<span class="dot">.</span> Research</div>
-        <div class="ph-meta">Macro Topics / Gas / [Day, DD Month YYYY]</div>
+        <div class="ph-meta">Macro Topics / Gas / Sunday, 18 May 2026</div>
       </div>
       <div class="breadcrumb">
-        <span class="crumb-issue">[DD Month]</span><span class="sep">/</span><a href="#">Macro</a><span class="sep">/</span><a href="#">Gas</a><span class="sep">/</span><span class="page-indicator"><b>4</b>&thinsp;of&thinsp;5</span>
+        <span class="crumb-issue">18 May</span><span class="sep">/</span><a href="#">Macro</a><span class="sep">/</span><a href="#">Gas</a><span class="sep">/</span><span class="page-indicator"><b>4</b>&thinsp;of&thinsp;5</span>
       </div>
-      <h1 class="headline">Gas headline &mdash; a <em>leaner</em> piece with a cross-reference</h1>
+      <h1 class="headline">&ldquo;Everything Energy&rdquo;</h1>
       <div class="meta-line">
-        <span class="desk">The Gas Desk</span><span class="meta-sep">/</span><span class="meta-date">[DD Month YYYY]</span>
+        <span class="desk">The Gas Desk</span><span class="meta-sep">/</span><span class="meta-date">18 May 2026</span>
       </div>
       <div class="article-opener-rule" aria-hidden="true"></div>
-      <p class="standfirst">This piece demonstrates a leaner article with fewer sub-sections, a cross-reference back to Oil, and the KPI grid used in a gas context.</p>
+      <p class="standfirst">After his two-day visit to Beijing, Trump claims China wants to buy energy from the US.</p>
       <div class="body">
 
       <section aria-labelledby="sec-gas-1">
-        <h2 id="sec-gas-1" class="sr-only">Opening</h2>
+        <h2 id="sec-gas-1" class="sr-only">A new phase</h2>
         <button class="sec-share" data-share-anchor="sec-gas-1" aria-label="Copy link to this section">&sect;</button>
-      <p class="opener" data-pidx="0">Not every piece needs three sub-sections. The Gas desk often writes a tighter brief &mdash; two sections, one data block, and a concise sign-off. The template accommodates both shapes without changing the overall rhythm.</p>
-      <p data-pidx="1">Where the Oil and Gas desks cover the same event from different angles, a cross-reference keeps the reader oriented: <a href="#page-oil" class="xref" data-xref="oil">the Oil desk covers the upstream supply picture and Brent pricing</a>. The return pill lets them come back here without losing their place.</p>
-
-        <figure class="figure">
-          <div class="figure-label"><span class="num">i.</span> LNG spot snapshot</div>
-          <div class="figure-caption">Regional spot prices, USD per MMBtu.</div>
-          <div class="kpi-row">
-            <div class="kpi"><div class="kpi-val">13.4<small>$/MMBtu</small></div><div class="kpi-label">JKM (Asia spot)</div></div>
-            <div class="kpi"><div class="kpi-val">11.8<small>$/MMBtu</small></div><div class="kpi-label">TTF (Europe)</div></div>
-            <div class="kpi"><div class="kpi-val">3.2<small>$/MMBtu</small></div><div class="kpi-label">Henry Hub (US)</div></div>
-            <div class="kpi"><div class="kpi-val">48<small>cargoes</small></div><div class="kpi-label">Spot fixtures this week</div></div>
-          </div>
-        </figure>
-
+      <p class="opener" data-pidx="0">Global LNG markets are entering a new phase of rebalancing, marked by shifting trade flows, geopolitical disruption and evolving demand patterns across major importing regions. Europe is preparing for a structural pivot toward US LNG, while developments in China suggest a possible reopening of one of the most important demand channels in the global gas system. At the same time, supply disruptions in the Middle East continue to underpin elevated prices and reshape how buyers approach energy security.</p>
+      <p data-pidx="1">Europe&rsquo;s reliance on US LNG is set to increase sharply in the coming years as the continent seeks to reduce dependency on Middle Eastern and Russian volumes. According to the Institute for Energy Economics and Financial Analysis (IEEFA), Europe&rsquo;s dependence on US LNG imports is projected to surge by around 80 per cent by 2028, as ongoing disruptions in traditional supply routes force a reorientation of trade flows. This shift reflects both necessity and policy, as Europe attempts to secure reliable supply amid instability in the Persian Gulf and an ongoing effort to phase out Russian energy. US LNG has emerged as the most flexible large-scale alternative, but the transition also raises questions around pricing, infrastructure readiness and long-term contract structures.</p>
       </section>
 
       <section aria-labelledby="sec-gas-2">
-        <h2 id="sec-gas-2" class="sub">What to watch</h2>
+        <h2 id="sec-gas-2" class="sub">China&rsquo;s &ldquo;insatiable appetite&rdquo;</h2>
         <button class="sec-share" data-share-anchor="sec-gas-2" aria-label="Copy link to this section">&sect;</button>
+      <p data-pidx="2">At the same time, developments in Asia are adding a new layer of complexity to global LNG dynamics. Comments from US President Donald Trump following discussions with Chinese President Xi Jinping suggest that China may be open to resuming imports of US energy, including LNG, after a prolonged freeze. Trump said that China wants to buy &ldquo;everything energy&rdquo; from the US, highlighting the country&rsquo;s &ldquo;insatiable appetite&rdquo; for fuel. A revival of LNG trade between the two nations would reconnect the world&rsquo;s largest LNG buyer with the largest LNG exporter, potentially reshaping flows across the Atlantic and Pacific basins.</p>
+
+      <blockquote class="pullquote">
+        China wants to buy &ldquo;everything energy&rdquo; from the US.
+        <cite>Donald Trump, following discussions with Xi Jinping</cite>
+      </blockquote>
+
+      <p data-pidx="3">However, significant barriers remain. China continues to apply a 25 per cent tariff on US LNG, which has been the primary obstacle to resumed trade following earlier tariff disputes. Even without a formal agreement, analysts note that China could unilaterally reduce or remove the tariff if it requires additional volumes, especially as buyers prepare for peak summer demand. Ship tracking data already suggests some tentative movement, with two US LNG cargoes loading from Sabine Pass and Plaquemines in Louisiana signalling Tianjin as their potential destination. If completed, these would represent the first US LNG deliveries to China since February 2025.</p>
+      <p data-pidx="4">Despite this potential reopening, China&rsquo;s demand profile remains relatively weak in the near term. S&amp;P Global notes that China has been importing less than its full contracted volumes and has largely managed the supply disruption by diverting cargoes and staying out of the spot market for much of the year. This strategy has helped mitigate the immediate impact of the Middle East crisis on Asian markets, even as other buyers have struggled. China accounted for about 28 per cent of Qatar&rsquo;s LNG exports in 2025, underscoring its central role in global demand. Chinese firms also hold around 21 Mn T per year of US LNG term contracts, of which 5.4 Mn T are already being delivered, while another 8.7 Mn T are scheduled to begin delivery between July and October.</p>
+      </section>
+
+      <section aria-labelledby="sec-gas-3">
+        <h2 id="sec-gas-3" class="sub">Tight market conditions</h2>
+        <button class="sec-share" data-share-anchor="sec-gas-3" aria-label="Copy link to this section">&sect;</button>
+      <p data-pidx="5">Meanwhile, market conditions remain tight. Global LNG prices continue to reflect supply disruptions tied to the conflict in the Middle East, particularly around the Strait of Hormuz, which has historically carried about a fifth of global LNG flows. Platts assessed the June JKM benchmark price for Northeast Asia at USD 18.465 per MmBtu on 15 May, representing a 3 per cent increase from the previous assessment and about 73 per cent higher than prewar levels. These elevated prices have kept pressure on importing countries, particularly in Asia, where demand is more sensitive to price fluctuations.</p>
 
       <div class="analysis-section">
         <span class="as-label">Affinity view</span>
-        <p><strong>The JKM&ndash;TTF spread may widen further if Asian restocking accelerates.</strong> A single-paragraph analysis block with a different label to demonstrate flexibility. The bold lead-in carries the framing; the rest provides the reasoning.</p>
+        <p><strong>The LNG market is fragmenting along geopolitical lines.</strong> Europe is locking in greater volumes from the US as it reshapes its supply base, while Asia, led by China, is balancing between demand restraint and selective re-entry into the market. The potential revival of US-China LNG trade could provide support for American project developers, particularly if it leads to new long-term contracting activity. Before the trade dispute, the US was the fifth-largest LNG supplier to China, exporting about 4.2 Mn T in 2024, accounting for more than 5 per cent of total Chinese imports. As <a href="#page-oil" class="xref" data-xref="oil">the Oil desk reports</a>, the broader US-China trade relationship also saw movement last week.</p>
       </div>
-
-      <blockquote class="pullquote">
-        The glut that was supposed to arrive in 2026 has not materialised.
-        <cite>Senior LNG trader, Geneva</cite>
-      </blockquote>
-
-      <p data-pidx="2">The closing paragraph ties the piece together. Keep it concrete: a data point, a date to watch, or a scenario the reader should keep in mind before the next edition.</p>
       </section>
 
       </div>
@@ -4065,7 +4203,7 @@
       <div class="topics">
         <div class="topics-label">Topics in this report</div>
         <div class="topics-list">
-          <a href="#" class="topic">Gas</a><a href="#" class="topic">LNG</a><a href="#" class="topic">JKM</a>
+          <a href="#" class="topic">Gas</a><a href="#" class="topic">LNG</a><a href="#" class="topic">US-China</a><a href="#" class="topic">JKM</a>
         </div>
       </div>
 
@@ -4081,8 +4219,8 @@
             <span><span class="badge-dot secondary"></span> Secondary / specialist</span>
           </div>
           <ul>
-            <li class="src-wire"><strong>Wire:</strong> <a href="#" target="_blank" rel="noopener">Reuters</a></li>
-            <li class="src-secondary"><strong>Secondary:</strong> <a href="#" target="_blank" rel="noopener">IEA Gas Market Report</a></li>
+            <li class="src-wire"><strong>Wire:</strong> Shipping Telegraph</li>
+            <li class="src-secondary"><strong>Secondary:</strong> S&amp;P Global</li>
           </ul>
         </div>
       </div>
@@ -4111,66 +4249,45 @@
     <article class="article">
       <div class="print-header" aria-hidden="true">
         <div class="ph-brand">Affinity<span class="dot">.</span> Research</div>
-        <div class="ph-meta">Macro Topics / Containers / [Day, DD Month YYYY]</div>
+        <div class="ph-meta">Macro Topics / Containers / Sunday, 18 May 2026</div>
       </div>
       <div class="breadcrumb">
-        <span class="crumb-issue">[DD Month]</span><span class="sep">/</span><a href="#">Macro</a><span class="sep">/</span><a href="#">Containers</a><span class="sep">/</span><span class="page-indicator"><b>5</b>&thinsp;of&thinsp;5</span>
+        <span class="crumb-issue">18 May</span><span class="sep">/</span><a href="#">Macro</a><span class="sep">/</span><a href="#">Containers</a><span class="sep">/</span><span class="page-indicator"><b>5</b>&thinsp;of&thinsp;5</span>
       </div>
-      <h1 class="headline">Containers headline &mdash; the <em>final</em> piece in the issue</h1>
+      <h1 class="headline">Taking Advantage of Geopolitics</h1>
       <div class="meta-line">
-        <span class="desk">The Containers Desk</span><span class="meta-sep">/</span><span class="meta-date">[DD Month YYYY]</span>
+        <span class="desk">The Containers Desk</span><span class="meta-sep">/</span><span class="meta-date">18 May 2026</span>
       </div>
       <div class="article-opener-rule" aria-hidden="true"></div>
-      <p class="standfirst">The last piece in the issue. It demonstrates the prices table in a container-freight context and closes with a pull-quote.</p>
+      <p class="standfirst">Spot rates continue to jump as carriers press their advantage, but dark clouds are gathering on the horizon.</p>
       <div class="body">
 
       <section aria-labelledby="sec-containers-1">
-        <h2 id="sec-containers-1" class="sr-only">Opening</h2>
+        <h2 id="sec-containers-1" class="sr-only">Rate surge</h2>
         <button class="sec-share" data-share-anchor="sec-containers-1" aria-label="Copy link to this section">&sect;</button>
-      <p class="opener" data-pidx="0">The Containers desk closes the issue. The rhythm is the same as the earlier pieces: opener, sub-section, optional data block, and a landing paragraph. Any component from the template vocabulary can appear here.</p>
-      <p data-pidx="1">The prices table below re-uses the same component as the Oil piece, demonstrating that it works for any key-value data set &mdash; freight indices, rates, spreads.</p>
-
-        <figure class="figure">
-          <div class="figure-label"><span class="num">i.</span> Container freight indices</div>
-          <div class="figure-caption">Composite and route indices, at time of writing.</div>
-          <div class="prices">
-            <div class="prices-row head">
-              <div>Index</div>
-              <div style="text-align:right">Latest</div>
-              <div style="text-align:right">&Delta; wow</div>
-            </div>
-            <div class="prices-row">
-              <div class="price-name">Drewry WCI<small>Composite</small></div>
-              <div class="price-val">3,240</div>
-              <div class="price-delta up">+4.2%</div>
-            </div>
-            <div class="prices-row">
-              <div class="price-name">Shanghai&ndash;Rotterdam<small>40ft</small></div>
-              <div class="price-val">4,810</div>
-              <div class="price-delta up">+6.1%</div>
-            </div>
-            <div class="prices-row">
-              <div class="price-name">Shanghai&ndash;LA<small>40ft</small></div>
-              <div class="price-val">3,120</div>
-              <div class="price-delta down">&minus;1.3%</div>
-            </div>
-          </div>
-          <div class="figure-source">Sources &mdash; Drewry; Freightos.</div>
-        </figure>
-
+      <p class="opener" data-pidx="0">There remains little prospect of an imminent end to the war in the Middle East. The US continues to push Iran to the negotiating table, but Iran believes that it is &ldquo;winning&rdquo;, as the US electorate feel an increasingly acute pinch from rising energy and consumer prices.</p>
+      <p data-pidx="1">But as long as the conflict continues, liner companies will continue to push freight rates higher. Last week, spot rates posted their highest weekly gains in months, after carriers implemented both higher emergency surcharges and capacity cuts. The Drewry World Container Index leapt 12 per cent to USD 2,553 per FEU, with the strongest increases posted on the Far East&ndash;US routes.</p>
+      <p data-pidx="2">On these routes, liner companies have implemented both Emergency Fuel Surcharges (EFS) and Peak Season Surcharges (PSS), passing on higher operating costs onto shippers. On Shanghai&ndash;New York, spot rates jumped 14 per cent on the week to USD 4,252 per FEU, while Shanghai&ndash;Los Angeles rose 10 per cent to USD 3,357 per FEU. Carriers continue to tighten capacity to support the freight market, with Drewry reporting seven blank sailings scheduled for this week. Moreover, others continue to push the rate higher, with Yang Ming Marine Transport announcing a General Rate Increase (GRI) of USD 2,000 per FEU effective 15 May. Drewry expects further GRI announcements this week.</p>
+      <p data-pidx="3">Rates on Asia&ndash;Europe routes also strengthened, also driven by carriers pushing through rate hikes. Rates on Shanghai&ndash;Genoa jumped 20 per cent to USD 3,701 per FEU, while Shanghai&ndash;Rotterdam climbed 11 per cent to USD 2,413 per FEU. Higher Freight All Kinds (FAK) rates led the charge, driven by carriers tightening capacity.</p>
       </section>
 
       <section aria-labelledby="sec-containers-2">
-        <h2 id="sec-containers-2" class="sub">Outlook</h2>
+        <h2 id="sec-containers-2" class="sub">Bypass routes and congestion</h2>
         <button class="sec-share" data-share-anchor="sec-containers-2" aria-label="Copy link to this section">&sect;</button>
-      <p data-pidx="2">A sub-section heading followed by the closing prose. The analysis block is optional &mdash; not every piece needs one. The pull-quote below demonstrates the component at the end of the issue rather than mid-article.</p>
+      <p data-pidx="4">The Asia&ndash;Europe peak season typically begins in the latter half of Q2, as shippers begin building inventories ahead of the end-of-year holiday season. But just as last year, when they front-loaded imports to counter US President Trump&rsquo;s tariffs, shippers appear to be moving earlier this year because of tightening tonnage and uncertainty generated by supply chain disruptions because of the war in the Middle East.</p>
+      <p data-pidx="5">Speaking of which, carriers have continued to ship volumes to the Middle East, utilising trucking to bypass the closed Strait of Hormuz. Trucking routes linking Red Sea and Gulf of Oman ports, such as Yanbu and Fujairah, to some of the largest ports in the Arabian Gulf, such as Jebel Ali and Basra, have opened up. And carriers are charging record-high freight rates, rising beyond even those at the height of the pandemic with the release of unprecedented pent-up demand. Congestion at these ports, however, has soared, further tightening tonnage and supporting the wider containership market&rsquo;s fundamentals.</p>
+      <p data-pidx="6">By contrast, volumes handled at US ports continued to drop in April. At the Port of Long Beach, handled cargo volumes fell 5.7 per cent on the year last month, falling to 817,992 TEU. However, early last year, the port handled record volumes on the sharp front-loading and, despite the drop in volumes in March, Long Beach became the US&rsquo;s busiest port through Q1 this year.</p>
+      </section>
 
-      <blockquote class="pullquote">
-        We are not at peak box rates yet.
-        <cite>Drewry Supply Chain Advisors</cite>
-      </blockquote>
+      <section aria-labelledby="sec-containers-3">
+        <h2 id="sec-containers-3" class="sub">Outlook</h2>
+        <button class="sec-share" data-share-anchor="sec-containers-3" aria-label="Copy link to this section">&sect;</button>
+      <p data-pidx="7">Uncertainty and volatility borne out of the conflict in the Middle East continue to support container imports and, according to Xeneta, the market is in a unique position in which both shippers and carriers are &ldquo;happy&rdquo; with freight levels, particularly on Transpacific trades. Although rates have risen well above pre-conflict levels, they have &ldquo;remained effectively flat&rdquo; over the past month, according to Xeneta&rsquo;s Peter Sand. A factor behind the plateau is US shippers delaying signing new long-term contracts because of the uncertainty emanating from the Middle East, wary of locking in rates at higher levels than necessary, depending on when and how the conflict is resolved.</p>
 
-      <p data-pidx="3">The endmark diamond signals that the last piece is over. The progress bar should show all five segments as read; the TOC drawer should mark the full set as read. End of issue.</p>
+      <div class="analysis-section">
+        <span class="as-label">Risk</span>
+        <p><strong>Short-term support masks longer-term vulnerability.</strong> The impact of the conflict is becoming increasingly wide-ranging. More and more economic indicators are being published that underline the extent to which the global economy is being affected. Inflation is creeping higher and the latest Chinese economic data was weaker than expected. Accompanying the data, Beijing warned of the &ldquo;severe&rdquo; global economic environment that has been caused by the war. So, while there may be short-term support for the freight market, longer-term &mdash; should the current status quo be maintained &mdash; weakness is expected as the conflict takes its toll.</p>
+      </div>
       </section>
 
       </div>
@@ -4182,7 +4299,7 @@
       <div class="topics">
         <div class="topics-label">Topics in this report</div>
         <div class="topics-list">
-          <a href="#" class="topic">Containers</a><a href="#" class="topic">Drewry</a><a href="#" class="topic">Freight</a>
+          <a href="#" class="topic">Containers</a><a href="#" class="topic">Freight Rates</a><a href="#" class="topic">Drewry</a><a href="#" class="topic">Middle East</a>
         </div>
       </div>
 
@@ -4198,8 +4315,8 @@
             <span><span class="badge-dot secondary"></span> Secondary / specialist</span>
           </div>
           <ul>
-            <li class="src-wire"><strong>Wire:</strong> <a href="#" target="_blank" rel="noopener">Lloyd&rsquo;s List</a></li>
-            <li class="src-secondary"><strong>Secondary:</strong> <a href="#" target="_blank" rel="noopener">Drewry Maritime Research</a>; <a href="#" target="_blank" rel="noopener">Freightos</a></li>
+            <li class="src-wire"><strong>Wire:</strong> Financial Times</li>
+            <li class="src-secondary"><strong>Secondary:</strong> Drewry; gCaptain; Xeneta</li>
           </ul>
         </div>
       </div>
@@ -4224,7 +4341,7 @@
 </main>
 
 <!-- ============================================================
-     FOOTER — colophon. Ornament, brand mark, publication meta.
+     FOOTER â colophon. Ornament, brand mark, publication meta.
      ============================================================ -->
 <footer class="pub-footer">
   <div class="pub-footer-ornament" id="footer-ornament"><svg viewBox="0 0 120 10" width="120" height="10" aria-hidden="true">
@@ -4236,7 +4353,7 @@
   <div class="pub-footer-meta">
     Macro Topics
     <span class="meta-sep">/</span>
-    [Day, DD Month YYYY]
+    Sunday, 18 May 2026
     <span class="issn">Research Desk &middot; London</span>
   </div>
 </footer>
@@ -4251,12 +4368,12 @@
   <div class="toc-head">
     <div>
       <div class="toc-issue">Macro<span class="dot">.</span> Topics</div>
-      <div class="toc-date">[Day, DD Month YYYY]</div>
+      <div class="toc-date">Sunday, 18 May 2026</div>
     </div>
     <button class="toc-close" id="close-toc" aria-label="Close">Close</button>
   </div>
   <div class="toc-search">
-    <input type="search" id="toc-search-input" placeholder="Search this issue…" autocomplete="off" />
+    <input type="search" id="toc-search-input" placeholder="Search this issueâ¦" autocomplete="off" />
     <span class="search-icon"></span>
   </div>
   <div class="toc-filters" role="tablist" aria-label="Filter">
@@ -4461,6 +4578,124 @@
   </div>
 </aside>
 
+<!-- ============================================================
+     ASK THE DESK â sheet overlay.
+     Static-first: a real form that POSTs to the form service even
+     with JS off (iOS Files preview, forwarded copies). JS upgrades
+     it to an inline confirmation with no page navigation.
+
+     âï¸ UPDATE per issue: data-issue-id / data-issue-title below, and
+        drop the Web3Forms access key into the hidden access_key input
+        (the single placeholder that gates live submissions).
+     ============================================================ -->
+<aside class="ask-sheet" id="ask-sheet" aria-hidden="true"
+       aria-labelledby="ask-title"
+       data-issue-id="macro-topics-template"
+       data-issue-title="Macro Topics â 18 May 2026">
+  <div class="sheet-handle" aria-hidden="true"></div>
+
+  <div class="sheet-head">
+    <div class="sheet-head-text">
+      <h2 class="sheet-title" id="ask-title">Ask the Desk</h2>
+      <p class="sheet-subtitle">Put a question to our research analysts</p>
+    </div>
+    <button class="sheet-close" id="close-ask" aria-label="Close">Done</button>
+  </div>
+
+  <div class="ask-crest" aria-hidden="true">
+    <svg viewBox="0 0 64 22" width="120" height="22" fill="none"
+         stroke="currentColor" stroke-width="1">
+      <line x1="0" y1="11" x2="20" y2="11"></line>
+      <circle cx="30" cy="11" r="5.4"></circle>
+      <circle cx="30" cy="11" r="3" stroke-width="0.8" opacity="0.55"></circle>
+      <line x1="33.9" y1="14.9" x2="37" y2="18"></line>
+      <line x1="44" y1="11" x2="64" y2="11"></line>
+    </svg>
+  </div>
+
+  <div class="ask-body">
+    <p class="ask-intro">
+      Reading something you&rsquo;d like clarified or expanded? Send the
+      desk your question and we&rsquo;ll follow up directly.
+    </p>
+
+    <!-- Real form: works as a full POST with JS off. -->
+    <form id="ask-form" method="POST" action="https://api.web3forms.com/submit"
+          autocomplete="on" novalidate>
+
+      <!-- âï¸ Web3Forms access key â replace placeholder to go live. -->
+      <input type="hidden" name="access_key" value="YOUR_WEB3FORMS_ACCESS_KEY">
+      <input type="hidden" name="subject"
+             value="Ask the Desk â Macro Topics, 18 May 2026">
+      <input type="hidden" name="from_name" value="Affinity Reader â Ask the Desk">
+      <!-- Context: stamped per issue + at submit time by enhancement JS. -->
+      <input type="hidden" name="issue_id" id="ask-issue-id" value="">
+      <input type="hidden" name="issue_title" id="ask-issue-title" value="">
+      <input type="hidden" name="source_url" id="ask-source-url" value="">
+      <input type="hidden" name="section_hint" id="ask-section-hint" value="">
+
+      <!-- Honeypot: bots fill it, humans never see it. -->
+      <div class="ask-hp" aria-hidden="true">
+        <label for="ask-company">Company (leave blank)</label>
+        <input type="text" name="botcheck" id="ask-company"
+               tabindex="-1" autocomplete="off">
+      </div>
+
+      <div class="ask-field">
+        <label class="ask-label" for="ask-email">Your email</label>
+        <input class="ask-input" type="email" name="email" id="ask-email"
+               required inputmode="email" autocomplete="email"
+               autocapitalize="off" spellcheck="false"
+               aria-describedby="ask-email-help ask-email-err"
+               placeholder="name@firm.com">
+        <div class="ask-meta">
+          <span class="ask-help" id="ask-email-help">Where the desk will reply.</span>
+        </div>
+        <div class="ask-error" id="ask-email-err" role="alert">
+          Please enter a valid email address.
+        </div>
+      </div>
+
+      <div class="ask-field">
+        <label class="ask-label" for="ask-question">Your question</label>
+        <textarea class="ask-textarea" name="question" id="ask-question"
+                  required maxlength="1500"
+                  aria-describedby="ask-q-count ask-q-err"
+                  placeholder="e.g. On the containers piece â is the Drewry figure inclusive of the trans-Pacific spot correction?"></textarea>
+        <div class="ask-meta">
+          <span class="ask-help">Be as specific as you like â section, figure, claim.</span>
+          <span class="ask-count" id="ask-q-count">0 / 1500</span>
+        </div>
+        <div class="ask-error" id="ask-q-err" role="alert">
+          Please enter your question.
+        </div>
+      </div>
+
+      <div class="ask-actions">
+        <button class="ask-cancel" type="button" id="ask-cancel">Cancel</button>
+        <button class="ask-submit" type="submit" id="ask-submit">Send to the desk</button>
+      </div>
+    </form>
+
+    <!-- Replaces the form in JS mode after a successful send. -->
+    <div class="ask-confirm" id="ask-confirm" role="status" aria-live="polite" tabindex="-1">
+      <div class="ac-mark" aria-hidden="true">
+        <svg viewBox="0 0 48 48" width="44" height="44" fill="none"
+             stroke="currentColor" stroke-width="1.4"
+             stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="24" cy="24" r="20"></circle>
+          <path d="M15 24.5 L21 30.5 L33 17.5"></path>
+        </svg>
+      </div>
+      <p class="ac-title">Question received</p>
+      <p class="ac-text">
+        The research desk will follow up at
+        <strong id="ask-confirm-email">your address</strong>. Thank you.
+      </p>
+    </div>
+  </div>
+</aside>
+
 <div class="toast" id="toast"></div>
 
 <!-- Return pill: shown for 8s after a non-linear jump -->
@@ -4480,14 +4715,14 @@
 document.body.classList.remove('no-js');
 
 /* =====================================================================
-   PAGE CONTENT — seven pages of a maritime weekly
+   PAGE CONTENT â seven pages of a maritime weekly
    ===================================================================== */
 
 /* =====================================================================
-   ISSUE METADATA — set these once per edition.
+   ISSUE METADATA â set these once per edition.
    ===================================================================== */
-const ISSUE_DATE_LONG  = '[Day, DD Month YYYY]';
-const ISSUE_DATE_SHORT = '[DD Month]';
+const ISSUE_DATE_LONG  = 'Sunday, 18 May 2026';
+const ISSUE_DATE_SHORT = '18 May';
 
 const PAGES = [
   /* ======================== 1 / POLICY ======================== */
@@ -4495,300 +4730,282 @@ const PAGES = [
     id: 'policy',
     section: 'Policy',
     breadcrumb: ['Macro', 'Policy'],
-    headline: 'The Policy headline goes <em>here</em>, and wraps to two lines comfortably',
-    standfirst: 'A single sentence that frames the piece. Two clauses, separated by a semicolon or em-dash; this is what the reader sees first, after the headline.',
+    headline: 'Westminster Calling',
+    standfirst: 'Leadership challenge on the horizon for Starmer after local election disaster.',
     body: `
       <section aria-labelledby="sec-policy-1">
-        <h2 id="sec-policy-1" class="sr-only">The opening</h2>
+        <h2 id="sec-policy-1" class="sr-only">The crisis</h2>
         <button class="sec-share" data-share-anchor="sec-policy-1" aria-label="Copy link to this section">&sect;</button>
-      <p class="opener" data-pidx="0">The opening paragraph carries a drop-cap. Keep it short to medium length &mdash; one to two ideas, scene-set the piece, do not bury the lede. The drop cap can be toggled off, small, or large in the reading settings, so do not write around it.</p>
-      <p data-pidx="1">The second paragraph carries the reader from the scene-set into the substance. Cite a figure or a name if it earns its place. Where a claim is provisional or worth flagging for follow-up &mdash; a wire report not yet confirmed, a figure pending revision &mdash; add an inline reference like this one,<a href="#tbc-policy-1" class="tbc-ref" id="tbc-policy-1-ref">1</a> which links to the &ldquo;Items to confirm&rdquo; block at the foot of the piece.</p>
+      <p class="opener" data-pidx="0">Britain might once have been renowned for political stability, but those days are long gone. Contrasting with the country\u2019s first Prime Minister Robert Walpole, who served for almost 21 years in the 18th century, the UK has had six Prime Ministers in just the past decade. The way things are looking right now, London is on course for a seventh.</p>
+      <p data-pidx="1">For all his successes on the international stage, UK Prime Minister Sir Keir Starmer has proven unpopular domestically. Labour has suffered, dropping from 39 per cent in polls at the 2024 election to 18 per cent today. But Starmer\u2019s personal approval rating sits at \u221246 per cent, down from 20.5 per cent two years ago. Politicians might take polls with a pinch of salt, but this month has displayed public displeasure with Labour. May\u2019s local elections were always going to hurt the party, but few appreciated just how disastrous they would be. Labour lost 1,500 councillors and 38 councils across England, and it was annihilated in Wales. Former strongholds like Sunderland flipped to Reform, whilst in London, the party lost Lewisham and Hackney to the Green Party. Even the beleaguered Conservatives managed to poach Westminster back.</p>
+      <p data-pidx="2">Some argue that the local elections were effectively a referendum on Starmer\u2019s leadership, so he has shouldered much of the blame. Labour MPs are increasingly concluding that a change of leader will improve their fortunes, and at the time of writing, 91 lawmakers have urged him to resign. Labour MP Catherine West even went so far as to call for Cabinet members to challenge Starmer\u2019s leadership, threatening she would run against him as a \u201Cstalking horse\u201D otherwise. The PM hoped to use the days after the vote for a fresh start, but his post-weekend \u201Creset\u201D speech, alongside Wednesday\u2019s King\u2019s Speech, were far overshadowed by leadership speculation.</p>
       </section>
 
       <section aria-labelledby="sec-policy-2">
-        <h2 id="sec-policy-2" class="sub">Sub-section heading</h2>
+        <h2 id="sec-policy-2" class="sub">Hanging on</h2>
         <button class="sec-share" data-share-anchor="sec-policy-2" aria-label="Copy link to this section">&sect;</button>
-      <p data-pidx="2">Sub-headings break a piece into legible chunks. Three to five sub-sections is the right shape for a roughly 600&ndash;900 word piece. Each sub-section can carry its own share anchor (the &sect; appears on hover at the right edge), so a reader can send a colleague the exact subsection that matters to them.</p>
-      <p data-pidx="3">Use plain text for figures: &ldquo;Brent closed Wednesday at $108.36 a barrel, up 2.9 per cent on the week.&rdquo; A numeric callout that earns more weight should go in an analysis block (below) rather than a chart &mdash; this is a text-only template.</p>
+      <p data-pidx="3">Despite escalating calls for his departure, Starmer has insisted that he will not throw in the towel, emphasising his intentions to see out his five-year mandate in full. The PM\u2019s allies argue that getting on with the day job is far more important, and having blamed constant leadership changes under the Conservatives for many of Britain\u2019s current woes, Labour would be unwise to emulate such antics. Moreover, as the Iran war sends energy prices and inflation skyward, many believe that the country needs a steady hand to manage the crisis. These arguments make sense, but with Starmer having lost the support of so many in his party, it looks like it will be difficult for him to continue until 2029. He might not be going gently, but that good night is likely coming.</p>
+      </section>
 
-      <div class="analysis-section">
-        <span class="as-label">What it means</span>
-        <p><strong>The takeaway, in one paragraph.</strong> The analysis block carries the editorial judgement that the prose has been building toward. One paragraph is the right shape: a bold lead-in for the headline judgement, then the supporting reasoning in plain text. Use this where you would otherwise be tempted to draw a chart.</p>
-      </div>
+      <section aria-labelledby="sec-policy-3">
+        <h2 id="sec-policy-3" class="sub">The contenders</h2>
+        <button class="sec-share" data-share-anchor="sec-policy-3" aria-label="Copy link to this section">&sect;</button>
+      <p data-pidx="4">With Starmer\u2019s days looking numbered, the obvious next question is who might replace him. No one has launched a formal leadership challenge yet, but among the main contenders are former Health Secretary Wes Streeting as well as Manchester Mayor Andy Burnham, respectively considered to be on the right and left flanks of the party. Labour Party rules stipulate that the leader needs to be a Member of Parliament, so Burnham would first need to be elected to the Commons before receiving the support of 81 MPs to run for the leadership.</p>
+      <p data-pidx="5">This, of course, limits Burnham in launching immediate action and would prima facie bolster Streeting\u2019s odds. Yet the Ilford North MP is conscious that being seen as the one who toppled Starmer could weaken his chances. Indeed, Streeting has said that he hopes that Burnham will make it to the leadership challenge. It is therefore a stalemate right now, but Labour MP Josh Simons\u2019s triggering a by-election on Thursday moves things one step forward. The election for the Greater Manchester seat of Makerfield is expected to be held on 18 June.</p>
+      <p data-pidx="6">The move was explicitly designed to get Burnham into Parliament, and having been allowed to run for selection as the party\u2019s candidate, the self-styled \u201CKing of the North\u201D looks to be on his way to Westminster. Burnham is popular locally, but considering Labour\u2019s local election performance, his victory is hardly a foregone conclusion. Reform UK has pledged to throw the kitchen sink at Makerfield, and should it win, Burnham\u2019s electoral gambit will look spectacularly ill-judged.</p>
       </section>
     `,
     pullquote: {
-      text: 'A pull-quote drawn from the prose, set in italic display type and accent-coloured.',
-      cite: 'Attribution &mdash; speaker, role'
+      text: 'He might not be going gently, but that good night is likely coming.',
+      cite: 'Affinity Research'
     },
     bodyAfter: `
-      <section aria-labelledby="sec-policy-3">
-        <h2 id="sec-policy-3" class="sub">A second sub-section</h2>
-        <button class="sec-share" data-share-anchor="sec-policy-3" aria-label="Copy link to this section">&sect;</button>
-      <p data-pidx="4">Cross-references to other pieces are written like this: <a href="#page-oil" class="xref" data-xref="oil">the Oil desk explains why the headline number does not yet show in the freight curve</a>. The xref machinery turns the link into a labelled jump and surfaces a &ldquo;Return to&rdquo; pill so the reader can come back without losing place.</p>
-      <p data-pidx="5">Close the piece with a paragraph that lands the argument. The endmark diamond below signals that the piece is over; the topics and the &ldquo;Items to confirm&rdquo; block follow.</p>
+      <section aria-labelledby="sec-policy-4">
+        <h2 id="sec-policy-4" class="sub">Policy platforms and market reaction</h2>
+        <button class="sec-share" data-share-anchor="sec-policy-4" aria-label="Copy link to this section">&sect;</button>
+      <p data-pidx="7">Regarding their policy platforms, both sides have made some overtures towards Brussels. On Saturday, Streeting told reporters that he believed Brexit to have been a \u201Ccatastrophic mistake\u201D and that he hoped to rejoin the EU. Burnham initially expressed hopes that the UK would rejoin but backtracked after criticism from other Labour lawmakers who are weary of reopening the Brexit debate \u2014 especially considering how such sentiment might go down in leave-voting Makerfield.</p>
+      <p data-pidx="8">Markets are also conscious that a leftward lurch after Starmer\u2019s departure could see the government weaken its commitment to fiscal rules, and Burnham\u2019s comments last year that London should not be \u201Cin hock to the bond markets\u201D do not exactly inspire confidence. Unsurprisingly, then, amid mounting likelihood that Burnham will throw his hat into the ring, 10-year bond yields rose 0.19 per cent on Friday to 5.18 per cent \u2014 their highest since 2008.</p>
+      <p data-pidx="9">Things are even more drastic for 30-year bond yields, which rose 0.2 per cent to their highest since 1998. Britain already faces the highest borrowing costs in the G7, so adding fuel to the fire by jettisoning spending restraints could spell disaster. At the same time, sterling fell 0.6 per cent against the dollar to USD 1.332, marking a monthly low and extending an 0.9 per cent fall on Thursday. Now, Burnham has tempered these earlier sentiments, telling ITV News at the weekend that he supported the UK\u2019s current fiscal rules and that the UK needed a plan to get debt under control. It will take more than that for markets to feel fully comfortable, though!</p>
+      </section>
+
+      <section aria-labelledby="sec-policy-5">
+        <h2 id="sec-policy-5" class="sub">What it means</h2>
+        <button class="sec-share" data-share-anchor="sec-policy-5" aria-label="Copy link to this section">&sect;</button>
+      <div class="analysis-section">
+        <span class="as-label">Outlook</span>
+        <p><strong>Protracted leadership uncertainty at the worst possible time.</strong> Starmer might be hanging on for now, and he has pledged to fight any leadership challenge which comes his way. While businesses and consumers might not be happy with parts of his programme, changing leadership could make things worse. As the Iran war\u2019s economic consequences become ever more apparent, protracted uncertainty about who is in charge might look indulgent. Inflation and high energy costs will hit everyone, but without proper leadership to guide the UK through the crisis, it could well be harder hit than most. Is that a price worth paying?</p>
+      </div>
       </section>
     `,
     bodyEnd: `
-      <div class="tbc-endnotes">
-        <span class="tbc-endnotes-label">Items to confirm</span>
-        <ol>
-          <li id="tbc-policy-1">Brief description of the provisional claim, with the source not yet matched. <a href="#tbc-policy-1-ref" class="back-ref">&crarr;</a></li>
-        </ol>
-      </div>
       <div class="sources-panel">
         <button class="sources-header" aria-expanded="false"><h3>Sources</h3><span class="sources-toggle">&#9656;</span></button>
-        <p class="sources-meta">3 source clusters &middot; click to expand</p>
+        <p class="sources-meta">2 source clusters \u00b7 click to expand</p>
         <div class="sources-body">
-          <div class="badge-legend"><span><span class="badge-dot official"></span> Official / primary</span><span><span class="badge-dot wire"></span> Wire / broadsheet</span><span><span class="badge-dot secondary"></span> Secondary / specialist</span></div>
+          <div class="badge-legend"><span><span class="badge-dot wire"></span> Wire / broadsheet</span><span><span class="badge-dot secondary"></span> Secondary / specialist</span></div>
           <ul>
-            <li class="src-official"><strong>Primary source cluster:</strong> <a href="#" target="_blank" rel="noopener">Press release</a>; <a href="#" target="_blank" rel="noopener">Filing</a></li>
-            <li class="src-wire"><strong>Wire / broadsheet:</strong> <a href="#" target="_blank" rel="noopener">Reuters</a>; <a href="#" target="_blank" rel="noopener">Bloomberg</a></li>
-            <li class="src-secondary"><strong>Secondary:</strong> <a href="#" target="_blank" rel="noopener">Specialist publication</a></li>
+            <li class="src-wire"><strong>Wire / broadsheet:</strong> Reuters; Financial Times; BBC; Politico</li>
+            <li class="src-secondary"><strong>Secondary:</strong> Sky News; ITV News</li>
           </ul>
         </div>
       </div>
     `,
-    topics: ['Policy', 'Topic two', 'Topic three']
+    topics: ['UK Politics', 'Labour', 'Starmer', 'Sterling']
   },
   /* ======================== 2 / OIL ======================== */
   {
     id: 'oil',
     section: 'Oil',
     breadcrumb: ['Macro', 'Oil'],
-    headline: 'The Oil headline goes <em>here</em> &mdash; demonstrates the prices table',
-    standfirst: 'This piece demonstrates the prices table and KPI grid. Both are structured data components that sit within the article flow.',
+    headline: 'No End in Sight',
+    standfirst: 'Tensions rise in the Middle East, boosting oil prices; and Trump\u2019s unremarkable trip to Beijing nevertheless assuages fears of a growing rift.',
     body: `
       <section aria-labelledby="sec-oil-1">
-        <h2 id="sec-oil-1" class="sr-only">Opening</h2>
+        <h2 id="sec-oil-1" class="sr-only">Stalling negotiations</h2>
         <button class="sec-share" data-share-anchor="sec-oil-1" aria-label="Copy link to this section">&sect;</button>
-      <p class="opener" data-pidx="0">The Oil piece opens with the week&rsquo;s top-line energy story. One or two paragraphs to set the scene before the structured data appears. The drop-cap anchors the reader; the price data follows.</p>
-      <p data-pidx="1">A second paragraph bridges the scene-set to the first data component &mdash; the prices table. Brief context frames the numbers so they read as a narrative, not a spreadsheet.</p>
+      <p class="opener" data-pidx="0">Negotiations between the US and Iran via Pakistan are continuing this week, but there are no suggestions that they have been successful. The issue of enrichment and uranium materials is still a roadblock, as neither country seems willing to compromise on this point.</p>
+      <p data-pidx="1">There are reports that the US and Israel are conducting the most intense preparations for further attacks on Iran since the current ceasefire was agreed last month, and there have already been some more attacks. On 17 May, the UAE\u2019s only nuclear power plant was hit by a drone. The strike at the Barakah plant started a fire at an electrical generator within the compound.</p>
+      <p data-pidx="2">Later on Sunday, Saudi Arabia said that it had destroyed three drones entering its airspace from Iraq, and Riyadh spokesman Major General Al-Maliki said that his defence ministry \u201Creserves the right to respond at the appropriate time and place\u201D. Iraq has previously launched drones at other Gulf countries, including Kuwait, despite the ceasefire.</p>
+      <p data-pidx="3">Oil prices rose early on Monday in response to the attacks and continued stalling. Brent rose by 2.03 per cent to USD 111.50 per barrel, and WTI jumped by 2.59 per cent to USD 108.20 per barrel. At the time of writing, the two benchmarks sit at USD 110.00 per barrel and USD 106.20 per barrel, respectively.</p>
       </section>
     `,
-    figures: [
-      { type: 'prices', label: 'i.', labelText: 'Crude benchmarks this week', caption: 'Spot prices, USD per barrel, at time of writing.', source: 'Sources &mdash; Reuters; Affinity Research.',
-        rows: [
-          { name: 'Brent', note: 'Monday peak', val: '108.36', delta: '+2.9%', dir: 'up' },
-          { name: 'WTI', note: 'At time of writing', val: '96.43', delta: '&mdash;', dir: 'flat' }
-        ]
-      },
-      { type: 'kpis', label: 'ii.', labelText: 'Key metrics', caption: 'Four figures that frame the picture.',
-        items: [
-          { val: '108', unit: '$/bbl', label: 'Brent crude, week high' },
-          { val: '9', unit: 'weeks', label: 'Duration of the stand-off' },
-          { val: '5,000', unit: 'crew', label: 'Aboard carrier group' },
-          { val: '2', unit: 'years', label: 'IEA normalisation estimate' }
-        ]
-      }
-    ],
     pullquote: {
-      text: 'Every day 10&ndash;13 million barrels of oil fail to get to the international market.',
-      cite: 'PVM Oil Associates'
+      text: 'For Iran, the Clock is Ticking, and they better get moving, FAST, or there won\u2019t be anything left of them. TIME IS OF THE ESSENCE!',
+      cite: 'Donald Trump, on social media'
     },
     bodyAfter: `
       <section aria-labelledby="sec-oil-2">
-        <h2 id="sec-oil-2" class="sub">The supply ledger</h2>
+        <h2 id="sec-oil-2" class="sub">Trump in Beijing</h2>
         <button class="sec-share" data-share-anchor="sec-oil-2" aria-label="Copy link to this section">&sect;</button>
+      <p data-pidx="4">There had been some optimism leading up to US President Donald Trump\u2019s visit to China last week, because it had been announced that one of the many topics to be discussed was the war in the Middle East. As the conflict has dragged on, China has become more vocal about its wish for peace, and many analysts had therefore hoped that Chinese President Xi Jinping would be able to push Trump towards some sort of deal \u2014 at the very least a method to increase flows through the Strait of Hormuz \u2014 while he was in Beijing.</p>
+      <p data-pidx="5">But this was not to be, and after returning to Washington, Trump hurled further threats at Iran on social media. The message is by no means the first of its kind, but the renewed intimidation does nothing to indicate a change of attitude.</p>
+      </section>
 
+      <section aria-labelledby="sec-oil-3">
+        <h2 id="sec-oil-3" class="sub">The trade angle</h2>
+        <button class="sec-share" data-share-anchor="sec-oil-3" aria-label="Copy link to this section">&sect;</button>
+      <p data-pidx="6">The trip to China was notable for another reason. In Trump\u2019s tariff blitz last year, China was the hardest hit; at this point last year, Beijing faced 145 per cent tariffs and had retaliated with its own. A truce was established in October, but it was not definitive, and it was expected that Trump and Xi would talk about the trade barriers on last week\u2019s visit.</p>
+      <p data-pidx="7">But, despite referencing trade agreements broadly, Trump told reporters on Air Force One that the two leaders had not discussed tariffs at all. Instead, he said, they had agreed to establish a \u201CBoard of Trade\u201D to manage the economic relationship without having to resume tariff negotiations, but no details were provided.</p>
+      <p data-pidx="8">On Saturday, China\u2019s commerce ministry offered a somewhat contradictory account. It issued a statement saying that Washington and Beijing had come to a preliminary agreement to reduce some tariffs, also confirming some agricultural and aircraft deals which Trump had already touted.</p>
       <div class="analysis-section">
-        <span class="as-label">Risk</span>
-        <p><strong>Supply tightness is the defining variable.</strong> The analysis block appears after the KPI grid. It carries the editorial judgement that the numbers above imply. Keep it single-paragraph and concrete.</p>
+        <span class="as-label">What it means</span>
+        <p><strong>A ceiling on trade-war risk has been restored \u2014 for now.</strong> Whatever the details are, the high tariffs which caused oil prices to sink last year seem less likely to reemerge than they did previously. After Trump\u2019s trip, a China expert from the Center for Strategic and International Studies said of US-China relations that \u201Ccompared to where we were a year ago\u2026 we\u2019ve had a counterrevolution and we\u2019re back at stability\u201D. If the situation remains like this, one possible limit to future spikes in oil prices has been neutralised. And <a href="#page-gas" class="xref" data-xref="gas">the Gas desk reports on the downstream LNG implications of Trump\u2019s \u201Ceverything energy\u201D claims</a>.</p>
       </div>
-
-      <p data-pidx="2">The closing paragraph lands the argument. Where the piece connects to others in this edition, use a cross-reference: <a href="#page-gas" class="xref" data-xref="gas">the Gas desk explains the downstream effects on LNG pricing</a>.</p>
       </section>
     `,
     bodyEnd: `
       <div class="sources-panel">
         <button class="sources-header" aria-expanded="false"><h3>Sources</h3><span class="sources-toggle">&#9656;</span></button>
-        <p class="sources-meta">2 source clusters &middot; click to expand</p>
+        <p class="sources-meta">2 source clusters \u00b7 click to expand</p>
         <div class="sources-body">
-          <div class="badge-legend"><span><span class="badge-dot official"></span> Official / primary</span><span><span class="badge-dot wire"></span> Wire / broadsheet</span></div>
+          <div class="badge-legend"><span><span class="badge-dot wire"></span> Wire / broadsheet</span><span><span class="badge-dot secondary"></span> Secondary / specialist</span></div>
           <ul>
-            <li class="src-wire"><strong>Wire / broadsheet:</strong> <a href="#" target="_blank" rel="noopener">Reuters</a>; <a href="#" target="_blank" rel="noopener">Bloomberg</a></li>
-            <li class="src-official"><strong>Official:</strong> <a href="#" target="_blank" rel="noopener">IEA monthly report</a></li>
+            <li class="src-wire"><strong>Wire / broadsheet:</strong> Reuters; Financial Times; BBC; Politico</li>
+            <li class="src-secondary"><strong>Secondary:</strong> OilPrice.com; Sky News</li>
           </ul>
         </div>
       </div>
     `,
-    topics: ['Oil', 'Brent', 'WTI']
+    topics: ['Oil', 'Middle East', 'Iran', 'US-China']
   },
   /* ======================== 3 / DRY CARGO ======================== */
   {
     id: 'drycargo',
     section: 'Dry Cargo',
     breadcrumb: ['Macro', 'Dry Cargo'],
-    headline: 'Dry Cargo headline &mdash; demonstrates the <em>orders list</em>',
-    standfirst: 'This piece demonstrates the orders/items list component and a chart placeholder. Both live inside figure wrappers with label, caption, and source.',
+    headline: 'The Great Bauxite Squeeze',
+    standfirst: 'Guinea risks, weaker Chinese demand, and Middle East disruption are shaking the bauxite trade and Capesize markets.',
     body: `
       <section aria-labelledby="sec-drycargo-1">
-        <h2 id="sec-drycargo-1" class="sr-only">Opening</h2>
+        <h2 id="sec-drycargo-1" class="sr-only">The bauxite trade</h2>
         <button class="sec-share" data-share-anchor="sec-drycargo-1" aria-label="Copy link to this section">&sect;</button>
-      <p class="opener" data-pidx="0">The Dry Cargo piece opens with the week&rsquo;s top freight or commodity story. One paragraph to orient the reader before the data components demonstrate the orders list and chart placeholder.</p>
-      <p data-pidx="1">The orders list (below) can carry newbuilding orders, S&amp;P fixtures, or any structured deal data. Each order has a vessel name, a class tag, descriptive text, and key-value meta fields. The chart placeholder (further down) reserves space for future charting support.<a href="#tbc-drycargo-1" class="tbc-ref" id="tbc-drycargo-1-ref">1</a></p>
+      <p class="opener" data-pidx="0">Global bauxite trade is an important component of dry bulk shipping, particularly for long-distance routes linking West Africa and Asia. In recent years, growth in seaborne flows has been supported mainly by rising exports from Guinea to China, which have underpinned strong demand for Capesize vessels due to the long voyage distances involved.</p>
+      <p data-pidx="1">However, the outlook for the market is becoming more uncertain. Structural factors such as changing supply conditions in Guinea, evolving Chinese demand for aluminium, and persistently weak pricing are all beginning to reshape expectations for future trade flows. At the same time, geopolitical instability and disruptions along key shipping routes are adding further volatility to logistics and freight markets. As a result, the bauxite trade is entering a more complex phase in which policy decisions, demand constraints and supply chain fragility are increasingly influencing both volumes and shipping dynamics.</p>
+      <p data-pidx="2">Guinea\u2019s exports to China more than doubled between 2020 and 2025, reaching around 178 Mn T and underpinning strong Capesize demand due to the roughly 100-day round voyage time on the West Africa\u2013China route.</p>
       </section>
-    `,
-    figures: [
-      { type: 'orders', label: 'i.', labelText: 'Notable orders this week', caption: 'Selected newbuilding and S&amp;P activity.', source: 'Sources &mdash; Clarksons; broker reports.',
-        items: [
-          { name: 'Vessel Name', em: 'hull 1234', cls: 'NEWBUILDING', text: 'Brief description of the order and its significance. <strong>Key terms</strong> can be italicised for emphasis.', meta: [['DWT','180,000'],['Yard','Hyundai HI'],['Delivery','Q3 2028']] },
-          { name: 'Another Vessel', em: 'ex-Name', cls: 'S&amp;P', text: 'Second order demonstrates how multiple items stack. Each is separated by a hairline rule; the rhythm keeps the list scannable.', meta: [['DWT','82,000'],['Built','2019'],['Price','$34.5M']] }
-        ]
-      }
-    ],
-    bodyAfter: `
-      <section aria-labelledby="sec-drycargo-2">
-        <h2 id="sec-drycargo-2" class="sub">Rate watch</h2>
-        <button class="sec-share" data-share-anchor="sec-drycargo-2" aria-label="Copy link to this section">&sect;</button>
-      <p data-pidx="2">The chart placeholder below reserves a visual slot for a rate chart or index graph. In this text-only template it renders as a gridded frame with a decorative area fill and axis labels. Replace with a real chart when charting support is added.</p>
-      </section>
-    `,
-    figures2: [
-      { type: 'chart', label: 'ii.', labelText: 'Baltic Capesize Index', caption: 'Daily BCI, last twelve months.', source: 'Source &mdash; Baltic Exchange.',
-        yAxis: ['4,000','3,000','2,000','1,000','0'],
-        xAxis: ['May','Jul','Sep','Nov','Jan','Mar','May']
-      }
-    ],
-    bodyEnd: `
-      <div class="analysis-section">
-        <span class="as-label">What we are watching</span>
-        <p><strong>The BCI pattern suggests a trough is forming.</strong> Use a different analysis-block label to suit the piece &mdash; &ldquo;Key takeaway&rdquo;, &ldquo;Affinity view&rdquo;, &ldquo;Risk&rdquo;. The block itself stays single-paragraph.</p>
-      </div>
-      <p data-pidx="3">The closing paragraph lands the argument. A well-placed cross-reference connects to related coverage elsewhere in the issue.</p>
 
-      <div class="tbc-endnotes">
-        <span class="tbc-endnotes-label">Items to confirm</span>
-        <ol>
-          <li id="tbc-drycargo-1">Provisional order details pending broker confirmation. <a href="#tbc-drycargo-1-ref" class="back-ref">&crarr;</a></li>
-        </ol>
+      <section aria-labelledby="sec-drycargo-2">
+        <h2 id="sec-drycargo-2" class="sub">Export caps and oversupply</h2>
+        <button class="sec-share" data-share-anchor="sec-drycargo-2" aria-label="Copy link to this section">&sect;</button>
+      <p data-pidx="3">Despite this growth, the market is increasingly challenged by oversupply, weaker aluminium demand and geopolitical instability. Guinea, the world\u2019s largest bauxite exporter, is considering export restrictions in 2026 to stabilise prices and protect smaller miners whose margins have been squeezed by falling prices. A proposed export cap of 150 Mn T would represent a reduction of about 15 per cent from 2025 levels and could release around 46 Capesize vessels back into the market, equivalent to nearly 80 per cent of the Capesize fleet scheduled for delivery in 2026. Such a move would likely place significant downward pressure on freight rates, particularly if implemented during the second half of the year.</p>
+      <p data-pidx="4">However, some market participants believe a 150 Mn T cap may prove too restrictive. Guinea\u2019s bauxite exports rose by 25 per cent year-on-year in the first quarter of 2026 to 60.9 Mn T, driven largely by sustained Chinese demand. Chinese-linked producers dominated shipments, with Soci\u00e9t\u00e9 Mini\u00e8re de Bok\u00e9 exporting 18 Mn T and Chalco increasing volumes by 35 per cent to 8 Mn T. Other key contributors included AGB2A/SDM, CBG and AMC. Given the strong start to the year, many analysts see a more realistic export range of 170\u2013190 Mn T for 2026.</p>
+      <p data-pidx="5">Chinese aluminium production has now reached the country\u2019s official ceiling of 44.2 Mn T, limiting long-term growth in bauxite demand. At the same time, bauxite prices have fallen to around USD 32\u201338 per T, their lowest levels since 2022, increasing pressure on Guinean authorities to intervene. Beyond export caps, the government is also considering tax reforms designed to encourage investment in rail infrastructure, ports and domestic refining capacity.</p>
+      </section>
+    `,
+    bodyAfter: `
+      <section aria-labelledby="sec-drycargo-3">
+        <h2 id="sec-drycargo-3" class="sub">Strait of Hormuz disruption</h2>
+        <button class="sec-share" data-share-anchor="sec-drycargo-3" aria-label="Copy link to this section">&sect;</button>
+      <p data-pidx="6">The market is also being disrupted by instability around the Strait of Hormuz, which has forced Gulf aluminium producers to adopt costly and complex emergency logistics solutions. With direct shipments of alumina and bauxite disrupted, cargoes are being transhipped through Indian anchorages onto smaller vessels for delivery to the UAE before being transported overland to smelters. While the system has allowed operations to continue, it remains inefficient, expensive and highly vulnerable to weather conditions, particularly during the Indian monsoon season when handling bauxite and alumina becomes significantly more difficult.</p>
+      <div class="analysis-section">
+        <span class="as-label">Outlook</span>
+        <p><strong>A triple squeeze is reshaping the market.</strong> Together, the prospect of Guinean export controls, slowing Chinese aluminium growth and Middle Eastern supply chain disruption is creating significant uncertainty for both global aluminium markets and dry bulk shipping. The second half of 2026 will be decisive.</p>
       </div>
+      </section>
+    `,
+    bodyEnd: `
       <div class="sources-panel">
         <button class="sources-header" aria-expanded="false"><h3>Sources</h3><span class="sources-toggle">&#9656;</span></button>
-        <p class="sources-meta">2 source clusters &middot; click to expand</p>
+        <p class="sources-meta">2 source clusters \u00b7 click to expand</p>
         <div class="sources-body">
           <div class="badge-legend"><span><span class="badge-dot wire"></span> Wire / broadsheet</span><span><span class="badge-dot secondary"></span> Secondary / specialist</span></div>
           <ul>
-            <li class="src-wire"><strong>Wire:</strong> <a href="#" target="_blank" rel="noopener">TradeWinds</a></li>
-            <li class="src-secondary"><strong>Secondary:</strong> <a href="#" target="_blank" rel="noopener">Clarksons Research</a>; <a href="#" target="_blank" rel="noopener">Baltic Exchange</a></li>
+            <li class="src-wire"><strong>Wire:</strong> Reuters</li>
+            <li class="src-secondary"><strong>Secondary:</strong> Splash</li>
           </ul>
         </div>
       </div>
     `,
-    topics: ['Dry Cargo', 'Newbuilding', 'S&amp;P']
+    topics: ['Dry Cargo', 'Bauxite', 'Capesize', 'Guinea']
   },
   /* ======================== 4 / GAS ======================== */
   {
     id: 'gas',
     section: 'Gas',
     breadcrumb: ['Macro', 'Gas'],
-    headline: 'Gas headline &mdash; a <em>leaner</em> piece with a cross-reference',
-    standfirst: 'This piece demonstrates a leaner article with fewer sub-sections, a cross-reference back to Oil, and the KPI grid used in a gas context.',
+    headline: '\u201CEverything Energy\u201D',
+    standfirst: 'After his two-day visit to Beijing, Trump claims China wants to buy energy from the US.',
     body: `
       <section aria-labelledby="sec-gas-1">
-        <h2 id="sec-gas-1" class="sr-only">Opening</h2>
+        <h2 id="sec-gas-1" class="sr-only">A new phase</h2>
         <button class="sec-share" data-share-anchor="sec-gas-1" aria-label="Copy link to this section">&sect;</button>
-      <p class="opener" data-pidx="0">Not every piece needs three sub-sections. The Gas desk often writes a tighter brief &mdash; two sections, one data block, and a concise sign-off. The template accommodates both shapes without changing the overall rhythm.</p>
-      <p data-pidx="1">Where the Oil and Gas desks cover the same event from different angles, a cross-reference keeps the reader oriented: <a href="#page-oil" class="xref" data-xref="oil">the Oil desk covers the upstream supply picture and Brent pricing</a>. The return pill lets them come back here without losing their place.</p>
+      <p class="opener" data-pidx="0">Global LNG markets are entering a new phase of rebalancing, marked by shifting trade flows, geopolitical disruption and evolving demand patterns across major importing regions. Europe is preparing for a structural pivot toward US LNG, while developments in China suggest a possible reopening of one of the most important demand channels in the global gas system. At the same time, supply disruptions in the Middle East continue to underpin elevated prices and reshape how buyers approach energy security.</p>
+      <p data-pidx="1">Europe\u2019s reliance on US LNG is set to increase sharply in the coming years as the continent seeks to reduce dependency on Middle Eastern and Russian volumes. According to the Institute for Energy Economics and Financial Analysis (IEEFA), Europe\u2019s dependence on US LNG imports is projected to surge by around 80 per cent by 2028, as ongoing disruptions in traditional supply routes force a reorientation of trade flows. This shift reflects both necessity and policy, as Europe attempts to secure reliable supply amid instability in the Persian Gulf and an ongoing effort to phase out Russian energy. US LNG has emerged as the most flexible large-scale alternative, but the transition also raises questions around pricing, infrastructure readiness and long-term contract structures.</p>
       </section>
     `,
-    figures: [
-      { type: 'kpis', label: 'i.', labelText: 'LNG spot snapshot', caption: 'Regional spot prices, USD per MMBtu.',
-        items: [
-          { val: '13.4', unit: '$/MMBtu', label: 'JKM (Asia spot)' },
-          { val: '11.8', unit: '$/MMBtu', label: 'TTF (Europe)' },
-          { val: '3.2', unit: '$/MMBtu', label: 'Henry Hub (US)' },
-          { val: '48', unit: 'cargoes', label: 'Spot fixtures this week' }
-        ]
-      }
-    ],
     pullquote: {
-      text: 'The glut that was supposed to arrive in 2026 has not materialised.',
-      cite: 'Senior LNG trader, Geneva'
+      text: 'China wants to buy \u201Ceverything energy\u201D from the US.',
+      cite: 'Donald Trump, following discussions with Xi Jinping'
     },
     bodyAfter: `
       <section aria-labelledby="sec-gas-2">
-        <h2 id="sec-gas-2" class="sub">What to watch</h2>
+        <h2 id="sec-gas-2" class="sub">China\u2019s \u201Cinsatiable appetite\u201D</h2>
         <button class="sec-share" data-share-anchor="sec-gas-2" aria-label="Copy link to this section">&sect;</button>
+      <p data-pidx="2">At the same time, developments in Asia are adding a new layer of complexity to global LNG dynamics. Comments from US President Donald Trump following discussions with Chinese President Xi Jinping suggest that China may be open to resuming imports of US energy, including LNG, after a prolonged freeze. Trump said that China wants to buy \u201Ceverything energy\u201D from the US, highlighting the country\u2019s \u201Cinsatiable appetite\u201D for fuel. A revival of LNG trade between the two nations would reconnect the world\u2019s largest LNG buyer with the largest LNG exporter, potentially reshaping flows across the Atlantic and Pacific basins.</p>
+      <p data-pidx="3">However, significant barriers remain. China continues to apply a 25 per cent tariff on US LNG, which has been the primary obstacle to resumed trade following earlier tariff disputes. Even without a formal agreement, analysts note that China could unilaterally reduce or remove the tariff if it requires additional volumes, especially as buyers prepare for peak summer demand. Ship tracking data already suggests some tentative movement, with two US LNG cargoes loading from Sabine Pass and Plaquemines in Louisiana signalling Tianjin as their potential destination. If completed, these would represent the first US LNG deliveries to China since February 2025.</p>
+      <p data-pidx="4">Despite this potential reopening, China\u2019s demand profile remains relatively weak in the near term. S&P Global notes that China has been importing less than its full contracted volumes and has largely managed the supply disruption by diverting cargoes and staying out of the spot market for much of the year. This strategy has helped mitigate the immediate impact of the Middle East crisis on Asian markets, even as other buyers have struggled. China accounted for about 28 per cent of Qatar\u2019s LNG exports in 2025, underscoring its central role in global demand. Chinese firms also hold around 21 Mn T per year of US LNG term contracts, of which 5.4 Mn T are already being delivered, while another 8.7 Mn T are scheduled to begin delivery between July and October.</p>
+      </section>
 
+      <section aria-labelledby="sec-gas-3">
+        <h2 id="sec-gas-3" class="sub">Tight market conditions</h2>
+        <button class="sec-share" data-share-anchor="sec-gas-3" aria-label="Copy link to this section">&sect;</button>
+      <p data-pidx="5">Meanwhile, market conditions remain tight. Global LNG prices continue to reflect supply disruptions tied to the conflict in the Middle East, particularly around the Strait of Hormuz, which has historically carried about a fifth of global LNG flows. Platts assessed the June JKM benchmark price for Northeast Asia at USD 18.465 per MmBtu on 15 May, representing a 3 per cent increase from the previous assessment and about 73 per cent higher than prewar levels. These elevated prices have kept pressure on importing countries, particularly in Asia, where demand is more sensitive to price fluctuations.</p>
       <div class="analysis-section">
         <span class="as-label">Affinity view</span>
-        <p><strong>The JKM&ndash;TTF spread may widen further if Asian restocking accelerates.</strong> A single-paragraph analysis block with a different label to demonstrate flexibility. The bold lead-in carries the framing; the rest provides the reasoning.</p>
+        <p><strong>The LNG market is fragmenting along geopolitical lines.</strong> Europe is locking in greater volumes from the US as it reshapes its supply base, while Asia, led by China, is balancing between demand restraint and selective re-entry into the market. The potential revival of US-China LNG trade could provide support for American project developers, particularly if it leads to new long-term contracting activity. Before the trade dispute, the US was the fifth-largest LNG supplier to China, exporting about 4.2 Mn T in 2024, accounting for more than 5 per cent of total Chinese imports. As <a href="#page-oil" class="xref" data-xref="oil">the Oil desk reports</a>, the broader US-China trade relationship also saw movement last week.</p>
       </div>
-
-      <p data-pidx="2">The closing paragraph ties the piece together. Keep it concrete: a data point, a date to watch, or a scenario the reader should keep in mind before the next edition.</p>
       </section>
     `,
     bodyEnd: `
       <div class="sources-panel">
         <button class="sources-header" aria-expanded="false"><h3>Sources</h3><span class="sources-toggle">&#9656;</span></button>
-        <p class="sources-meta">2 source clusters &middot; click to expand</p>
+        <p class="sources-meta">2 source clusters \u00b7 click to expand</p>
         <div class="sources-body">
           <div class="badge-legend"><span><span class="badge-dot wire"></span> Wire / broadsheet</span><span><span class="badge-dot secondary"></span> Secondary / specialist</span></div>
           <ul>
-            <li class="src-wire"><strong>Wire:</strong> <a href="#" target="_blank" rel="noopener">Reuters</a></li>
-            <li class="src-secondary"><strong>Secondary:</strong> <a href="#" target="_blank" rel="noopener">IEA Gas Market Report</a></li>
+            <li class="src-wire"><strong>Wire:</strong> Shipping Telegraph</li>
+            <li class="src-secondary"><strong>Secondary:</strong> S&P Global</li>
           </ul>
         </div>
       </div>
     `,
-    topics: ['Gas', 'LNG', 'JKM']
+    topics: ['Gas', 'LNG', 'US-China', 'JKM']
   },
   /* ======================== 5 / CONTAINERS ======================== */
   {
     id: 'containers',
     section: 'Containers',
     breadcrumb: ['Macro', 'Containers'],
-    headline: 'Containers headline &mdash; the <em>final</em> piece in the issue',
-    standfirst: 'The last piece in the issue. It demonstrates the prices table in a container-freight context and closes with a pull-quote.',
+    headline: 'Taking Advantage of Geopolitics',
+    standfirst: 'Spot rates continue to jump as carriers press their advantage, but dark clouds are gathering on the horizon.',
     body: `
       <section aria-labelledby="sec-containers-1">
-        <h2 id="sec-containers-1" class="sr-only">Opening</h2>
+        <h2 id="sec-containers-1" class="sr-only">Rate surge</h2>
         <button class="sec-share" data-share-anchor="sec-containers-1" aria-label="Copy link to this section">&sect;</button>
-      <p class="opener" data-pidx="0">The Containers desk closes the issue. The rhythm is the same as the earlier pieces: opener, sub-section, optional data block, and a landing paragraph. Any component from the template vocabulary can appear here.</p>
-      <p data-pidx="1">The prices table below re-uses the same component as the Oil piece, demonstrating that it works for any key-value data set &mdash; freight indices, rates, spreads.</p>
+      <p class="opener" data-pidx="0">There remains little prospect of an imminent end to the war in the Middle East. The US continues to push Iran to the negotiating table, but Iran believes that it is \u201Cwinning\u201D, as the US electorate feel an increasingly acute pinch from rising energy and consumer prices.</p>
+      <p data-pidx="1">But as long as the conflict continues, liner companies will continue to push freight rates higher. Last week, spot rates posted their highest weekly gains in months, after carriers implemented both higher emergency surcharges and capacity cuts. The Drewry World Container Index leapt 12 per cent to USD 2,553 per FEU, with the strongest increases posted on the Far East\u2013US routes.</p>
+      <p data-pidx="2">On these routes, liner companies have implemented both Emergency Fuel Surcharges (EFS) and Peak Season Surcharges (PSS), passing on higher operating costs onto shippers. On Shanghai\u2013New York, spot rates jumped 14 per cent on the week to USD 4,252 per FEU, while Shanghai\u2013Los Angeles rose 10 per cent to USD 3,357 per FEU. Carriers continue to tighten capacity to support the freight market, with Drewry reporting seven blank sailings scheduled for this week. Moreover, others continue to push the rate higher, with Yang Ming Marine Transport announcing a General Rate Increase (GRI) of USD 2,000 per FEU effective 15 May. Drewry expects further GRI announcements this week.</p>
+      <p data-pidx="3">Rates on Asia\u2013Europe routes also strengthened, also driven by carriers pushing through rate hikes. Rates on Shanghai\u2013Genoa jumped 20 per cent to USD 3,701 per FEU, while Shanghai\u2013Rotterdam climbed 11 per cent to USD 2,413 per FEU. Higher Freight All Kinds (FAK) rates led the charge, driven by carriers tightening capacity.</p>
       </section>
     `,
-    figures: [
-      { type: 'prices', label: 'i.', labelText: 'Container freight indices', caption: 'Composite and route indices, at time of writing.', source: 'Sources &mdash; Drewry; Freightos.', headCols: ['Index', 'Latest', '&Delta; wow'],
-        rows: [
-          { name: 'Drewry WCI', note: 'Composite', val: '3,240', delta: '+4.2%', dir: 'up' },
-          { name: 'Shanghai&ndash;Rotterdam', note: '40ft', val: '4,810', delta: '+6.1%', dir: 'up' },
-          { name: 'Shanghai&ndash;LA', note: '40ft', val: '3,120', delta: '&minus;1.3%', dir: 'down' }
-        ]
-      }
-    ],
-    pullquote: {
-      text: 'We are not at peak box rates yet.',
-      cite: 'Drewry Supply Chain Advisors'
-    },
     bodyAfter: `
       <section aria-labelledby="sec-containers-2">
-        <h2 id="sec-containers-2" class="sub">Outlook</h2>
+        <h2 id="sec-containers-2" class="sub">Bypass routes and congestion</h2>
         <button class="sec-share" data-share-anchor="sec-containers-2" aria-label="Copy link to this section">&sect;</button>
-      <p data-pidx="2">A sub-section heading followed by the closing prose. The analysis block is optional &mdash; not every piece needs one. The pull-quote above demonstrates the component at the end of the issue rather than mid-article.</p>
-      <p data-pidx="3">The endmark diamond signals that the last piece is over. The progress bar should show all five segments as read; the TOC drawer should mark the full set as read. End of issue.</p>
+      <p data-pidx="4">The Asia\u2013Europe peak season typically begins in the latter half of Q2, as shippers begin building inventories ahead of the end-of-year holiday season. But just as last year, when they front-loaded imports to counter US President Trump\u2019s tariffs, shippers appear to be moving earlier this year because of tightening tonnage and uncertainty generated by supply chain disruptions because of the war in the Middle East.</p>
+      <p data-pidx="5">Speaking of which, carriers have continued to ship volumes to the Middle East, utilising trucking to bypass the closed Strait of Hormuz. Trucking routes linking Red Sea and Gulf of Oman ports, such as Yanbu and Fujairah, to some of the largest ports in the Arabian Gulf, such as Jebel Ali and Basra, have opened up. And carriers are charging record-high freight rates, rising beyond even those at the height of the pandemic with the release of unprecedented pent-up demand. Congestion at these ports, however, has soared, further tightening tonnage and supporting the wider containership market\u2019s fundamentals.</p>
+      <p data-pidx="6">By contrast, volumes handled at US ports continued to drop in April. At the Port of Long Beach, handled cargo volumes fell 5.7 per cent on the year last month, falling to 817,992 TEU. However, early last year, the port handled record volumes on the sharp front-loading and, despite the drop in volumes in March, Long Beach became the US\u2019s busiest port through Q1 this year.</p>
+      </section>
+
+      <section aria-labelledby="sec-containers-3">
+        <h2 id="sec-containers-3" class="sub">Outlook</h2>
+        <button class="sec-share" data-share-anchor="sec-containers-3" aria-label="Copy link to this section">&sect;</button>
+      <p data-pidx="7">Uncertainty and volatility borne out of the conflict in the Middle East continue to support container imports and, according to Xeneta, the market is in a unique position in which both shippers and carriers are \u201Chappy\u201D with freight levels, particularly on Transpacific trades. Although rates have risen well above pre-conflict levels, they have \u201Cremained effectively flat\u201D over the past month, according to Xeneta\u2019s Peter Sand. A factor behind the plateau is US shippers delaying signing new long-term contracts because of the uncertainty emanating from the Middle East, wary of locking in rates at higher levels than necessary, depending on when and how the conflict is resolved.</p>
+      <div class="analysis-section">
+        <span class="as-label">Risk</span>
+        <p><strong>Short-term support masks longer-term vulnerability.</strong> The impact of the conflict is becoming increasingly wide-ranging. More and more economic indicators are being published that underline the extent to which the global economy is being affected. Inflation is creeping higher and the latest Chinese economic data was weaker than expected. Accompanying the data, Beijing warned of the \u201Csevere\u201D global economic environment that has been caused by the war. So, while there may be short-term support for the freight market, longer-term \u2014 should the current status quo be maintained \u2014 weakness is expected as the conflict takes its toll.</p>
+      </div>
       </section>
     `,
     bodyEnd: `
       <div class="sources-panel">
         <button class="sources-header" aria-expanded="false"><h3>Sources</h3><span class="sources-toggle">&#9656;</span></button>
-        <p class="sources-meta">2 source clusters &middot; click to expand</p>
+        <p class="sources-meta">2 source clusters \u00b7 click to expand</p>
         <div class="sources-body">
           <div class="badge-legend"><span><span class="badge-dot wire"></span> Wire / broadsheet</span><span><span class="badge-dot secondary"></span> Secondary / specialist</span></div>
           <ul>
-            <li class="src-wire"><strong>Wire:</strong> <a href="#" target="_blank" rel="noopener">Lloyd&rsquo;s List</a></li>
-            <li class="src-secondary"><strong>Secondary:</strong> <a href="#" target="_blank" rel="noopener">Drewry Maritime Research</a>; <a href="#" target="_blank" rel="noopener">Freightos</a></li>
+            <li class="src-wire"><strong>Wire:</strong> Financial Times</li>
+            <li class="src-secondary"><strong>Secondary:</strong> Drewry; gCaptain; Xeneta</li>
           </ul>
         </div>
       </div>
     `,
-    topics: ['Containers', 'Drewry', 'Freight']
+    topics: ['Containers', 'Freight Rates', 'Drewry', 'Middle East']
   }
 ];
 
 /* =====================================================================
-   STATE — persisted in localStorage
+   STATE â persisted in localStorage
    ===================================================================== */
 
 const DEFAULTS = {
@@ -4854,7 +5071,7 @@ function applySettings() {
   } else {
     root.removeAttribute('data-theme');
   }
-  // Update theme-color meta — covers all six themes so iOS Safari's
+  // Update theme-color meta â covers all six themes so iOS Safari's
   // status bar tints correctly under each.
   const themeColor = state.theme === 'dark'     ? '#0A0A0A'
                    : state.theme === 'sepia'    ? '#F4E8D0'
@@ -4864,7 +5081,7 @@ function applySettings() {
                    : '#FDFCF9';
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', themeColor);
 
-  // Prose controls — drive CSS via data-* attributes on <html>.
+  // Prose controls â drive CSS via data-* attributes on <html>.
   root.setAttribute('data-typeface', state.typeface || 'goudy');
   root.setAttribute('data-dropcap', state.dropcap || 'large');
   root.setAttribute('data-para',    state.para    || 'spaced');
@@ -5071,7 +5288,7 @@ function renderArticleActions(p) {
 }
 
 /* =====================================================================
-   SVG ORNAMENTS — a single typographic mark reused across the product.
+   SVG ORNAMENTS â a single typographic mark reused across the product.
    One solid diamond flanked by hairline rules. Scales via width.
    The compact variant (no rules) serves as the article end mark.
    ===================================================================== */
@@ -5148,31 +5365,31 @@ function renderPage(idx, opts = {}) {
 
   document.getElementById('page-content').innerHTML = html;
 
-  // Wire up nav cards (sequential — does NOT push history)
+  // Wire up nav cards (sequential â does NOT push history)
   document.querySelectorAll('.article [data-goto]').forEach(el => {
     el.addEventListener('click', (e) => {
       e.preventDefault();
       const targetIdx = parseInt(el.dataset.goto, 10);
       // Cover contents jumps are always real navigation but from the cover
-      // they're sequential enough — don't push history
+      // they're sequential enough â don't push history
       goToPage(targetIdx);
     });
   });
-  // Wire up topic tags — opens TOC pre-filled with that topic as a query
+  // Wire up topic tags â opens TOC pre-filled with that topic as a query
   document.querySelectorAll('.article .topic').forEach(el => {
     el.addEventListener('click', (e) => {
       e.preventDefault();
       openTOCWithSearch(el.textContent.trim());
     });
   });
-  // Wire up article actions — these patch DOM in place, no full rerender
+  // Wire up article actions â these patch DOM in place, no full rerender
   document.querySelectorAll('.art-primary, .art-act').forEach(el => {
     el.addEventListener('click', () => handleArticleAction(el.dataset.act, p.id));
   });
-  // Wire up paragraph highlights — long-press on touch, double-click on desktop.
+  // Wire up paragraph highlights â long-press on touch, double-click on desktop.
   // Cover-page editor's-note paragraphs are excluded (they're meta, not body).
   wireHighlights(p.id);
-  // Wire up inline cross-references — open TOC search or jump to another page.
+  // Wire up inline cross-references â open TOC search or jump to another page.
   document.querySelectorAll('.article .xref').forEach(el => {
     el.addEventListener('click', (e) => {
       e.preventDefault();
@@ -5223,7 +5440,7 @@ function goToPage(idx, opts = {}) {
 
    Why long-press not single-tap: a single tap would compete with link
    activation, accidental scroll, and reading itself. Long-press is the
-   honest "I am marking this" gesture — it's what every native iOS
+   honest "I am marking this" gesture â it's what every native iOS
    reading app uses.
    ===================================================================== */
 
@@ -5267,14 +5484,14 @@ function wireHighlights(pageId) {
   // disable / enable round-trip without losing their anchor.
   paragraphs.forEach((p, idx) => { p.dataset.pidx = idx; });
 
-  // Feature off → no class, no listeners, no visual state. The highlight
+  // Feature off â no class, no listeners, no visual state. The highlight
   // data is preserved in state.highlights but invisible until re-enabled.
   if (!state.highlightsEnabled) return;
 
   paragraphs.forEach((p) => p.classList.add('highlightable'));
   applyHighlightStates(pageId);
 
-  // Long-press handler — works on both touch and mouse for parity
+  // Long-press handler â works on both touch and mouse for parity
   let pressTimer = null;
   let pressTarget = null;
   let pressStartXY = null;
@@ -5327,7 +5544,7 @@ function wireHighlights(pageId) {
     p.addEventListener('touchmove', moveCheck, { passive: true });
     p.addEventListener('touchend', cancelPress);
     p.addEventListener('touchcancel', cancelPress);
-    // Mouse — long-press AND double-click both work on desktop
+    // Mouse â long-press AND double-click both work on desktop
     p.addEventListener('mousedown', (e) => {
       // Ignore if user is starting a text selection (with shift) or click on a link
       if (e.target.tagName === 'A' || e.shiftKey) return;
@@ -5346,7 +5563,7 @@ function wireHighlights(pageId) {
         renderTOC(document.getElementById('toc-search-input').value);
       }
     });
-    // Suppress click after a long-press fired — otherwise embedded link
+    // Suppress click after a long-press fired â otherwise embedded link
     // activations can race against the highlight toggle
     p.addEventListener('click', (e) => {
       if (pressFired) {
@@ -5405,7 +5622,7 @@ function handleArticleAction(act, pageId) {
 }
 
 /* =====================================================================
-   RETURN PILL — stack-based history (browser-like back behaviour)
+   RETURN PILL â stack-based history (browser-like back behaviour)
    Every non-sequential jump pushes the source page onto a stack. The
    pill always shows the top of the stack; tapping pops one level.
    Sequential next/previous navigation does NOT push (otherwise the
@@ -5447,7 +5664,7 @@ function clearReturnStack() {
 document.getElementById('rp-go').addEventListener('click', () => {
   if (!returnStack.length) return;
   const t = returnStack.pop();
-  // Going via the pill is itself navigation — but it should not push
+  // Going via the pill is itself navigation â but it should not push
   // the current page back on (otherwise we'd loop forever)
   goToPage(t, { suppressHistory: true });
 });
@@ -5456,12 +5673,12 @@ document.getElementById('rp-close').addEventListener('click', () => {
 });
 
 /* =====================================================================
-   PROGRESS — segmented bar (one segment per page)
+   PROGRESS â segmented bar (one segment per page)
    ===================================================================== */
 
 
 /* =====================================================================
-   LAYOUT — paged (one article at a time) vs continuous (all stacked).
+   LAYOUT â paged (one article at a time) vs continuous (all stacked).
    Continuous mode replaces #page-content with all five sections; the
    CSS view-timeline animations drive each progress segment independently
    as the user scrolls past its section. Paged mode is the original
@@ -5550,7 +5767,7 @@ function renderContinuous() {
     wireHighlights(p.id);
   });
 
-  // In continuous mode no segment is "the active page" — clear the active
+  // In continuous mode no segment is "the active page" â clear the active
   // class so the CSS @supports view-timeline animation can paint each
   // segment as its section scrolls into view.
   document.querySelectorAll('.seg').forEach(s => s.classList.remove('active'));
@@ -5641,7 +5858,7 @@ function tease(text, maxWords = 16) {
   return words.slice(0, maxWords).join(' ') + '\u2026';
 }
 
-/* TOC FILTER — applied alongside search.
+/* TOC FILTER â applied alongside search.
    Search wins: when query is non-empty, filters are visually suppressed
    and the search runs against ALL pages. Filters operate on the
    already-search-narrowed set. */
@@ -5660,11 +5877,11 @@ function renderTOC(filter = '') {
   const filtersEl = document.querySelector('.toc-filters');
   const q = filter.trim().toLowerCase();
 
-  // When a search query is active, hide the filter chips entirely —
+  // When a search query is active, hide the filter chips entirely â
   // search overrides filter for clarity.
   if (filtersEl) filtersEl.classList.toggle('suppressed', !!q);
 
-  // Update counts (computed against full PAGES — independent of search)
+  // Update counts (computed against full PAGES â independent of search)
   document.getElementById('toc-count-all').textContent = PAGES.length;
   document.getElementById('toc-count-saved').textContent = state.saved.length;
   document.getElementById('toc-count-highlighted').textContent =
@@ -5733,7 +5950,7 @@ function renderTOC(filter = '') {
   });
 }
 
-// Filter chips — click to switch
+// Filter chips â click to switch
 document.querySelectorAll('.toc-filter').forEach(b => {
   b.addEventListener('click', () => {
     tocFilter = b.dataset.filter;
@@ -5753,7 +5970,7 @@ document.getElementById('close-toc').addEventListener('click', () => {
 });
 
 /* =====================================================================
-   OVERLAYS — open/close
+   OVERLAYS â open/close
    ===================================================================== */
 
 const scrim = document.getElementById('scrim');
@@ -5785,10 +6002,120 @@ function openTOCWithSearch(query) {
 function closeOverlays() {
   settingsSheet.classList.remove('show');
   tocDrawer.classList.remove('show');
+  if (askSheet) {
+    askSheet.classList.remove('show');
+    askSheet.setAttribute('aria-hidden', 'true');
+  }
   scrim.classList.remove('show');
   settingsSheet.setAttribute('aria-hidden', 'true');
   tocDrawer.setAttribute('aria-hidden', 'true');
 }
+
+/* ===== ASK THE DESK â progressive enhancement ====================
+   The form already works as a plain POST with JS off. Here we add:
+   open/close via the shared scrim, per-issue + live context fields,
+   client validation, a character counter, and a fetch submit that
+   swaps in an inline confirmation instead of navigating away. ===== */
+const askSheet   = document.getElementById('ask-sheet');
+const askForm    = document.getElementById('ask-form');
+const askEmail   = document.getElementById('ask-email');
+const askQuestion= document.getElementById('ask-question');
+const askSubmit  = document.getElementById('ask-submit');
+const askConfirm = document.getElementById('ask-confirm');
+const askEmailErr= document.getElementById('ask-email-err');
+const askQErr    = document.getElementById('ask-q-err');
+const askQCount  = document.getElementById('ask-q-count');
+
+function openAsk() {
+  // Stamp issue identity from the sheet's data-* (âï¸ per-issue edit point)
+  document.getElementById('ask-issue-id').value =
+    askSheet.getAttribute('data-issue-id') || '';
+  document.getElementById('ask-issue-title').value =
+    askSheet.getAttribute('data-issue-title') || '';
+  askSheet.classList.add('show');
+  scrim.classList.add('show');
+  askSheet.setAttribute('aria-hidden', 'false');
+  setTimeout(() => askEmail && askEmail.focus(), 340);
+}
+
+function askClearError(input, errEl) {
+  input.removeAttribute('aria-invalid');
+  errEl.classList.remove('show');
+}
+function askShowError(input, errEl) {
+  input.setAttribute('aria-invalid', 'true');
+  errEl.classList.add('show');
+}
+
+if (askSheet) {
+  document.getElementById('open-ask').addEventListener('click', openAsk);
+  document.getElementById('close-ask').addEventListener('click', closeOverlays);
+  document.getElementById('ask-cancel').addEventListener('click', closeOverlays);
+
+  // Live character counter
+  askQuestion.addEventListener('input', () => {
+    askQCount.textContent = askQuestion.value.length + ' / 1500';
+    if (askQuestion.value.trim()) askClearError(askQuestion, askQErr);
+  });
+  askEmail.addEventListener('input', () => {
+    if (askEmail.validity.valid) askClearError(askEmail, askEmailErr);
+  });
+
+  askForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    // Validate
+    let ok = true;
+    if (!askEmail.value.trim() || !askEmail.validity.valid) {
+      askShowError(askEmail, askEmailErr); ok = false;
+    }
+    if (!askQuestion.value.trim()) {
+      askShowError(askQuestion, askQErr); ok = false;
+    }
+    if (!ok) {
+      (askEmail.getAttribute('aria-invalid') ? askEmail : askQuestion).focus();
+      return;
+    }
+
+    // Populate live context just before sending
+    document.getElementById('ask-source-url').value = location.href;
+    const active = document.querySelector('.seg.active');
+    document.getElementById('ask-section-hint').value =
+      (active && active.getAttribute('data-page-id')) || '';
+
+    askSubmit.disabled = true;
+    askSubmit.textContent = 'Sending\u2026';
+
+    try {
+      const res = await fetch(askForm.action, {
+        method: 'POST',
+        body: new FormData(askForm),
+        headers: { 'Accept': 'application/json' }
+      });
+      let data = {};
+      try { data = await res.json(); } catch (_) { /* non-JSON */ }
+
+      if (res.ok && (data.success === undefined || data.success === true)) {
+        document.getElementById('ask-confirm-email').textContent =
+          askEmail.value.trim();
+        askForm.style.display = 'none';
+        askConfirm.classList.add('show');
+        askConfirm.focus();
+        askForm.reset();
+        askQCount.textContent = '0 / 1500';
+      } else {
+        throw new Error((data && data.message) || 'Send failed');
+      }
+    } catch (err) {
+      askSubmit.disabled = false;
+      askSubmit.textContent = 'Send to the desk';
+      askQErr.textContent =
+        'Could not send just now â please try again, or email the desk directly.';
+      askQErr.classList.add('show');
+    }
+  });
+}
+/* ================================================================ */
 
 document.getElementById('open-settings').addEventListener('click', openSettings);
 document.getElementById('open-toc').addEventListener('click', openTOC);
@@ -5829,7 +6156,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 /* =====================================================================
-   SETTINGS UI — wire up pickers
+   SETTINGS UI â wire up pickers
    ===================================================================== */
 
 function syncSettingsUI() {
@@ -5839,7 +6166,7 @@ function syncSettingsUI() {
     b.classList.toggle('active', on);
     b.setAttribute('aria-checked', on);
   });
-  // Theme — single source of truth, theme-card with embedded swatch + label
+  // Theme â single source of truth, theme-card with embedded swatch + label
   document.querySelectorAll('.theme-card').forEach(b => {
     const on = b.dataset.theme === (state.theme || 'paper');
     b.classList.toggle('active', on);
@@ -5957,7 +6284,7 @@ document.getElementById('width-picker').addEventListener('click', (e) => {
   });
 });
 
-// Highlights switch — re-wires the current page so the gesture goes
+// Highlights switch â re-wires the current page so the gesture goes
 // live (or goes dead) without a full page rerender.
 document.getElementById('highlights-switch').addEventListener('click', () => {
   state.highlightsEnabled = !state.highlightsEnabled;
@@ -6001,7 +6328,7 @@ resetBtn.addEventListener('click', () => {
     resetArmTimer = setTimeout(disarmReset, 4000);
     return;
   }
-  // Second tap — execute (preserves saved/read/highlights data)
+  // Second tap â execute (preserves saved/read/highlights data)
   state.scale = DEFAULTS.scale;
   state.theme = DEFAULTS.theme;
   state.density = DEFAULTS.density;
@@ -6030,7 +6357,7 @@ resetBtn.addEventListener('click', () => {
 document.getElementById('close-settings').addEventListener('click', disarmReset);
 
 /* =====================================================================
-   SHARE — Web Share API on iOS, fallback to copy
+   SHARE â Web Share API on iOS, fallback to copy
    ===================================================================== */
 
 function doShare() {
@@ -6072,7 +6399,7 @@ function showToast(msg) {
 }
 
 /* =====================================================================
-   SWIPE — left/right between pages on touch devices
+   SWIPE â left/right between pages on touch devices
    Restricted to the middle ~80% of the viewport so it doesn't conflict
    with iOS Safari's swipe-to-go-back edge gesture.
    ===================================================================== */
@@ -6135,7 +6462,7 @@ document.getElementById('brand-home').addEventListener('click', (e) => {
 });
 
 /* =====================================================================
-   TEMPLATE ADDITIONS — wire up the new prose toggles, sec-share buttons,
+   TEMPLATE ADDITIONS â wire up the new prose toggles, sec-share buttons,
    collapsible sources panel, focus-mode touch fallback, and reading ruler.
    ===================================================================== */
 
@@ -6147,7 +6474,7 @@ if (dropcapPicker) dropcapPicker.addEventListener('click', (e) => {
   applySettings(); syncSettingsUI(); saveState();
 });
 
-// Typeface picker — swap the editorial serif (Goudy / Garamond / Sans)
+// Typeface picker â swap the editorial serif (Goudy / Garamond / Sans)
 const typefacePicker = document.getElementById('typeface-picker');
 if (typefacePicker) typefacePicker.addEventListener('click', (e) => {
   const btn = e.target.closest('.toggle-btn'); if (!btn) return;
@@ -6201,7 +6528,7 @@ if (rulerSwitch) rulerSwitch.addEventListener('click', () => {
   showToast(state.ruler ? 'Ruler on' : 'Ruler off');
 });
 
-// Reading ruler — horizontal line follows the cursor through the prose.
+// Reading ruler â horizontal line follows the cursor through the prose.
 (function () {
   const rule = document.getElementById('reading-ruler');
   if (!rule) return;
@@ -6218,7 +6545,7 @@ if (rulerSwitch) rulerSwitch.addEventListener('click', () => {
   document.addEventListener('mouseleave', () => { rule.style.display = 'none'; }, { passive: true });
 })();
 
-// Focus mode — touch fallback. On touch devices, hover doesn't fire, so
+// Focus mode â touch fallback. On touch devices, hover doesn't fire, so
 // tap-to-focus toggles a class on the tapped paragraph. Tapping outside
 // any prose element clears focus so nothing stays stuck.
 (function () {
@@ -6227,7 +6554,7 @@ if (rulerSwitch) rulerSwitch.addEventListener('click', () => {
     if (!state.focusMode) return;
     const target = e.target.closest('.article .body p, .article .body .pullquote, .article .body .analysis-section');
     if (!target) {
-      // Tapped outside prose — clear all focus
+      // Tapped outside prose â clear all focus
       document.querySelectorAll('.focus-active').forEach(el => el.classList.remove('focus-active'));
       return;
     }
@@ -6238,7 +6565,7 @@ if (rulerSwitch) rulerSwitch.addEventListener('click', () => {
   });
 })();
 
-// Section share — click the &sect; button to copy a deep link to the
+// Section share â click the &sect; button to copy a deep link to the
 // section. Uses navigator.share if available, otherwise clipboard.
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('.sec-share');
@@ -6258,7 +6585,7 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Sources panel — collapsible. Click the header to toggle.
+// Sources panel â collapsible. Click the header to toggle.
 document.addEventListener('click', (e) => {
   const hdr = e.target.closest('.sources-header');
   if (!hdr) return;
