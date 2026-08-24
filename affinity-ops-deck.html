@@ -1711,15 +1711,21 @@ function commsView(){
    ═══════════════════════════════════════════════════════════════ */
 function reportsView(){
   const pub = S.reports.filter(r => r.status === "Published").length;
+  /* a shrinking backlog is an improvement, so each tile says which way is
+     good rather than colouring on the sign alone */
   const tiles = [
     ["Published · W34", "17", "+13.3%"],
     ["Client opens · 30 days", "1,240", "+6.1%"],
     ["Distribution reach", "386", "+2.4%"],
-    ["Follow-ups due", "11", "-8.3%"]
-  ].map(([label, value, d], i) => statTile({
-    label, value, cls:i === 0 ? "lead" : "",
-    sub:`<span class="mono ${d.startsWith("+") ? "pos-txt" : "neg-txt"}">${d}</span> vs prior period`
-  })).join("");
+    ["Follow-ups due", "11", "-8.3%", "down"]
+  ].map(([label, value, d, good = "up"], i) => {
+    const rose = d.startsWith("+");
+    const better = good === "up" ? rose : !rose;
+    return statTile({
+      label, value, cls:i === 0 ? "lead" : "",
+      sub:`<span class="mono ${better ? "pos-txt" : "neg-txt"}">${d}</span> vs prior period`
+    });
+  }).join("");
 
   return head("03 · Research reports", "6 desks · 8-week window",
       "Research library", "– what shipped, and who read it",
