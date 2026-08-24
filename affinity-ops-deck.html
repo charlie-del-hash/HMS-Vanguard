@@ -128,7 +128,7 @@
     --amber:rgba(255,167,51,.10);
     --amber-dk:#F2BE6B;
     --body:#A9C0C9;
-    --small:#7E98A2;
+    --small:#84A0AA;   /* 4.86:1 on the panel – #7E98A2 sat at 4.42 */
 
     --pos:#4FC287;  --pos-soft:rgba(79,194,135,.13);  --pos-line:#2E6B4C;
     --neg:#F0857A;  --neg-soft:rgba(240,133,122,.13); --neg-line:#7A3B36;
@@ -183,7 +183,11 @@ body{background:var(--page);color:var(--body);font-family:var(--font);font-size:
   color:#0E4152}
 .tick-up{color:var(--light-tl);font-size:10.5px} .tick-down{color:#F2ADA4;font-size:10.5px}
 .tick-sep{opacity:.22;margin-left:15px}
-@media(prefers-reduced-motion:reduce){.tick-track{animation:none}.dot{animation:none}}
+@media(prefers-reduced-motion:reduce){
+  .tick-track,.dot{animation:none}
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;scroll-behavior:auto !important}
+}
 
 /* ── frame ───────────────────────────────────────────────────── */
 .shell{display:flex;flex-direction:column;min-height:100vh}
@@ -325,10 +329,10 @@ input.search{padding:6px 10px 6px 28px;font-size:12.5px;width:190px;
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%235F6E74' stroke-width='1.6'><circle cx='7' cy='7' r='4.4'/><path d='M10.4 10.4 14 14'/></svg>");
   background-size:13px 13px}
 [data-theme="dark"] input.search{
-  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%237E98A2' stroke-width='1.6'><circle cx='7' cy='7' r='4.4'/><path d='M10.4 10.4 14 14'/></svg>")}
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%2384A0AA' stroke-width='1.6'><circle cx='7' cy='7' r='4.4'/><path d='M10.4 10.4 14 14'/></svg>")}
 .tabrow{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .tab{border:1px solid var(--rule);background:var(--field);border-radius:6px;padding:5px 11px;font:inherit;
-  font-size:11.5px;font-weight:600;color:var(--small);cursor:pointer;transition:all .16s;
+  font-size:11.5px;font-weight:600;color:var(--small);cursor:pointer;transition:background-color .16s,border-color .16s,color .16s;
   display:inline-flex;align-items:center;gap:6px}
 .tab:hover{border-color:var(--teal);color:var(--teal)}
 .tab .n{font-family:var(--mono);font-size:9.5px;opacity:.7}
@@ -361,8 +365,8 @@ tr:last-child td{border-bottom:none}
 .mrow{cursor:pointer}
 .mrow td{transition:background .14s}
 .mrow:hover td{background:var(--tint2)}
-.mrow[aria-selected="true"] td{background:var(--tint)}
-.mrow[aria-selected="true"] td:first-child{box-shadow:inset 3px 0 0 var(--teal)}
+.mrow[aria-current="true"] td{background:var(--tint)}
+.mrow[aria-current="true"] td:first-child{box-shadow:inset 3px 0 0 var(--teal)}
 .mrow.closed td{background:var(--row-dim)}
 .mrow.closed:hover td{background:var(--tint2)}
 .mid{font-family:var(--mono);font-size:10px;color:var(--small);letter-spacing:.06em}
@@ -403,7 +407,7 @@ td.mid,th:first-child{padding-right:0}
 .side-seg{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .sidebtn{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:10px 12px;
   border-radius:7px;border:1.5px solid var(--rule);background:var(--field);font:inherit;cursor:pointer;
-  color:var(--small);transition:all .16s}
+  color:var(--small);transition:background-color .16s,border-color .16s,color .16s}
 .sidebtn .sb-l{font-family:var(--mono);font-size:9px;letter-spacing:.18em;font-weight:700}
 .sidebtn .sb-p{font-family:var(--mono);font-size:19px;font-weight:700;letter-spacing:-.02em;
   color:var(--ink);line-height:1}
@@ -1333,7 +1337,7 @@ function marketRow(m){
     </div>`;
 
   return `<tr class="mrow${isRes || expired(m) ? " closed" : ""}" data-act="selmkt" data-v="${m.id}"
-      tabindex="0" aria-selected="${S.selId === m.id}">
+      tabindex="0" aria-current="${S.selId === m.id}">
     <td class="mid">${pad3(m.id)}</td>
     <td>
       <div class="qtext">${esc(m.q)}</div>
