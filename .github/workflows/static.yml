@@ -33,11 +33,12 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup Pages
         uses: actions/configure-pages@v5
+      - name: Stage the ops deck alongside the reader
+        run: cp affinity-ops-deck.html macro-topics-site/ops-deck.html
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
-                  path: './macro-topics-site'
+          path: './macro-topics-site'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
