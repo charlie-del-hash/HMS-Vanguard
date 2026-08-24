@@ -1904,7 +1904,12 @@ app.addEventListener("change", e => {
   const b = e.target.dataset ? e.target.dataset.bind : null;
   if(!b) return;
   S[b] = e.target.value;
-  if(b === "mktCat" || b === "sort" || b === "qty") render();
+  /* size settles in place. A render() here would swap the Buy button out
+     during the blur that the click on it caused, so the click landed on a
+     detached node and the trade never fired – syncTicket already clamps
+     the typed value and writes it back to the field. */
+  if(b === "qty"){ S.qty = String(qtyNum()); syncTicket(); return; }
+  if(b === "mktCat" || b === "sort") render();
 });
 
 app.addEventListener("pointermove", moveCrosshair);
