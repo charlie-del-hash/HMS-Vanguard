@@ -518,6 +518,9 @@ svg.chart{display:block;width:100%;height:auto}
   .navbtn .idx{display:none}      /* the label alone identifies the module */
   .main{padding:20px 14px}
   h1.hl{font-size:24px}
+  /* the kicker row wraps here, and a right-aligned second line orphans its
+     last word against the left-aligned first */
+  .kicker.r{text-align:left}
 
   /* two-up tiles, with a lone last tile taking the full row instead of
      leaving a hole beside it */
@@ -541,6 +544,28 @@ svg.chart{display:block;width:100%;height:auto}
   #boardscroll th:nth-child(4),#boardscroll td:nth-child(4){display:none}
 
   th,td{padding:10px 14px}
+}
+
+/* below this the brand and three modules stop fitting on one line, so the
+   bar wraps and the nav takes the full width – a module is never parked
+   off-screen behind a sideways scroll */
+@media(max-width:420px){
+  .spine{flex-wrap:wrap;padding-right:0}
+  .spine-brand{width:100%;padding:10px 12px}
+  .nav{width:100%;border-top:1px solid rgba(127,208,229,.12)}
+  .navbtn{flex:1 1 0;justify-content:center;padding:11px 6px}
+  .navbtn .lab{font-size:13.5px}
+
+  /* last columns to go: volume reads on the ticket, and the board's rank is
+     already carried by row order */
+  #mktscroll th:nth-child(5),#mktscroll td:nth-child(5),
+  #boardscroll th:nth-child(1),#boardscroll td:nth-child(1){display:none}
+  .bbar{width:34px}
+  /* NO is exactly 100 minus YES and the bar already shows the split, so the
+     question gets those pixels back instead */
+  .prob-no{display:none}
+  .prob{min-width:64px}
+  #mktscroll th,#mktscroll td,#boardscroll th,#boardscroll td{padding-left:12px;padding-right:12px}
   .panel-h,.subbar,.composer,.gov,.panel-f{padding-left:14px;padding-right:14px}
   .subbar .right{margin-left:0}
   .composer>*{flex:1 1 100% !important}
