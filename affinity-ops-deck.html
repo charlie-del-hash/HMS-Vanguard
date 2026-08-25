@@ -276,7 +276,8 @@ h1.hl em{font-style:normal;color:var(--teal)}
 .stats{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(172px,1fr));margin-bottom:18px}
 .stat{position:relative;padding:15px 18px 16px;background:var(--surface);border:1px solid var(--hair);
   border-radius:var(--r);box-shadow:var(--shadow-sm);overflow:hidden}
-.stat::before{content:"";position:absolute;inset:0 0 auto 0;height:2px;background:var(--hair)}
+.stat::before{content:"";position:absolute;inset:0 0 auto 0;height:2px;
+  background:var(--accent,var(--hair))}
 .stat.lead::before{background:linear-gradient(90deg,var(--teal) 0%,var(--light-tl) 100%)}
 .stat .l{font-family:var(--mono);font-size:8.5px;letter-spacing:.18em;text-transform:uppercase;
   color:var(--small);display:block}
@@ -287,7 +288,8 @@ h1.hl em{font-style:normal;color:var(--teal)}
   color:var(--small)}
 .stat .sub{font-size:11.5px;color:var(--small);margin-top:7px;line-height:1.4}
 .meter{height:4px;border-radius:2px;background:var(--tint);overflow:hidden;margin-top:11px}
-.meter i{display:block;height:100%;border-radius:2px;background:var(--teal);transition:width .3s ease}
+.meter i{display:block;height:100%;border-radius:2px;background:var(--accent,var(--teal));
+  transition:width .3s ease}
 
 .insight{background:var(--insight-bg);border:1px solid var(--insight-line);border-radius:var(--r);
   padding:24px 26px;margin-top:18px;color:var(--insight-fg);box-shadow:var(--shadow)}
@@ -386,7 +388,8 @@ tr:last-child td{border-bottom:none}
 .mrow td{transition:background .14s}
 .mrow:hover td{background:var(--tint2)}
 .mrow[aria-current="true"] td{background:var(--tint)}
-.mrow[aria-current="true"] td:first-child{box-shadow:inset 3px 0 0 var(--teal)}
+.mrow td:first-child{box-shadow:inset 3px 0 0 var(--cc,var(--teal))}
+.mrow[aria-current="true"] td:first-child{box-shadow:inset 4px 0 0 var(--cc,var(--teal))}
 .mrow.closed td{background:var(--row-dim)}
 .mrow.closed:hover td{background:var(--tint2)}
 .mid{font-family:var(--mono);font-size:10px;color:var(--small);letter-spacing:.06em}
@@ -555,6 +558,11 @@ svg.chart{display:block;width:100%;height:auto}
   #mktscroll th:nth-child(1),#mktscroll td:nth-child(1),
   #mktscroll th:nth-child(4),#mktscroll td:nth-child(4){display:none}
   #mktscroll th,#mktscroll td{padding:11px 14px}
+  /* the serial cell is hidden here, so the category edge moves to the
+     question, which is the first cell still on screen */
+  .mrow td:first-child,.mrow[aria-current="true"] td:first-child{box-shadow:none}
+  .mrow td:nth-child(2){box-shadow:inset 3px 0 0 var(--cc,var(--teal))}
+  .mrow[aria-current="true"] td:nth-child(2){box-shadow:inset 4px 0 0 var(--cc,var(--teal))}
   .qtext{max-width:none}
   .prob{min-width:92px}
 
@@ -748,6 +756,17 @@ const RATES = [
   {k:"BPI",  v:1564, d:-0.9, h:[1622,1610,1597,1588,1601,1583,1578,1564]},
   {k:"BHSI", v:712,  d:+0.5, h:[689,694,691,700,705,702,708,712]}
 ];
+
+/* the ticker rail is dark in both themes, so its category tags use fixed
+   light values rather than the palette's on-surface ones */
+const CAT_TICK = {
+  "FFA":                    {tag:"FFA",  color:"#5FC2DC"},
+  "Dry bulk":               {tag:"DRY",  color:"#F0B857"},
+  "Tankers":                {tag:"TANK", color:"#8FBFEC"},
+  "Ports & canals":         {tag:"PORT", color:"#C9A9E8"},
+  "Newbuilds & recycling":  {tag:"NEW",  color:"#4FC287"},
+  "Internal":               {tag:"INT",  color:"#A9C9D6"}
+};
 
 const CATS = ["FFA","Dry bulk","Tankers","Ports & canals","Newbuilds & recycling","Internal"];
 const CAT_VAR = {
@@ -1254,8 +1273,8 @@ const head = (kick, kickR, h1, em, deck) => `
 
 const blank = (h5, p) => `<div class="blank"><h5>${h5}</h5><p>${p}</p></div>`;
 
-const statTile = ({label, value, unit, sub, cls = "", tone = "", meter}) => `
-  <div class="stat ${cls}">
+const statTile = ({label, value, unit, sub, cls = "", tone = "", meter, accent}) => `
+  <div class="stat ${cls}"${accent ? ` style="--accent:var(${accent})"` : ""}>
     <span class="l">${label}</span>
     <div class="k ${tone}">${value}${unit ? `<span class="u">${unit}</span>` : ""}</div>
     ${sub ? `<div class="sub">${sub}</div>` : ""}
@@ -1281,7 +1300,7 @@ function tickerItems(){
   const items = S.markets.filter(tradable).map(m => {
     const prev = m.hist.length > 1 ? m.hist.at(-2).p : yesC(m);
     return {
-      key:`m${m.id}`, tag:"MKT", color:"#7FD0E5",
+      key:`m${m.id}`, ...(CAT_TICK[m.cat] || {tag:"MKT", color:"#7FD0E5"}),
       text:`${m.q.length > 44 ? `${m.q.slice(0, 44)}…` : m.q}   YES ${yesC(m)}c`,
       delta:yesC(m) - prev
     };
@@ -1380,13 +1399,13 @@ function statsStrip(){
     ${statTile({label:"Credits available", value:cr0(S.balance), unit:"cr", cls:"lead",
       sub:`Equity ${cr0(p.equity)} cr against a 1,000 allocation`,
       meter:(S.balance / 1000) * 100})}
-    ${statTile({label:"Open exposure", value:cr0(p.value), unit:"cr",
+    ${statTile({label:"Open exposure", value:cr0(p.value), unit:"cr", accent:"--c-tank",
       sub:`${S.positions.length} position${S.positions.length === 1 ? "" : "s"} at the current mark`})}
-    ${statTile({label:"Unrealised", value:sgn(p.unreal), tone:pnlClass(p.unreal),
+    ${statTile({label:"Unrealised", value:sgn(p.unreal), tone:pnlClass(p.unreal), accent:"--c-port",
       sub:p.cost ? `Paid ${cr(p.cost)} cr for the book` : "Nothing at risk yet"})}
-    ${statTile({label:"Realised", value:sgn(S.realised), tone:pnlClass(S.realised),
+    ${statTile({label:"Realised", value:sgn(S.realised), tone:pnlClass(S.realised), accent:"--c-new",
       sub:S.brierN ? `${S.brierN} position${S.brierN === 1 ? "" : "s"} settled` : "Nothing settled yet"})}
-    ${statTile({label:"Brier score", value:p.brier === null ? "–" : p.brier.toFixed(3),
+    ${statTile({label:"Brier score", accent:"--c-dry", value:p.brier === null ? "–" : p.brier.toFixed(3),
       sub:p.brier === null ? `Field average ${FIELD_BRIER.toFixed(3)}`
         : `${p.brier <= FIELD_BRIER ? "Ahead of" : "Behind"} the field at ${FIELD_BRIER.toFixed(3)}`,
       meter:p.brier === null ? 0 : (1 - clamp(p.brier / 0.35, 0, 1)) * 100})}
@@ -1410,12 +1429,12 @@ function marketRow(m){
     </div>`;
 
   return `<tr class="mrow${isRes || expired(m) ? " closed" : ""}" data-act="selmkt" data-v="${m.id}"
-      tabindex="0" aria-current="${S.selId === m.id}">
+      tabindex="0" aria-current="${S.selId === m.id}" style="${catStyle(m.cat)}">
     <td class="mid">${pad3(m.id)}</td>
     <td>
       <div class="qtext">${esc(m.q)}</div>
       <div class="qmeta">
-        <span class="cat" style="${catStyle(m.cat)}">${esc(m.cat)}</span>
+        <span class="cat">${esc(m.cat)}</span>
         <span class="due ${dueClass(m)}">${closeLabel(m)}</span>
         ${mine ? `<span class="hold">holding ${mine}</span>` : ""}
       </div>
