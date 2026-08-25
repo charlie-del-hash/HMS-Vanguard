@@ -180,7 +180,8 @@ body{background:var(--page);color:var(--body);font-family:var(--font);font-size:
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
 /* ── ticker rail – dark in both themes ───────────────────────── */
-.ticker{background:color-mix(in srgb,var(--spine-bg) 86%,transparent);color:#C6DCE4;
+.ticker{background:var(--spine-bg);
+  background:color-mix(in srgb,var(--spine-bg) 86%,transparent);color:#C6DCE4;
   -webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);
   overflow:hidden;white-space:nowrap;border-bottom:2px solid var(--teal);position:relative;height:38px}
 @supports not (backdrop-filter:blur(1px)){.ticker{background:var(--spine-bg)}}
@@ -211,8 +212,15 @@ body{background:var(--page);color:var(--body);font-family:var(--font);font-size:
 .shell{display:flex;flex-direction:column;min-height:100vh}
 .frame{display:flex;flex:1;min-height:0}
 
+/* the spine would otherwise stretch to the full document height – 2600px
+   on a 12-market page, which is where the empty space came from, and it
+   carried the rates off screen. Sticking it at viewport height keeps the
+   rail in view while the page scrolls, and leaves the document as the
+   scroll container so nothing else changes. */
 .spine{width:240px;flex-shrink:0;background:var(--spine-bg);color:var(--spine-fg);
-  display:flex;flex-direction:column;box-shadow:inset -1px 0 0 rgba(127,208,229,.10)}
+  display:flex;flex-direction:column;min-height:0;
+  position:sticky;top:0;align-self:flex-start;height:100vh;height:100dvh;
+  box-shadow:inset -1px 0 0 rgba(127,208,229,.10)}
 .spine-brand{padding:26px 22px 28px;display:flex;align-items:center;gap:13px}
 .wordmark{font-size:16px;font-weight:600;letter-spacing:.32em;color:#fff;line-height:1}
 .brand-sub{font-family:var(--mono);font-size:8px;letter-spacing:.22em;color:var(--rail-off);margin-top:7px}
@@ -234,7 +242,30 @@ body{background:var(--page);color:var(--body);font-family:var(--font);font-size:
 .navbtn[aria-current="page"]::before{content:"";position:absolute;left:-10px;top:14px;
   width:3px;height:24px;border-radius:0 2px 2px 0;background:var(--light-tl)}
 /* ── rail rates ──────────────────────────────────────────────── */
-.rates{margin-top:20px;padding:16px 10px 4px;border-top:1px solid rgba(127,208,229,.12)}
+.rail{margin-top:16px;flex:1 1 auto;min-height:0;overflow-y:auto;scrollbar-width:thin;
+  scrollbar-color:rgba(127,208,229,.22) transparent}
+.rail::-webkit-scrollbar{width:6px}
+.rail::-webkit-scrollbar-thumb{background:rgba(127,208,229,.22);border-radius:3px}
+.rates{padding:14px 10px 6px;border-top:1px solid rgba(127,208,229,.12)}
+.rates:first-child{border-top:0}
+
+/* forward curve: the near price and the shape of the strip */
+.ffa{padding:6px 10px 9px}
+.ffa-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.ffa-shape{font-family:var(--mono);font-size:7.5px;letter-spacing:.14em;font-weight:700}
+.ffa-shape.dn{color:var(--rail-dn)} .ffa-shape.up{color:var(--rail-up)}
+.ffa-q{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
+.ffa-q span{display:flex;flex-direction:column;gap:2px;font-family:var(--mono);font-size:11px;
+  font-weight:700;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.ffa-q i{font-style:normal;font-size:7.5px;letter-spacing:.12em;font-weight:400;color:var(--rail-off)}
+
+/* bunkers reuse the rate row, minus the sparkline column */
+.rate.bunker{grid-template-columns:1fr auto auto;gap:0 10px}
+.rate.bunker .rate-n{font-size:9.5px;letter-spacing:.1em;text-transform:none}
+.spread{display:flex;align-items:baseline;justify-content:space-between;padding:8px 10px 2px;
+  margin-top:4px;border-top:1px dashed rgba(127,208,229,.16);
+  font-family:var(--mono);font-size:8px;letter-spacing:.16em;color:var(--rail-off)}
+.spread strong{font-size:11px;color:var(--light-tl);letter-spacing:-.01em}
 .rates-h,.rates-f{display:flex;align-items:center;justify-content:space-between;
   font-family:var(--mono);font-size:8px;letter-spacing:.2em;color:var(--rail-off);padding:0 10px}
 .rates-h{padding-bottom:9px}
@@ -266,7 +297,7 @@ h1.hl{font-size:34px;font-weight:700;letter-spacing:-.026em;color:var(--ink);mar
 h1.hl em{font-style:normal;color:var(--teal)}
 .deck{font-size:14.5px;color:var(--small);margin-top:10px;max-width:74ch;line-height:1.6;
   letter-spacing:-.003em}
-/* the smallest mono labels open up rather than tighten */
+/* figures in the small mono labels line up column to column */
 .kicker,.stat .l,.rates-h,.rates-f,.rate-n{font-feature-settings:"tnum" 1}
 .hairfade{height:1px;margin:22px 0 20px;
   background:linear-gradient(90deg,var(--rule) 0%,var(--hair) 55%,transparent 100%)}
@@ -550,7 +581,8 @@ svg.chart{display:block;width:100%;height:auto}
 }
 @media(max-width:960px){
   .frame{flex-direction:column}
-  .spine{width:100%;flex-direction:row;align-items:center;overflow-x:auto;padding-right:14px;
+  .spine{width:100%;height:auto;position:static;align-self:auto;
+    flex-direction:row;align-items:center;overflow-x:auto;padding-right:14px;
     box-shadow:inset 0 -1px 0 rgba(127,208,229,.12)}
   .spine-brand{padding:14px 18px;flex-shrink:0;gap:11px}
   .brand-sub{display:none}
@@ -559,7 +591,7 @@ svg.chart{display:block;width:100%;height:auto}
   .navbtn{width:auto;white-space:nowrap;grid-template-columns:auto auto;align-items:center;gap:8px;border-radius:0}
   .navbtn .sub{display:none}
   .navbtn[aria-current="page"]::before{top:auto;bottom:0;left:12px;right:12px;width:auto;height:2px}
-  .spine-foot,.rates{display:none}
+  .spine-foot,.rail{display:none}
   .main{padding:22px 18px}
   h1.hl{font-size:27px;max-width:none}
   .two,.half,.grid{grid-template-columns:1fr !important}
@@ -818,6 +850,19 @@ const CAT_TICK = {
   "Newbuilds & recycling":  {tag:"NEW",  color:"#4FC287"},
   "Internal":               {tag:"INT",  color:"#A9C9D6"}
 };
+
+/* forward curve, nearest three quarters per contract */
+const FFA = [
+  {k:"CAPE 5TC", q:["Q4 26","Q1 27","Q2 27"], v:[22150, 19800, 18400]},
+  {k:"PMX 4TC",  q:["Q4 26","Q1 27","Q2 27"], v:[14600, 13900, 13250]}
+];
+
+/* VLSFO, delivered, per metric tonne */
+const BUNKERS = [
+  {k:"Singapore", v:612, d:+4},
+  {k:"Rotterdam", v:583, d:-2},
+  {k:"Fujairah",  v:601, d:+1}
+];
 
 const CATS = ["FFA","Dry bulk","Tankers","Ports & canals","Newbuilds & recycling","Internal"];
 const CAT_VAR = {
@@ -1431,6 +1476,38 @@ function ratesView(){
     <div class="rates-f"><span class="dot"></span><span>AS OF ${BUILD} · 11:00 LDN</span></div>`;
 }
 
+/* forward curve. The shape is the point, so each contract gets a
+   sparkline of its own three quarters next to the near price. */
+function ffaView(){
+  const rows = FFA.map(f => {
+    const near = f.v[0], far = f.v.at(-1);
+    const down = far < near;
+    return `<div class="ffa">
+      <div class="ffa-top">
+        <span class="rate-n">${esc(f.k)}</span>
+        <span class="ffa-shape ${down ? "dn" : "up"}">${down ? "BACKWARDATED" : "CONTANGO"}</span>
+      </div>
+      <div class="ffa-q">${f.q.map((q, i) => `<span><i>${esc(q)}</i>${cr0(f.v[i])}</span>`).join("")}</div>
+    </div>`;
+  }).join("");
+  return `<div class="rates-h"><span>FFA CURVE</span><span>$/DAY</span></div>${rows}`;
+}
+
+function bunkerView(){
+  const rows = BUNKERS.map(b => {
+    const up = b.d >= 0;
+    return `<div class="rate bunker ${up ? "up" : "dn"}">
+      <span class="rate-n">${esc(b.k)}</span>
+      <span class="rate-v mono">${cr0(b.v)}</span>
+      <span class="rate-d">${up ? "+" : "-"}${Math.abs(b.d)}</span>
+    </div>`;
+  }).join("");
+  const spread = BUNKERS[0].v - BUNKERS[1].v;
+  return `<div class="rates-h"><span>BUNKERS · VLSFO</span><span>$/MT</span></div>${rows}
+    <div class="spread"><span>SIN–RDM</span>
+      <strong>${spread >= 0 ? "+" : "-"}${cr0(Math.abs(spread))}</strong></div>`;
+}
+
 function navView(){
   return NAV.map(n => `
     <button class="navbtn" id="nav-${n.id}" data-act="tab" data-v="${n.id}"${S.tab === n.id ? ' aria-current="page"' : ""}>
@@ -1925,7 +2002,11 @@ function mountShell(){
       <nav class="spine" aria-label="Modules">
         <div class="spine-brand" id="spinebrand"></div>
         <div class="nav" id="nav"></div>
-        <div class="rates" id="rates">${ratesView()}</div>
+        <div class="rail" id="rail">
+          <div class="rates">${ratesView()}</div>
+          <div class="rates">${ffaView()}</div>
+          <div class="rates">${bunkerView()}</div>
+        </div>
         <div class="spine-foot"><div class="confid">PRIVATE &amp; CONFIDENTIAL<br>
           AFFINITY (SHIPPING) LLP<br><strong>${VERSION.toUpperCase()} · ${BUILD}</strong></div></div>
       </nav>
