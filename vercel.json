@@ -1,4 +1,8 @@
 {
+  "rewrites": [
+    { "source": "/", "destination": "/affinity-ops-deck.html" },
+    { "source": "/ops-deck.html", "destination": "/affinity-ops-deck.html" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
