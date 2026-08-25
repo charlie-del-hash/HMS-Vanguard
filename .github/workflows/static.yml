@@ -33,12 +33,18 @@ jobs:
         uses: actions/checkout@v7
       - name: Setup Pages
         uses: actions/configure-pages@v6
-      - name: Stage the ops deck alongside the reader
-        run: cp affinity-ops-deck.html macro-topics-site/ops-deck.html
+      - name: Stage the ops deck as the site
+        # The deck is the site root; /ops-deck.html stays as an alias so the
+        # published URL keeps working. Both are copies made at build time, so
+        # there is no second committed file to drift.
+        run: |
+          mkdir -p _site
+          cp affinity-ops-deck.html _site/index.html
+          cp affinity-ops-deck.html _site/ops-deck.html
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:
-          path: './macro-topics-site'
+          path: './_site'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
