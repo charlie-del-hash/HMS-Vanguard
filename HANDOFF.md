@@ -70,6 +70,38 @@ stays above that fold; only the resolver block at the bottom scrolls.
   reason the ticker's category tags use fixed light values.
 - Comms and Reports are placeholder content on a live shell; the prediction desk is real.
 
+## Tables measure their panel, not the window
+
+Every table in the deck sheds columns on the width of **its own panel**, through a
+container query on `.panel.cqpanel` (the basket's `.eqpanel` is the same thing). This is not
+a stylistic preference — a media query gets it wrong here, twice over:
+
+**The spine breaks the proxy.** It is 240px wide above 960px and gone below it, so a 768px
+viewport leaves a full-width table **less** room (730px) than a 960px viewport does (922px).
+Viewport width is not monotonic with the width a table actually gets, so a width query sheds
+columns in the wrong order on the way down.
+
+**Sticky side panels break it again.** The prediction desk's market table and calibration
+board sit beside a ticket that takes a fixed share of the row. Between roughly 1200 and
+1320px of viewport they were squeezed to ~515px for 567px of columns and scrolled sideways —
+a band the phone-only rules never reached, and nobody had looked at. The same applied to the
+basket once it gained a side panel.
+
+Thresholds are **measured, not chosen**. `#mktscroll` is 567px with the trend column and
+410px without, so its break is at 566px. Re-measure with
+`table.style.width = 'min-content'` before moving one.
+
+**A hidden column is not a dropped fact.** The library and the wiring table each keep a
+`.tmeta` line under the row's name, hidden at full width and revealed one item at a time as
+its column goes — so owner, desk, cadence, updated and scope survive on a phone in a
+different arrangement rather than disappearing. Where the deck instead just hides a column,
+it is because a panel beside the table already carries it: the ticket for the market table,
+the selected-name panel for the basket. Those two are the only cases where dropping is
+correct, and both are documented in place.
+
+Verified 320 → 1920 in both themes across all four views: 112/112 with no page overflow and
+no table scrolling inside its own panel.
+
 ## Reports has two tabs
 
 `03 Reports` is one module with two views behind a `.tabrow`: **Library** (the research
@@ -78,16 +110,28 @@ operators). They sit together rather than as a fourth spine entry because they a
 same question from either end — what the desk published, and what the market did with it.
 `S.rtab` holds the choice and it survives switching modules, like every other filter.
 
-Both are placeholder data on a live shell. `EQUITIES` is shaped like the quote feed that
-replaces it — a listing, the last print in the listing currency, the day's and the year's
-move, market cap normalised to US$bn so one column adds up across five exchanges, and the
-two valuation lines the desk argues about. `h` is eight weekly closes ending on the last
-print, which is what the sparkline draws. Wiring a real feed is a data change and nothing
-else.
+Both are placeholder data on a live shell. `EQUITIES` is 23 names shaped like the quote feed
+that replaces it — a listing, the last print in the listing currency, the day's and the
+year's move, market cap normalised to US$bn so one column adds up across nine exchanges, NAV
+per share, the multiple, the yield, the 52-week range, a fleet line and the desk's one-line
+take. `h` is eight weekly closes ending on the last print. Wiring a real feed is a data
+change and nothing else.
 
-**The tiles are derived, not typed.** Aggregate market cap, the count trading above NAV,
-the median P/NAV and the basket's eight-week move all compute from `EQUITIES` and `BASKET`.
-Typing them as literals is how a tile and its own table come to disagree.
+**Almost nothing in the tab is typed twice.** `pnav()` is computed from NAV per share rather
+than stored beside it. `BASKET` is rolled up from the constituents' own histories, so the
+index line and the names under it cannot tell different stories. `EQ_YTD` is the market-cap
+weighted return of each segment's rows. The tiles, the exchange count and the figures inside
+the desk-view copy all read the same array. The one earlier version of this tab typed the
+segment returns and the basket path as constants; they agreed on the day they were written,
+which is exactly how that kind of thing survives review.
+
+**The rows are literals grouped by segment**, not a flat list with a `seg` field per row.
+That is deliberate: the flat version lost the segment on twenty of twenty-three rows the
+first time it was written, and nothing catches it but eyes.
+
+**The histories share a market factor.** Each name's path is 65% a common shape and 35% its
+own. Twenty-three independent walks average out flat, which made the rolled-up index a
+straight line; a sector basket does not behave that way.
 
 **Segments take the six category slots in `C.cats` order.** `EQ_SEGS` is
 Containers → Dry bulk → Tankers → Ports & terminals → Gas carriers → Car carriers, mapped
@@ -104,14 +148,27 @@ as the single reference, which is the level a reader actually compares against. 
 colour comes from where the series ends **relative to the rebase**, not from the last tick,
 so one down week does not flip an eight-week gain to red.
 
-**The constituents table sheds columns on the panel's width, not the viewport.** This is the
-one place in the deck using a container query, and it is not decoration. Nine columns need
-about 920px. The spine is 240px wide above 960px and gone below it, so a **768px viewport
-leaves this table less room (730px) than a 960px viewport does (922px)** — viewport width is
-not monotonic with the width the table actually gets, and a media query sheds columns in the
-wrong order because of it. `.panel.eqpanel` carries `container-type:inline-size` and the
-breakpoints (930 / 830 / 730 / 430 / 330) are measured against that. Verified from 320 to
-1920: never a sideways scroll, and the column order degrades sensibly at every step.
+**The selected name is the ticket, again.** Clicking or Entering a row fills a `.sticky`
+panel beside the table — the eight-week window at its own geometry, the 52-week range, the
+three multiples, the fleet, the desk note, its segment peers as one-click jumps, and where
+one exists, the crossing to the prediction market that is the same view expressed as a
+question. It reuses `.sticky`, so it inherits the measured height cap along with the
+behaviour. The table sheds columns as it narrows for the same reason the market table does:
+this panel is where the shed detail lives.
+
+**`indexChart` takes its geometry from the caller.** The side panel is half the width of a
+full panel, so a shared viewBox would render the type at half the size. It runs at 680×210
+in a full panel and 440×200 in the side one, and the labels come out the same size on screen.
+
+**The scatter carries segment as shape *and* hue.** It is the one place in the deck with no
+label beside the mark, and the palette's two accepted contrast warnings are only legal while
+a category is never colour alone — so each segment gets a shape too, and the legend shows
+both. P/NAV runs on a **log** axis because it is a ratio: 0.5× and 2× are the same distance
+from parity, and a linear axis squashes twenty names into the left third to make room for two
+terminal operators. Every point keeps its label; the placement tries right, left, above and
+below, then nudges, testing against the marks as well as the labels already down. Dropping
+labels would have been easier and leaves points nobody can identify. Verified: 23 labels, 0
+overlapping pairs, 0 sitting on a mark, 0 out of frame.
 
 ## Colour and type — the rules that are easiest to undo
 
@@ -164,15 +221,16 @@ Re-runnable against any static server pointed at the file.
 
 | Check | Result |
 | --- | --- |
-| Viewport × theme × module | 42/42 clean, 390→1920, no overflow, no console errors |
-| Narrow widths | 320 / 360 / 375 clean, nav fits, no table scrolling internally |
-| Equities tab, 13 widths × 2 themes | 320→1920, zero sideways scroll on the constituents table at every step |
-| Interaction tests | 14/14 — trade, close, resolve, search, new market, comms, report, basket filter and sort, theme persistence |
-| Contrast (WCAG AA) | 0 failures, both themes, DOM text and SVG text — equities tab re-checked separately |
+| Viewport × theme × view | 112/112 clean — 14 widths, 320→1920, both themes, all four views |
+| Table overflow | 0 tables scroll inside their own panel at any tested width, in any view |
+| Interaction tests | 25/25 — trade, close, resolve, search, new market, comms, report, basket select/filter/sort/peer/crossing, theme persistence |
+| Scatter labels | 23 of 23 placed: 0 overlapping pairs, 0 on a mark, 0 out of frame |
+| Derived figures | Tiles re-checked against the rendered table rows, not against the source array |
+| Contrast (WCAG AA) | 0 failures in the rendered body, both themes, at 1440 and 390, DOM and SVG text — **except** the pre-existing WhatsApp avatar, below |
 | Tile wash worst case | 4.78:1 light / 5.19:1 dark with the wash forced to full strength across the whole tile |
 | Category palette | Passes the validator in both modes; two accepted warnings, see above |
-| Keyboard | All reachable controls show an immediate focus ring |
-| Touch targets | Nothing under 44pt under `pointer:coarse` |
+| Keyboard | 221 stops across the four views, 0 without a focus ring |
+| Touch targets | Nothing under 44pt under `pointer:coarse` except the qty slider, which the CSS sets to 32px on purpose |
 | Reduced motion | 0 elements animating or transitioning |
 | Market maker | 9/9 LMSR invariants — complementary prices, convex cost, loss-free round trip, `maxAffordable` exact |
 | Print | Forces light even from dark theme; ticker and spine hidden |
@@ -191,11 +249,21 @@ Raised and not taken up, in rough order of value:
 - `render`, `buy`, `ticket` and friends are function declarations, so they land on `window`.
 - Market rows have no arrow-key navigation, only Enter/Space on a focused row.
 - The toast has no live region, so a screen reader is not told when a trade fills.
-- The library and comms tables scroll sideways below 600px. Pre-existing — the column
-  shedding was only ever written for the market table and the board. The equities table
-  now shows how to fix them: give the panel a container and shed on its width.
-- The equities basket is static. Nothing recomputes, so sorting and filtering are the only
-  live parts of the tab; a feed would want `syncTicker`-style in-place updates rather than
-  a re-render, for the same reason the ticker has them.
-- Segment returns are typed constants (`EQ_YTD`) rather than rolled up from `EQUITIES`
-  weights. They agree today; a real feed should compute them.
+- **The WhatsApp avatar fails AA.** `.av` puts white 11px bold on `#1FA05C`, which measures
+  **3.36:1** against a 4.5 requirement. Slack (`#611F69`, 11.0:1) and ICE (`#14406B`,
+  10.6:1) are fine. Pre-existing and identical in every earlier revision — the verification
+  table's old "0 failures" line was measured over a narrower scope. It is left as found
+  because it is a brand colour and the call is a design one, not a bug fix. `#1A8B4E` is
+  about as far as the hue can be darkened before it stops reading as WhatsApp green, and
+  even that only reaches 4.33:1; passing AA means either a darker green or dark text.
+- The qty slider is 32px tall under `pointer:coarse`, set explicitly by
+  `input[type=range]{height:32px}`. Its thumb is 22px. Deliberate, and still under 44pt.
+- The equities basket is static. Nothing recomputes, so selecting, sorting and filtering are
+  the only live parts of the tab; a feed would want `syncTicker`-style in-place updates
+  rather than a re-render, for the same reason the ticker has them.
+- The scatter's label widths are estimated from the character count rather than measured.
+  Every figure in the deck uses one face, so the estimate holds — but a face change, or a
+  ticker with unusually wide glyphs, would need it re-checked.
+- The basket table has no arrow-key navigation either, only Enter and Space on a focused row.
+- Only one name can be selected. Comparing two side by side means reading the peer list,
+  which gives P/NAV and YTD but not the rest.
