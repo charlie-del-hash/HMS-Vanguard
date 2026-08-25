@@ -47,6 +47,8 @@
   --teal-lt:#7FB0BF;
   --light-tl:#7FD0E5;     /* accents on dark */
   --rail-off:#8FB3BF;
+  --rail-up:#63D6A0;      /* movers on the spine, which is dark in both themes */
+  --rail-dn:#FF9184;
   --tint:#E7F0F3;
   --tint2:#F4F9FA;
   --bar-soft:#C3DAE3;
@@ -118,6 +120,8 @@
     --teal-mid:#7FD0E5;
     --teal-lt:#4E7F8E;
     --rail-off:#7A99A5;
+    --rail-up:#63D6A0;
+    --rail-dn:#FF9184;
     --tint:#16323F;
     --tint2:#102A35;
     --bar-soft:#2A5A6C;
@@ -215,6 +219,22 @@ body{background:var(--page);color:var(--body);font-family:var(--font);font-size:
 .navbtn[aria-current="page"] .idx{font-weight:700;color:var(--light-tl)}
 .navbtn[aria-current="page"]::before{content:"";position:absolute;left:-10px;top:14px;
   width:3px;height:24px;border-radius:0 2px 2px 0;background:var(--light-tl)}
+/* ── rail rates ──────────────────────────────────────────────── */
+.rates{margin-top:20px;padding:16px 10px 4px;border-top:1px solid rgba(127,208,229,.12)}
+.rates-h,.rates-f{display:flex;align-items:center;justify-content:space-between;
+  font-family:var(--mono);font-size:8px;letter-spacing:.2em;color:var(--rail-off);padding:0 10px}
+.rates-h{padding-bottom:9px}
+.rates-f{justify-content:flex-start;gap:8px;padding-top:12px;letter-spacing:.16em}
+.rate{display:grid;grid-template-columns:1fr auto;gap:1px 10px;align-items:center;
+  padding:7px 10px;border-radius:7px;transition:background .16s}
+.rate:hover{background:rgba(127,208,229,.07)}
+.rate-n{font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--rail-off)}
+.rate-s{justify-self:end;display:flex;align-items:center}
+.rate-v{font-size:13.5px;font-weight:700;color:#fff;letter-spacing:-.01em}
+.rate-d{font-family:var(--mono);font-size:9.5px;font-weight:700;justify-self:end}
+.rate.up .rate-d{color:var(--rail-up)}
+.rate.dn .rate-d{color:var(--rail-dn)}
+
 .spine-foot{margin-top:auto;padding:20px 22px 24px;border-top:1px solid rgba(127,208,229,.14)}
 .confid{font-family:var(--mono);font-size:8px;letter-spacing:.2em;color:var(--rail-off);line-height:2.1}
 .confid strong{color:var(--light-tl);font-weight:600}
@@ -500,7 +520,7 @@ svg.chart{display:block;width:100%;height:auto}
   .navbtn{width:auto;white-space:nowrap;grid-template-columns:auto auto;align-items:center;gap:8px;border-radius:0}
   .navbtn .sub{display:none}
   .navbtn[aria-current="page"]::before{top:auto;bottom:0;left:12px;right:12px;width:auto;height:2px}
-  .spine-foot{display:none}
+  .spine-foot,.rates{display:none}
   .main{padding:22px 18px}
   h1.hl{font-size:27px;max-width:none}
   .two,.half,.grid{grid-template-columns:1fr !important}
@@ -719,6 +739,16 @@ const MARKETS = [
    resolver:"C. Hernandez",source:"Portal publication timestamp",
    p0:0.97,vol:1450,state:"resolved",outcome:"yes",hist:hist([70,74,78,82,88,93,97,100])}
 ];
+/* placeholder market data for the rail – same shape as the feed that
+   replaces it: a label, the current print, the day's move and a short
+   history for the sparkline */
+const RATES = [
+  {k:"BDI",  v:1842, d:+2.4, h:[1691,1704,1735,1722,1768,1795,1799,1842]},
+  {k:"BCI",  v:2930, d:+3.8, h:[2588,2641,2677,2712,2760,2801,2823,2930]},
+  {k:"BPI",  v:1564, d:-0.9, h:[1622,1610,1597,1588,1601,1583,1578,1564]},
+  {k:"BHSI", v:712,  d:+0.5, h:[689,694,691,700,705,702,708,712]}
+];
+
 const CATS = ["FFA","Dry bulk","Tankers","Ports & canals","Newbuilds & recycling","Internal"];
 const CAT_VAR = {
   "FFA":"--c-ffa", "Dry bulk":"--c-dry", "Tankers":"--c-tank",
@@ -905,8 +935,8 @@ const MONO_SVG = "Cascadia Mono,Consolas,ui-monospace,monospace";
 let gradSeq = 0;
 const gradId = () => `g${++gradSeq}`;
 
-function spark(vals, color, tip){
-  const w = 78, h = 24, iw = w - 3;
+function spark(vals, color, tip, {w = 78, h = 24} = {}){
+  const iw = w - 3;
   const d = vals.length < 2 ? [vals[0], vals[0]] : vals;
   const mn = Math.min(...d), mx = Math.max(...d), sp = (mx - mn) || 1;
   const pt = d.map((v, i) => [i / (d.length - 1) * iw, h - 3 - ((v - mn) / sp) * (h - 6)]);
@@ -1303,6 +1333,24 @@ function spineView(){
       <div class="brand-sub">OPS DECK</div></div>
     <button class="themebtn" id="themebtn" data-act="theme" title="Switch to ${next} mode"
             aria-label="Switch to ${next} mode">${THEME_ICON}</button>`;
+}
+
+/* rail rates. Rendered once with the shell – the numbers are static, so
+   there is nothing for a re-render to update. */
+function ratesView(){
+  const rows = RATES.map(r => {
+    const up = r.d >= 0;
+    return `<div class="rate ${up ? "up" : "dn"}">
+      <span class="rate-n">${esc(r.k)}</span>
+      <span class="rate-s">${spark(r.h, up ? "var(--rail-up)" : "var(--rail-dn)",
+        `${r.k} ${r.h[0]} to ${r.h.at(-1)}`, {w:46, h:15})}</span>
+      <span class="rate-v mono">${cr0(r.v)}</span>
+      <span class="rate-d">${up ? "+" : "-"}${Math.abs(r.d).toFixed(1)}%</span>
+    </div>`;
+  }).join("");
+  return `<div class="rates-h"><span>BALTIC EXCHANGE</span><span>DAILY</span></div>
+    ${rows}
+    <div class="rates-f"><span class="dot"></span><span>AS OF ${BUILD} · 11:00 LDN</span></div>`;
 }
 
 function navView(){
@@ -1798,6 +1846,7 @@ function mountShell(){
       <nav class="spine" aria-label="Modules">
         <div class="spine-brand" id="spinebrand"></div>
         <div class="nav" id="nav"></div>
+        <div class="rates" id="rates">${ratesView()}</div>
         <div class="spine-foot"><div class="confid">PRIVATE &amp; CONFIDENTIAL<br>
           AFFINITY (SHIPPING) LLP<br><strong>${VERSION.toUpperCase()} · ${BUILD}</strong></div></div>
       </nav>
