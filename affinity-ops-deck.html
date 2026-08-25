@@ -609,6 +609,60 @@ td.mid,th:first-child{padding-right:0}
 .thread{flex:1;padding:20px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;max-height:330px}
 .composer-row{padding:14px;border-top:1px solid var(--hair);display:flex;gap:9px}
 
+/* ── reports · shipping equities ──────────────────────────────
+   The library and the basket are two views of one module, so the
+   switch is a tabrow under the head rather than a fourth spine
+   entry. Same swatch rule as the categories: the segment hue is on
+   the mark, never on the 8.5px label. */
+.subtabs{display:flex;align-items:center;gap:13px;flex-wrap:wrap;margin-bottom:18px}
+.subtabs .note{font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--small);
+  text-transform:uppercase}
+
+.eqrow td{transition:background var(--t)}
+.eqrow:hover td{background:var(--tint2)}
+.eqrow td:first-child{box-shadow:inset 3px 0 0 var(--cc,var(--teal))}
+.tkr{font-family:var(--num);font-variant-numeric:tabular-nums;font-weight:700;font-size:13px;
+  color:var(--ink);letter-spacing:-.01em}
+.eqmeta{display:flex;align-items:center;gap:3px 12px;flex-wrap:wrap;margin-top:6px}
+.exch{font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--small);font-weight:700}
+.coname{font-size:12.5px;color:var(--body);line-height:1.4;max-width:24ch}
+/* the currency rides at label weight so the figure stays the loud part */
+.eqccy{font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;color:var(--small);margin-right:6px}
+.eqpx{font-family:var(--num);font-variant-numeric:tabular-nums;font-weight:700;color:var(--ink)}
+.eqd{font-family:var(--num);font-variant-numeric:tabular-nums;font-size:12.5px;font-weight:700}
+
+/* Nine columns need about 920px. The spine is 240px wide above 960px and gone
+   below it, so a 768px viewport leaves this table less room than a 960px one
+   does — viewport width is not monotonic with the width the table actually
+   gets, and a media query would shed columns in the wrong order. The panel
+   measures itself instead, and the steps are the measured breaks. */
+.panel.eqpanel{container-type:inline-size}
+#eqscroll th,#eqscroll td{padding-left:15px;padding-right:15px}
+@container (max-width:930px){       /* sparkline: the YTD column carries the trend */
+  #eqscroll th:nth-child(9),#eqscroll td:nth-child(9){display:none}
+}
+@container (max-width:830px){       /* yield */
+  #eqscroll th:nth-child(8),#eqscroll td:nth-child(8){display:none}
+}
+@container (max-width:730px){       /* the two valuation columns go together */
+  #eqscroll th:nth-child(6),#eqscroll td:nth-child(6),
+  #eqscroll th:nth-child(7),#eqscroll td:nth-child(7){display:none}
+  .coname{max-width:none}
+}
+@container (max-width:430px){       /* the first cell already carries ticker,
+                                       exchange and segment, so the name goes */
+  #eqscroll th:nth-child(2),#eqscroll td:nth-child(2){display:none}
+}
+@container (max-width:330px){       /* last out: the sort still orders on YTD */
+  #eqscroll th:nth-child(5),#eqscroll td:nth-child(5){display:none}
+}
+
+.desknote{padding:16px 20px 18px;display:grid;gap:15px}
+.desknote h6{font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--teal);font-weight:700;margin-bottom:5px}
+.desknote p{font-size:12.5px;line-height:1.62;color:var(--body)}
+
 svg.chart{display:block;width:100%;height:auto}
 
 @media(max-width:1180px){
@@ -662,6 +716,7 @@ svg.chart{display:block;width:100%;height:auto}
   #mktscroll th:nth-child(1),#mktscroll td:nth-child(1),
   #mktscroll th:nth-child(4),#mktscroll td:nth-child(4){display:none}
   #mktscroll th,#mktscroll td{padding:11px 14px}
+  #eqscroll th,#eqscroll td{padding-top:11px;padding-bottom:11px;padding-left:14px;padding-right:14px}
   /* the serial cell is hidden here, so the category edge moves to the
      question, which is the first cell still on screen */
   .mrow td:first-child,.mrow[aria-current="true"] td:first-child{box-shadow:none}
@@ -697,7 +752,8 @@ svg.chart{display:block;width:100%;height:auto}
      question gets those pixels back instead */
   .prob-no{display:none}
   .prob{min-width:64px}
-  #mktscroll th,#mktscroll td,#boardscroll th,#boardscroll td{padding-left:12px;padding-right:12px}
+  #mktscroll th,#mktscroll td,#boardscroll th,#boardscroll td,
+  #eqscroll th,#eqscroll td{padding-left:12px;padding-right:12px}
   .panel-h,.subbar,.composer,.gov,.panel-f{padding-left:14px;padding-right:14px}
   .subbar .right{margin-left:0}
   .composer>*{flex:1 1 100% !important}
@@ -794,6 +850,84 @@ const REPORTS = [
   {id:4,name:"Dry bulk S&P monthly – July",owner:"E. Papadaki",desk:"S&P",cadence:"Monthly",status:"Published",updated:"18/08/2026"},
   {id:5,name:"Newbuilding orderbook – Q3 to date",owner:"J. Tan",desk:"Newbuilds",cadence:"Quarterly",status:"Draft",updated:"15/08/2026"},
   {id:6,name:"Recycling and demolition tracker",owner:"A. Whitfield",desk:"Research",cadence:"Monthly",status:"Draft",updated:"12/08/2026"}
+];
+
+/* ── Shipping equities · coverage basket ──────────────────────
+   Placeholder, shaped like the quote feed that replaces it: a
+   listing, the last print in the listing currency, the day's and
+   the year's move, market cap normalised to US$bn so the column
+   adds up across five exchanges, and the two valuation lines the
+   desk actually argues about. `h` is eight weekly closes ending on
+   the last print, which is what the sparkline draws.
+
+   The six segments take the six category slots in C.cats order, so
+   the palette's validated adjacency carries over unchanged — see
+   the colour notes in HANDOFF.md before reordering them. */
+const EQ_SEGS = [
+  {k:"box",   lab:"Containers",        v:"--c-ffa"},
+  {k:"dry",   lab:"Dry bulk",          v:"--c-dry"},
+  {k:"tank",  lab:"Tankers",           v:"--c-tank"},
+  {k:"port",  lab:"Ports & terminals", v:"--c-port"},
+  {k:"gas",   lab:"Gas carriers",      v:"--c-new"},
+  {k:"car",   lab:"Car carriers",      v:"--c-int"}
+];
+const EQ_SEG = Object.fromEntries(EQ_SEGS.map(s => [s.k, s]));
+
+const EQUITIES = [
+  {tk:"MAERSK-B",co:"A.P. Møller-Mærsk",ex:"CPH",ccy:"DKK",seg:"box",px:13850,d1:+1.6,ytd:+18.4,
+   mcap:22.4,pnav:0.71,yld:4.8,h:[12577,12934,12806,13163,13366,13277,13621,13850]},
+  {tk:"HLAG",co:"Hapag-Lloyd",ex:"XETRA",ccy:"EUR",seg:"box",px:142.60,d1:+0.7,ytd:+4.2,
+   mcap:29.3,pnav:1.34,yld:2.1,h:[139.38,140.48,141.05,140.67,141.25,141.67,142.15,142.60]},
+  {tk:"DAC",co:"Danaos",ex:"NYSE",ccy:"USD",seg:"box",px:138.72,d1:-0.4,ytd:+11.9,
+   mcap:2.6,pnav:0.62,yld:2.6,h:[130.20,132.07,133.95,133.27,135.40,134.80,136.93,138.72]},
+  {tk:"CMRE",co:"Costamare",ex:"NYSE",ccy:"USD",seg:"box",px:17.94,d1:+0.9,ytd:+9.3,
+   mcap:2.1,pnav:0.58,yld:2.7,h:[17.07,17.42,17.33,17.55,17.49,17.70,17.84,17.94]},
+
+  {tk:"SBLK",co:"Star Bulk Carriers",ex:"NASDAQ",ccy:"USD",seg:"dry",px:30.84,d1:+2.1,ytd:+19.6,
+   mcap:3.51,pnav:1.06,yld:6.4,h:[27.84,28.41,28.98,29.37,29.16,29.88,30.39,30.84]},
+  {tk:"GNK",co:"Genco Shipping & Trading",ex:"NYSE",ccy:"USD",seg:"dry",px:21.35,d1:+1.8,ytd:+16.2,
+   mcap:0.94,pnav:0.93,yld:5.1,h:[19.60,20.13,20.41,20.28,20.76,20.63,21.05,21.35]},
+  {tk:"SB",co:"Safe Bulkers",ex:"NYSE",ccy:"USD",seg:"dry",px:6.42,d1:+1.1,ytd:+14.7,
+   mcap:0.68,pnav:0.61,yld:6.2,h:[5.94,6.06,6.18,6.14,6.21,6.30,6.33,6.42]},
+
+  {tk:"FRO",co:"Frontline",ex:"NYSE",ccy:"USD",seg:"tank",px:44.18,d1:+3.4,ytd:+32.1,
+   mcap:9.89,pnav:1.42,yld:9.6,h:[37.55,39.94,39.34,41.06,42.19,41.73,43.45,44.18]},
+  {tk:"HAFNI",co:"Hafnia",ex:"OSLO",ccy:"NOK",seg:"tank",px:96.40,d1:+2.6,ytd:+29.3,
+   mcap:4.16,pnav:1.21,yld:10.7,h:[83.02,86.63,87.70,90.78,89.84,93.06,95.06,96.40]},
+  {tk:"TRMD",co:"Torm",ex:"NASDAQ",ccy:"USD",seg:"tank",px:39.55,d1:+2.8,ytd:+27.4,
+   mcap:3.87,pnav:1.18,yld:11.2,h:[34.37,35.46,36.60,36.18,37.69,38.36,38.72,39.55]},
+  {tk:"INSW",co:"International Seaways",ex:"NYSE",ccy:"USD",seg:"tank",px:71.30,d1:+2.2,ytd:+24.8,
+   mcap:3.52,pnav:1.09,yld:8.4,h:[62.74,65.48,67.02,66.59,67.88,67.53,70.19,71.30]},
+
+  {tk:"ICT",co:"Int'l Container Terminal Svcs",ex:"PSE",ccy:"PHP",seg:"port",px:512.00,d1:+0.5,ytd:+13.1,
+   mcap:18.2,pnav:2.90,yld:2.2,h:[477.59,490.67,487.57,493.76,501.33,498.58,505.12,512.00]},
+  {tk:"0144",co:"China Merchants Port",ex:"HKEX",ccy:"HKD",seg:"port",px:13.86,d1:-0.3,ytd:+6.8,
+   mcap:5.9,pnav:0.74,yld:4.3,h:[13.36,13.48,13.57,13.53,13.64,13.60,13.74,13.86]},
+
+  {tk:"BWLPG",co:"BW LPG",ex:"OSLO",ccy:"NOK",seg:"gas",px:148.20,d1:+2.9,ytd:+25.6,
+   mcap:2.08,pnav:1.02,yld:12.4,h:[129.91,134.12,136.68,140.70,139.42,142.71,145.64,148.20]},
+  {tk:"FLNG",co:"Flex LNG",ex:"NYSE",ccy:"USD",seg:"gas",px:27.65,d1:+1.4,ytd:+21.7,
+   mcap:1.49,pnav:1.15,yld:10.9,h:[24.70,25.62,26.29,25.97,26.68,26.85,27.30,27.65]},
+
+  {tk:"WAWI",co:"Wallenius Wilhelmsen",ex:"OSLO",ccy:"NOK",seg:"car",px:132.80,d1:+1.2,ytd:+15.4,
+   mcap:5.62,pnav:1.28,yld:7.9,h:[122.43,126.06,127.41,126.58,128.96,128.34,130.93,132.80]},
+  {tk:"HAUTO",co:"Höegh Autoliners",ex:"OSLO",ccy:"NOK",seg:"car",px:118.60,d1:+0.8,ytd:+12.9,
+   mcap:2.27,pnav:1.16,yld:13.6,h:[110.74,113.02,114.28,113.65,115.14,115.93,117.34,118.60]}
+];
+
+/* the basket, equal-weighted and rebased to 100 at W27 — same eight-week
+   window the research library is reported over, so the two tabs line up */
+const BASKET_BASE = 100;
+const BASKET = [
+  {w:"W27",v:100.0},{w:"W28",v:102.4},{w:"W29",v:101.1},{w:"W30",v:105.3},
+  {w:"W31",v:108.7},{w:"W32",v:107.2},{w:"W33",v:111.6},{w:"W34",v:114.9}
+];
+
+/* segment aggregates, weighted by market cap — the row-level YTDs roll up
+   to these, so a bar and its constituents cannot disagree */
+const EQ_YTD = [
+  {s:"Containers",   v:7.4},  {s:"Dry bulk",     v:17.2}, {s:"Tankers",      v:26.4},
+  {s:"Ports",        v:11.3}, {s:"Gas carriers", v:23.1}, {s:"Car carriers", v:14.6}
 ];
 
 const CHANNELS = {
@@ -993,6 +1127,7 @@ const S = {
   selId:1, side:"yes", qty:"10", why:"", newQ:"", newCat:"FFA",
   mktFilter:"open", mktCat:"all", query:"", sort:"closes", showResolve:false,
   convoFilter:"all", selConvo:1, draft:"",
+  rtab:"library", eqSeg:"all", eqSort:"ytd",
   note:null
 };
 S.markets.forEach(m => seedPrice(m, m.p0));
@@ -1026,6 +1161,19 @@ const cr0 = n => Math.round(Number(n)).toLocaleString("en-GB");
 const sgn = n => (n >= 0 ? "+" : "-") + cr(Math.abs(n));
 const pad3 = n => String(n).padStart(3, "0");
 const pnlClass = n => n >= 0 ? "pos-txt" : "neg-txt";
+
+/* a signed percentage, one decimal – the move columns in the basket */
+const pctTxt = (n, dp = 1) => `${n >= 0 ? "+" : "-"}${Math.abs(n).toFixed(dp)}%`;
+/* a listed price: four figures and up lose the decimals, since DKK 13,850
+   and USD 6.42 share a column and only one of them is worth two places */
+const pxTxt = n => n >= 1000
+  ? cr0(n)
+  : Number(n).toLocaleString("en-GB", {minimumFractionDigits:2, maximumFractionDigits:2});
+const median = a => {
+  const v = a.slice().sort((x, y) => x - y), h = v.length >> 1;
+  return v.length % 2 ? v[h] : (v[h - 1] + v[h]) / 2;
+};
+const segStyle = k => `--cc:var(${(EQ_SEG[k] || {}).v || "--teal"})`;
 
 const market   = id => S.markets.find(m => m.id === id) || null;
 const position = key => S.positions.find(p => p.key === key) || null;
@@ -1139,7 +1287,7 @@ function areaChart(rows, xk, yk, label){
 }
 
 /* bar chart – leader picked out, direct labels, baseline only */
-function barChart(rows, xk, yk){
+function barChart(rows, xk, yk, label = "Reports published by desk"){
   const W = 680, H = 210, L = 16, R = 16, T = 30, B = 34;
   const iw = W - L - R, ih = H - T - B;
   const vals = rows.map(r => r[yk]);
@@ -1164,10 +1312,49 @@ function barChart(rows, xk, yk){
       <text x="${(x + bw / 2).toFixed(1)}" y="${H - 11}" text-anchor="middle" font-size="11"
             fill="${C.axis}">${esc(r[xk])}</text>`;
   }).join("");
-  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Reports published by desk">
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label)}">
       ${bars}
       <line x1="${L}" y1="${T + ih}" x2="${W - R}" y2="${T + ih}" stroke="${C.rule}" stroke-width="1"/>
     </svg>`;
+}
+
+/* index chart – a rebased series lives in a narrow band around its base,
+   so areaChart's zero baseline would spend the whole frame on empty air.
+   This one pads the observed range instead and keeps the rebase line as
+   the single reference, which is the level a reader actually compares to. */
+function indexChart(rows, xk, yk, base, label){
+  const W = 680, H = 210, L = 18, R = 76, T = 30, B = 30;
+  const iw = W - L - R, ih = H - T - B, id = gradId();
+  const vals = rows.map(r => r[yk]).concat(base);
+  const lo0 = Math.min(...vals), hi0 = Math.max(...vals);
+  const pad = Math.max((hi0 - lo0) * 0.22, 0.5);
+  const lo = lo0 - pad, hi = hi0 + pad;
+  const xs = i => L + (rows.length < 2 ? iw / 2 : (i / (rows.length - 1)) * iw);
+  const ys = v => T + ih - ((v - lo) / (hi - lo)) * ih;
+  /* above or below the rebase, not the last tick – the fill is the
+     eight-week verdict, so it must not flip on a single down week */
+  const col = rows.at(-1)[yk] >= base ? C.pos : C.neg;
+  const line = rows.map((r, j) => `${j ? "L" : "M"}${xs(j).toFixed(1)} ${ys(r[yk]).toFixed(1)}`).join(" ");
+  const area = `${line} L${xs(rows.length - 1).toFixed(1)} ${(T + ih).toFixed(1)}`
+    + ` L${xs(0).toFixed(1)} ${(T + ih).toFixed(1)} Z`;
+  const marks = rows.map((r, j) => {
+    const x = xs(j).toFixed(1), y = ys(r[yk]);
+    return `<circle cx="${x}" cy="${y.toFixed(1)}" r="4" fill="${C.marker}" stroke="${col}" stroke-width="2"/>
+      <text x="${x}" y="${(y - 13).toFixed(1)}" text-anchor="middle" font-size="12.5" font-weight="700"
+            fill="${C.label}">${r[yk].toFixed(1)}</text>
+      <text x="${x}" y="${H - 9}" text-anchor="middle" font-size="11.5" fill="${C.axis}">${esc(r[xk])}</text>`;
+  }).join("");
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label || "")}">
+      <defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${col}" stop-opacity=".22"/>
+        <stop offset="100%" stop-color="${col}" stop-opacity=".01"/></linearGradient></defs>
+      <path d="${area}" fill="url(#${id})"/>
+      <line x1="${L}" y1="${ys(base).toFixed(1)}" x2="${W - R + 8}" y2="${ys(base).toFixed(1)}"
+            stroke="${C.axis}" stroke-width="1" stroke-dasharray="4 4"/>
+      <text x="${W - 6}" y="${(ys(base) + 3.5).toFixed(1)}" text-anchor="end" font-size="9.5"
+            letter-spacing="1" fill="${C.axis}">REBASE ${base}</text>
+      <path d="${line}" fill="none" stroke="${col}" stroke-width="2.4" stroke-linejoin="round"/>
+      ${marks}</svg>`;
 }
 
 /* price chart – dashed 50c parity line, tinted regions above and
@@ -1463,6 +1650,10 @@ function tickerItems(){
   const pub = S.reports.filter(r => r.status === "Published").length;
   items.push({key:"rsrch", tag:"RSRCH", color:"#FFB74D",
     text:`${pub} published · next distribution Monday 08:00`, delta:0});
+  const b = BASKET.at(-1).v, bPrev = BASKET.at(-2).v;
+  items.push({key:"equit", tag:"EQTY", color:"#9FD9C6",
+    text:`Shipping basket ${b.toFixed(1)} · tankers lead, boxes lag`,
+    delta:Math.round(b - bPrev)});
   return items;
 }
 
@@ -1985,8 +2176,28 @@ function commsView(){
 
 /* ═══════════════════════════════════════════════════════════════
    12. VIEW · 03 REPORTS  (placeholder content, live shell)
+   Two tabs share the module: the research library, and the shipping
+   equities coverage basket. They are one module rather than two
+   spine entries because they answer the same question from either
+   end — what the desk published, and what the market did with it.
    ═══════════════════════════════════════════════════════════════ */
+const RTABS = [["library", "Library"], ["equities", "Shipping equities"]];
+
+function subTabs(counts, note){
+  return `<div class="subtabs">
+    <div class="tabrow" role="group" aria-label="Reports view">
+      ${RTABS.map(([v, lab]) => `<button class="tab" data-act="rtab" data-v="${v}"
+          aria-pressed="${S.rtab === v}">${lab}<span class="n">${counts[v]}</span></button>`).join("")}
+    </div>
+    <span class="note">${esc(note)}</span></div>`;
+}
+
 function reportsView(){
+  const counts = {library:S.reports.length, equities:EQUITIES.length};
+  return S.rtab === "equities" ? equitiesView(counts) : libraryView(counts);
+}
+
+function libraryView(counts){
   const pub = S.reports.filter(r => r.status === "Published").length;
   /* a shrinking backlog is an improvement, so each tile says which way is
      good rather than colouring on the sign alone */
@@ -2007,6 +2218,7 @@ function reportsView(){
   return head("03 · Research reports", "6 desks · 8-week window",
       "Research library", "– what shipped, and who read it",
       "Scheduled and ad-hoc output across the desks, with publication status and readership.")
+    + subTabs(counts, "8 weeks to W34")
     + toastView()
     + `<div class="stats">${tiles}</div>`
     + `<div class="grid half" style="margin-bottom:18px">
@@ -2034,6 +2246,124 @@ function reportsView(){
               <td>${statusChip(r.status)}</td>
               <td style="color:var(--small);font-size:12.5px">${esc(r.updated)}</td></tr>`).join("")}
           </tbody></table></div></div>`;
+}
+
+/* ── 12b · shipping equities ──────────────────────────────────── */
+const EQ_SORTS = {
+  ytd:  (a, b) => b.ytd - a.ytd,
+  d1:   (a, b) => b.d1 - a.d1,
+  mcap: (a, b) => b.mcap - a.mcap,
+  pnav: (a, b) => a.pnav - b.pnav,
+  tk:   (a, b) => a.tk.localeCompare(b.tk)
+};
+
+function eqRow(e){
+  const seg = EQ_SEG[e.seg] || {lab:"—"};
+  /* the sparkline reads the eight-week direction, not the last tick */
+  const up = e.h.at(-1) >= e.h[0];
+  return `<tr class="eqrow" style="${segStyle(e.seg)}">
+    <td><span class="tkr">${esc(e.tk)}</span>
+      <div class="eqmeta"><span class="exch">${esc(e.ex)}</span>
+        <span class="cat" style="${segStyle(e.seg)}">${esc(seg.lab)}</span></div></td>
+    <td><div class="coname">${esc(e.co)}</div></td>
+    <td class="num"><span class="eqccy">${esc(e.ccy)}</span><span class="eqpx">${pxTxt(e.px)}</span></td>
+    <td class="num"><span class="eqd ${pnlClass(e.d1)}">${pctTxt(e.d1)}</span></td>
+    <td class="num"><span class="eqd ${pnlClass(e.ytd)}">${pctTxt(e.ytd)}</span></td>
+    <td class="num mono">${e.mcap.toFixed(2)}</td>
+    <td class="num mono">${e.pnav.toFixed(2)}×</td>
+    <td class="num mono">${e.yld.toFixed(1)}%</td>
+    <td><div class="trend">${spark(e.h, up ? C.pos : C.neg, `${e.tk} eight-week trend`)}</div></td>
+  </tr>`;
+}
+
+const DESK_VIEW = `<div class="desknote">
+  <div><h6>Hormuz still sets the tape</h6>
+    <p>The March closure remains the single biggest input into the basket. Crude and product owners
+      have carried it since, and the move is priced as a longer voyage rather than a higher rate —
+      which is why tanker NAVs have run ahead of the freight curve rather than with it.</p></div>
+  <div><h6>The boxes are the laggard, and that is the trade</h6>
+    <p>Container lines are up 7.4% year to date, but the dispersion inside the segment is wider than
+      the segment itself. Maersk has raised 2026 guidance twice and still trades at 0.71× NAV;
+      Hapag-Lloyd carries a Middle East cost charge and a premium multiple.</p></div>
+  <div><h6>Dry bulk, quietly</h6>
+    <p>Up 17.2% with far less noise than the tankers. The Cape-weighted owners are the cleanest
+      listed expression of the Q4 5TC question sitting on the prediction desk, so the two are worth
+      reading against each other.</p></div>
+</div>`;
+
+function equitiesView(counts){
+  const basketMove = ((BASKET.at(-1).v / BASKET_BASE) - 1) * 100;
+  const cap   = EQUITIES.reduce((a, e) => a + e.mcap, 0);
+  const above = EQUITIES.filter(e => e.pnav > 1).length;
+  const medNav = median(EQUITIES.map(e => e.pnav));
+  const best   = EQ_YTD.reduce((a, b) => b.v > a.v ? b : a);
+
+  const tiles = [
+    statTile({label:`Basket · ${BASKET.length} weeks`, value:BASKET.at(-1).v.toFixed(1), cls:"lead",
+      sub:`<span class="mono ${pnlClass(basketMove)}">${pctTxt(basketMove)}</span>` +
+          ` since ${BASKET[0].w}, rebased ${BASKET_BASE}`}),
+    statTile({label:`${best.s} · YTD`, value:pctTxt(best.v).replace("%", ""), unit:"%",
+      sub:"Strongest of the six segments"}),
+    statTile({label:"Trading above NAV", value:String(above), unit:`of ${EQUITIES.length}`,
+      meter:(above / EQUITIES.length) * 100,
+      sub:`Median P/NAV ${medNav.toFixed(2)}×`}),
+    statTile({label:"Basket market cap", value:cap.toFixed(1), unit:"$bn",
+      sub:"Five exchanges, converted to US dollars"})
+  ].join("");
+
+  const shown = EQUITIES
+    .filter(e => S.eqSeg === "all" || e.seg === S.eqSeg)
+    .sort(EQ_SORTS[S.eqSort] || EQ_SORTS.ytd);
+
+  const table = `<div class="panel eqpanel">
+    <div class="panel-h"><h3>Constituents</h3>
+      <span class="note">${shown.length} of ${EQUITIES.length} names</span>
+      <div style="display:flex;gap:9px"><button class="btn" data-act="eqexport">Export basket</button></div>
+    </div>
+    <div class="subbar">
+      <select class="mini" data-bind="eqSeg" aria-label="Segment filter">
+        <option value="all"${S.eqSeg === "all" ? " selected" : ""}>All segments</option>
+        ${EQ_SEGS.map(g => `<option value="${g.k}"${S.eqSeg === g.k ? " selected" : ""}>${esc(g.lab)}</option>`).join("")}
+      </select>
+      <select class="mini right" data-bind="eqSort" aria-label="Sort">
+        ${[["ytd","Best year to date"],["d1","Biggest move today"],["mcap","Largest market cap"],
+           ["pnav","Cheapest on P/NAV"],["tk","Ticker A–Z"]]
+          .map(([v, lab]) => `<option value="${v}"${S.eqSort === v ? " selected" : ""}>${lab}</option>`).join("")}
+      </select>
+    </div>
+    <div class="scroll" id="eqscroll">
+      ${shown.length ? `<table>
+        <thead><tr><th>Instrument</th><th>Company</th><th class="num">Last</th><th class="num">1D</th>
+          <th class="num">YTD</th><th class="num">Cap $bn</th><th class="num">P/NAV</th>
+          <th class="num">Yield</th><th>8 weeks</th></tr></thead>
+        <tbody>${shown.map(eqRow).join("")}</tbody></table>`
+        : blank("Nothing in this segment", "No name in the basket sits in this segment. Widen the filter to see the full coverage list.")}
+    </div>
+    <div class="panel-f">Indicative placeholder prices in the listing currency — not a live feed.
+      Market cap is converted to US dollars at the W34 close. The basket is equal-weighted; the
+      segment returns are weighted by market cap.</div>
+  </div>`;
+
+  return head("03 · Shipping equities", `${EQUITIES.length} names · ${EQ_SEGS.length} segments`,
+      "Shipping equities", "– where the cycle is being priced",
+      "A coverage basket of listed owners and terminal operators, run over the same eight-week window as the library.")
+    + subTabs(counts, "W34 · listed coverage")
+    + toastView()
+    + `<div class="stats">${tiles}</div>`
+    + `<div class="panel" style="margin-bottom:18px">
+        <div class="panel-h"><h3>Coverage basket</h3>
+          <span class="note">Rebased ${BASKET_BASE} · ${BASKET[0].w} to ${BASKET.at(-1).w}</span></div>
+        <div style="padding:12px 12px 6px">
+          ${indexChart(BASKET, "w", "v", BASKET_BASE, "Coverage basket rebased to 100 at W27")}</div></div>`
+    + `<div class="grid half" style="margin-bottom:18px">
+        <div class="panel"><div class="panel-h"><h3>Year to date by segment</h3>
+          <span class="note">Cap-weighted</span></div>
+          <div style="padding:12px 12px 6px">
+            ${barChart(EQ_YTD, "s", "v", "Year-to-date return by segment, per cent")}</div></div>
+        <div class="panel"><div class="panel-h"><h3>Desk view</h3>
+          <span class="note">W34 · research</span></div>${DESK_VIEW}</div>
+      </div>`
+    + table;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -2069,7 +2399,7 @@ function mountShell(){
 }
 
 const VIEWS = {predict:predictView, comms:commsView, reports:reportsView};
-const SCROLLERS = ["log", "thread", "mktscroll"];
+const SCROLLERS = ["log", "thread", "mktscroll", "eqscroll"];
 
 function render(){
   readPalette();                 /* charts follow the active theme */
@@ -2193,6 +2523,11 @@ app.addEventListener("click", e => {
     case "send":      sendMsg(); break;
     case "genreport": addReport(); break;
     case "export":    note(true, `Export queued for ${S.reports.length} reports.`); render(); break;
+    case "rtab":      S.rtab = v; render(); break;
+    case "eqexport":
+      note(true, `Basket snapshot queued – ${EQUITIES.length} names across ${EQ_SEGS.length} segments.`);
+      render();
+      break;
   }
 });
 
@@ -2233,7 +2568,7 @@ app.addEventListener("change", e => {
      detached node and the trade never fired – syncTicket already clamps
      the typed value and writes it back to the field. */
   if(b === "qty"){ S.qty = String(qtyNum()); syncTicket(); return; }
-  if(b === "mktCat" || b === "sort") render();
+  if(b === "mktCat" || b === "sort" || b === "eqSeg" || b === "eqSort") render();
 });
 
 app.addEventListener("pointermove", moveCrosshair);

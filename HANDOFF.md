@@ -70,6 +70,49 @@ stays above that fold; only the resolver block at the bottom scrolls.
   reason the ticker's category tags use fixed light values.
 - Comms and Reports are placeholder content on a live shell; the prediction desk is real.
 
+## Reports has two tabs
+
+`03 Reports` is one module with two views behind a `.tabrow`: **Library** (the research
+output) and **Shipping equities** (a coverage basket of listed owners and terminal
+operators). They sit together rather than as a fourth spine entry because they answer the
+same question from either end — what the desk published, and what the market did with it.
+`S.rtab` holds the choice and it survives switching modules, like every other filter.
+
+Both are placeholder data on a live shell. `EQUITIES` is shaped like the quote feed that
+replaces it — a listing, the last print in the listing currency, the day's and the year's
+move, market cap normalised to US$bn so one column adds up across five exchanges, and the
+two valuation lines the desk argues about. `h` is eight weekly closes ending on the last
+print, which is what the sparkline draws. Wiring a real feed is a data change and nothing
+else.
+
+**The tiles are derived, not typed.** Aggregate market cap, the count trading above NAV,
+the median P/NAV and the basket's eight-week move all compute from `EQUITIES` and `BASKET`.
+Typing them as literals is how a tile and its own table come to disagree.
+
+**Segments take the six category slots in `C.cats` order.** `EQ_SEGS` is
+Containers → Dry bulk → Tankers → Ports & terminals → Gas carriers → Car carriers, mapped
+onto `--c-ffa --c-dry --c-tank --c-port --c-new --c-int` in that order. That is deliberate:
+the palette was validated on **adjacent pairs**, so reusing the slots in their validated
+order carries the result over unchanged. Reordering the segments re-opens the checks — see
+the colour rules below before you do. The same swatch rule applies: the hue is on `.cat`'s
+mark, never on the 8.5px label.
+
+**`indexChart` exists because `areaChart` has a zero baseline.** A series rebased to 100
+lives in a narrow band around its base, so a zero-based frame spends almost all of its
+height on empty air. `indexChart` pads the observed range instead and keeps the rebase line
+as the single reference, which is the level a reader actually compares against. Its fill
+colour comes from where the series ends **relative to the rebase**, not from the last tick,
+so one down week does not flip an eight-week gain to red.
+
+**The constituents table sheds columns on the panel's width, not the viewport.** This is the
+one place in the deck using a container query, and it is not decoration. Nine columns need
+about 920px. The spine is 240px wide above 960px and gone below it, so a **768px viewport
+leaves this table less room (730px) than a 960px viewport does (922px)** — viewport width is
+not monotonic with the width the table actually gets, and a media query sheds columns in the
+wrong order because of it. `.panel.eqpanel` carries `container-type:inline-size` and the
+breakpoints (930 / 830 / 730 / 430 / 330) are measured against that. Verified from 320 to
+1920: never a sideways scroll, and the column order degrades sensibly at every step.
+
 ## Colour and type — the rules that are easiest to undo
 
 These were arrived at by measurement, and each one looks like a free choice until you
@@ -123,8 +166,9 @@ Re-runnable against any static server pointed at the file.
 | --- | --- |
 | Viewport × theme × module | 42/42 clean, 390→1920, no overflow, no console errors |
 | Narrow widths | 320 / 360 / 375 clean, nav fits, no table scrolling internally |
-| Interaction tests | 13/13 — trade, close, resolve, search, new market, comms, report, theme persistence |
-| Contrast (WCAG AA) | 0 failures, both themes, DOM text and SVG text |
+| Equities tab, 13 widths × 2 themes | 320→1920, zero sideways scroll on the constituents table at every step |
+| Interaction tests | 14/14 — trade, close, resolve, search, new market, comms, report, basket filter and sort, theme persistence |
+| Contrast (WCAG AA) | 0 failures, both themes, DOM text and SVG text — equities tab re-checked separately |
 | Tile wash worst case | 4.78:1 light / 5.19:1 dark with the wash forced to full strength across the whole tile |
 | Category palette | Passes the validator in both modes; two accepted warnings, see above |
 | Keyboard | All reachable controls show an immediate focus ring |
@@ -147,3 +191,11 @@ Raised and not taken up, in rough order of value:
 - `render`, `buy`, `ticket` and friends are function declarations, so they land on `window`.
 - Market rows have no arrow-key navigation, only Enter/Space on a focused row.
 - The toast has no live region, so a screen reader is not told when a trade fills.
+- The library and comms tables scroll sideways below 600px. Pre-existing — the column
+  shedding was only ever written for the market table and the board. The equities table
+  now shows how to fix them: give the panel a container and shed on its width.
+- The equities basket is static. Nothing recomputes, so sorting and filtering are the only
+  live parts of the tab; a feed would want `syncTicker`-style in-place updates rather than
+  a re-render, for the same reason the ticker has them.
+- Segment returns are typed constants (`EQ_YTD`) rather than rolled up from `EQUITIES`
+  weights. They agree today; a real feed should compute them.
