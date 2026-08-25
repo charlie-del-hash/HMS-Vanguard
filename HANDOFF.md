@@ -3,8 +3,8 @@
 `affinity-ops-deck.html` is one self-contained file — no build step, no dependencies, no
 network calls. Open it directly or serve it; both work.
 
-**Live:** https://charlie-del-hash.github.io/HMS-Vanguard/ops-deck.html
-**Reader:** https://charlie-del-hash.github.io/HMS-Vanguard/ (Macro Topics, unchanged)
+**Live:** https://charlie-del-hash.github.io/HMS-Vanguard/ — `/ops-deck.html` serves the
+same page.
 
 ## Publishing
 
@@ -13,11 +13,23 @@ will not publish. The workflow copies the deck into the Pages artifact at build 
 there is no second committed copy to drift:
 
 ```yaml
-- name: Stage the ops deck alongside the reader
-  run: cp affinity-ops-deck.html macro-topics-site/ops-deck.html
+- name: Stage the ops deck as the site
+  run: |
+    mkdir -p _site
+    cp affinity-ops-deck.html _site/index.html
+    cp affinity-ops-deck.html _site/ops-deck.html
 ```
 
+The deck is the site root now that the Macro Topics reader has been removed from the repo;
+`/ops-deck.html` is kept as an alias so the URL that was already circulated still resolves.
+
 A push to `main` deploys in roughly 20 seconds.
+
+Two Vercel projects (`affinity` and `hms-vanguard`) also build this repo, both rooted at the
+repo root rather than a subfolder — which is why the reader's old `macro-topics-site/vercel.json`
+never took effect. The root `vercel.json` rewrites `/` and `/ops-deck.html` to
+`/affinity-ops-deck.html`, so Vercel and Pages serve the same page at the same two paths.
+Vercel builds every branch, so its previews show a branch before `main` does.
 
 ## Layout model — read this before changing the frame
 
