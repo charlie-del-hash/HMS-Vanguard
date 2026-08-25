@@ -25,6 +25,12 @@ The deck is the site root now that the Macro Topics reader has been removed from
 
 A push to `main` deploys in roughly 20 seconds.
 
+Two Vercel projects (`affinity` and `hms-vanguard`) also build this repo, both rooted at the
+repo root rather than a subfolder — which is why the reader's old `macro-topics-site/vercel.json`
+never took effect. The root `vercel.json` rewrites `/` and `/ops-deck.html` to
+`/affinity-ops-deck.html`, so Vercel and Pages serve the same page at the same two paths.
+Vercel builds every branch, so its previews show a branch before `main` does.
+
 ## Layout model — read this before changing the frame
 
 Three things are load-bearing and interact. Changing one without the others has already
