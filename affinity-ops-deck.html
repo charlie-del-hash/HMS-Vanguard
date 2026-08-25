@@ -1163,8 +1163,16 @@ const EQ_YTD = EQ_SEGS.map(g => ({s:g.short, v:segYTD(g.k)}));
    says so and offers the crossing. */
 const EQ_LINK = {dry:1, tank:3, port:5, car:5};
 
+/* `color` is the avatar fill and nothing else, so it has one hard constraint:
+   `.av` sets white at 11px bold on it, which is small text and needs 4.5:1.
+   WhatsApp's green was #1FA05C and measured 3.36:1 — it failed AA from the
+   day it was written, and the earlier audits missed it because they swept a
+   narrower scope. #008745 is the *lightest* green that clears 4.5 (it makes
+   4.61): stepped down in OKLCH so the hue moves 1.5° and the chroma barely
+   at all, rather than picked by eye. Do not lighten it back toward the brand
+   value without re-measuring; the other two clear 10:1 and have room. */
 const CHANNELS = {
-  whatsapp:{label:"WhatsApp Business",short:"WA",color:"#1FA05C",
+  whatsapp:{label:"WhatsApp Business",short:"WA",color:"#008745",
             wiring:"Cloud API, webhook subscription",scope:"Business number, template messages outbound"},
   slack:   {label:"Slack",short:"SL",color:"#611F69",
             wiring:"Events API, bot token",scope:"Workspace-wide, per-channel grants"},

@@ -175,6 +175,21 @@ overlapping pairs, 0 sitting on a mark, 0 out of frame.
 These were arrived at by measurement, and each one looks like a free choice until you
 re-measure. The validator is `scripts/validate_palette.js` in the `dataviz` skill.
 
+**Avatar fills carry white text, so they are contrast constraints, not brand swatches.**
+`CHANNELS[].color` has exactly one use — the `.av` disc — and `.av` sets white at 11px bold
+on it. That is small text: it needs 4.5:1. WhatsApp's green was `#1FA05C` at **3.36:1** and
+had failed AA since the day it was written; the earlier "0 failures" line was measured over a
+narrower scope and never reached it. It is now `#008745`, which is the **lightest** green
+that clears the bar (4.61:1), stepped down in OKLCH so the hue moves 1.5° and the chroma
+barely at all rather than being picked by eye. Slack (`#611F69`, 11.0:1) and ICE (`#14406B`,
+10.6:1) always had room. Two things follow: do not lighten the green back toward the brand
+value without re-measuring, and if a fourth channel is added, check its fill before its hue.
+
+The alternative — keeping the brand green and switching that one avatar to dark text — was
+rejected because it would leave two avatars with white initials and one with dark, and the
+set has to read as a set. Darkening keeps all three consistent, and in practice evens out
+their visual weight, which the lighter green had broken.
+
 **The six category hues are validated, not chosen.** `--c-ffa` `--c-dry` `--c-tank`
 `--c-port` `--c-new` `--c-int`, light and dark stepped separately. The set they replaced
 failed three ways: teal and grey sat under the chroma floor and read as grey, purple
@@ -226,7 +241,7 @@ Re-runnable against any static server pointed at the file.
 | Interaction tests | 25/25 — trade, close, resolve, search, new market, comms, report, basket select/filter/sort/peer/crossing, theme persistence |
 | Scatter labels | 23 of 23 placed: 0 overlapping pairs, 0 on a mark, 0 out of frame |
 | Derived figures | Tiles re-checked against the rendered table rows, not against the source array |
-| Contrast (WCAG AA) | 0 failures in the rendered body, both themes, at 1440 and 390, DOM and SVG text — **except** the pre-existing WhatsApp avatar, below |
+| Contrast (WCAG AA) | 0 failures in the rendered body — all four views, both themes, at 1440 and 390, DOM and SVG text. Channel avatars measured separately: 4.61 / 11.00 / 10.63 |
 | Tile wash worst case | 4.78:1 light / 5.19:1 dark with the wash forced to full strength across the whole tile |
 | Category palette | Passes the validator in both modes; two accepted warnings, see above |
 | Keyboard | 221 stops across the four views, 0 without a focus ring |
@@ -249,13 +264,6 @@ Raised and not taken up, in rough order of value:
 - `render`, `buy`, `ticket` and friends are function declarations, so they land on `window`.
 - Market rows have no arrow-key navigation, only Enter/Space on a focused row.
 - The toast has no live region, so a screen reader is not told when a trade fills.
-- **The WhatsApp avatar fails AA.** `.av` puts white 11px bold on `#1FA05C`, which measures
-  **3.36:1** against a 4.5 requirement. Slack (`#611F69`, 11.0:1) and ICE (`#14406B`,
-  10.6:1) are fine. Pre-existing and identical in every earlier revision — the verification
-  table's old "0 failures" line was measured over a narrower scope. It is left as found
-  because it is a brand colour and the call is a design one, not a bug fix. `#1A8B4E` is
-  about as far as the hue can be darkened before it stops reading as WhatsApp green, and
-  even that only reaches 4.33:1; passing AA means either a darker green or dark text.
 - The qty slider is 32px tall under `pointer:coarse`, set explicitly by
   `input[type=range]{height:32px}`. Its thumb is 22px. Deliberate, and still under 44pt.
 - The equities basket is static. Nothing recomputes, so selecting, sorting and filtering are
