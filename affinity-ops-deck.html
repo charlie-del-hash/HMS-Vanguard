@@ -472,7 +472,20 @@ td.mid,th:first-child{padding-right:0}
 .pos-txt{color:var(--pos)} .neg-txt{color:var(--neg)}
 
 /* ── predictions · ticket ────────────────────────────────────── */
-.sticky{position:sticky;top:12px}
+/* A sticky element as tall as its scrollport barely travels before it
+   pins, and then sits on top of whatever follows it in the column – here
+   the positions panel, whose Close button becomes unreachable. Fitting is
+   not enough: the panel has to leave a usable strip below it, or the
+   content underneath never clears. 140px was measured, not guessed – at
+   132 the panel still blocked the Close button once the main column
+   became the scrollport, so this is that threshold plus a margin. It
+   holds whatever the panel grows to hold and wherever the scroll
+   container ends up. */
+.sticky{position:sticky;top:12px;overflow-y:auto;
+  max-height:calc(100vh - 140px);max-height:calc(100dvh - 140px);
+  scrollbar-width:thin;scrollbar-color:var(--rule) transparent}
+.sticky::-webkit-scrollbar{width:6px}
+.sticky::-webkit-scrollbar-thumb{background:var(--rule);border-radius:3px}
 .ticket-h{padding:16px 20px 14px;border-bottom:1px solid var(--hair)}
 .ticket-h h3{font-size:14px;font-weight:600;color:var(--ink);line-height:1.4;letter-spacing:-.005em;
   margin-top:9px}
