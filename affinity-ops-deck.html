@@ -66,12 +66,20 @@
   --neg:#C0392B;  --neg-soft:#FBECEA;  --neg-line:#EFC9C3;
 
   /* desk categories */
-  --c-ffa:#196579;
-  --c-dry:#A8600A;
-  --c-tank:#2A6BB0;
-  --c-port:#7A4FA3;
-  --c-new:#1F7A4C;
-  --c-int:#5F6E74;
+  /* Six categorical hues, run through the palette validator rather than
+     picked by eye. The old set failed it three ways: teal and grey fell
+     under the chroma floor (they read as grey), purple against blue was
+     dE 2.5 for deuteranopes, and grey against green was dE 10.6 even with
+     normal vision. Ports moved off purple so it never sits next to blue.
+     Two warnings remain by choice — green/orange CVD sits in the 6-8 band
+     and amber is a hair under 3:1 — both covered because every category
+     mark in this deck carries its name in text beside it. */
+  --c-ffa:#0E83A4;   /* teal    */
+  --c-dry:#C98500;   /* amber   */
+  --c-tank:#2F6FD0;  /* blue    */
+  --c-port:#D4571F;  /* orange  */
+  --c-new:#12894F;   /* green   */
+  --c-int:#B0509A;   /* magenta */
 
   --shadow-sm:0 1px 2px rgba(14,65,82,.04);
   --shadow-card:0 1px 1.5px rgba(14,65,82,.05), 0 6px 16px -10px rgba(14,65,82,.20);
@@ -90,6 +98,7 @@
   --chart-neg:#C0392B;
 
   --font:'Segoe UI','Segoe UI Variable Text',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif;
+  --num:'Segoe UI','Segoe UI Variable Text',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif;
   --mono:'Cascadia Mono',Consolas,'SF Mono',ui-monospace,'Liberation Mono',monospace;
   /* radii, layered rather than one value. Deliberately the older macOS
      range – softer than a hard 9px, well short of the 26 look. */
@@ -148,12 +157,14 @@
     --pos:#4FC287;  --pos-soft:rgba(79,194,135,.13);  --pos-line:#2E6B4C;
     --neg:#F0857A;  --neg-soft:rgba(240,133,122,.13); --neg-line:#7A3B36;
 
-    --c-ffa:#5FC2DC;
-    --c-dry:#F0B857;
-    --c-tank:#6FA8E0;
-    --c-port:#B08BD8;
-    --c-new:#4FC287;
-    --c-int:#7E98A2;
+    /* same six hues stepped for the dark surface, validated separately –
+       dark's lightness band is 0.48-0.67, much narrower than light's */
+    --c-ffa:#33A0BC;
+    --c-dry:#B78B3C;
+    --c-tank:#5B8ED6;
+    --c-port:#CF6A3E;
+    --c-new:#31996A;
+    --c-int:#A863B8;
 
     --shadow-sm:0 1px 2px rgba(0,0,0,.30);
     --shadow-card:0 1px 1.5px rgba(0,0,0,.34), 0 8px 20px -12px rgba(0,0,0,.60);
@@ -176,7 +187,8 @@
 html,body{height:100%}
 body{background:var(--page);color:var(--body);font-family:var(--font);font-size:14px;line-height:1.55;
   -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
-.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+/* figures: the sans, with tabular widths so columns line up */
+.mono{font-family:var(--num);font-variant-numeric:tabular-nums;letter-spacing:0}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
 /* ── ticker rail – dark in both themes ───────────────────────── */
@@ -255,9 +267,9 @@ body{background:var(--page);color:var(--body);font-family:var(--font);font-size:
 .ffa-shape{font-family:var(--mono);font-size:7.5px;letter-spacing:.14em;font-weight:700}
 .ffa-shape.dn{color:var(--rail-dn)} .ffa-shape.up{color:var(--rail-up)}
 .ffa-q{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
-.ffa-q span{display:flex;flex-direction:column;gap:2px;font-family:var(--mono);font-size:11px;
+.ffa-q span{display:flex;flex-direction:column;gap:2px;font-family:var(--num);font-size:11px;
   font-weight:700;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-.ffa-q i{font-style:normal;font-size:7.5px;letter-spacing:.12em;font-weight:400;color:var(--rail-off)}
+.ffa-q i{font-style:normal;font-family:var(--mono);font-size:7.5px;letter-spacing:.12em;font-weight:400;color:var(--rail-off)}
 
 /* bunkers reuse the rate row, minus the sparkline column */
 .rate.bunker{grid-template-columns:1fr auto auto;gap:0 10px}
@@ -276,7 +288,7 @@ body{background:var(--page);color:var(--body);font-family:var(--font);font-size:
 .rate-n{font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--rail-off)}
 .rate-s{justify-self:end;display:flex;align-items:center}
 .rate-v{font-size:13.5px;font-weight:700;color:#fff;letter-spacing:-.01em}
-.rate-d{font-family:var(--mono);font-size:9.5px;font-weight:700;justify-self:end}
+.rate-d{font-family:var(--num);font-size:9.5px;font-weight:700;justify-self:end}
 .rate.up .rate-d{color:var(--rail-up)}
 .rate.dn .rate-d{color:var(--rail-dn)}
 
@@ -323,21 +335,26 @@ h1.hl em{font-style:normal;color:var(--teal)}
 
 /* ── stat tiles ──────────────────────────────────────────────── */
 .stats{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(172px,1fr));margin-bottom:18px}
-.stat{position:relative;padding:15px 18px 16px;background:var(--surface);border:1px solid var(--hair);
-  border-radius:var(--r);box-shadow:var(--shadow-card);overflow:hidden}
-.stat::before{content:"";position:absolute;inset:0 0 auto 0;height:2px;
-  background:var(--accent,var(--hair))}
-.stat.lead::before{background:linear-gradient(90deg,var(--teal) 0%,var(--light-tl) 100%)}
+.stat{position:relative;padding:15px 18px 16px 20px;border:1px solid var(--hair);
+  border-radius:var(--r);box-shadow:var(--shadow-card);overflow:hidden;
+  background:linear-gradient(180deg,
+      color-mix(in srgb,var(--accent,var(--teal)) 7%,transparent) 0%,
+      transparent 52%),
+    var(--surface)}
+.stat::before{content:"";position:absolute;inset:0 auto 0 0;width:3px;
+  background:var(--accent,var(--teal))}
+.stat.lead::before{background:linear-gradient(180deg,var(--teal) 0%,var(--light-tl) 100%)}
 .stat .l{font-family:var(--mono);font-size:8.5px;letter-spacing:.18em;text-transform:uppercase;
   color:var(--small);display:block}
-.stat .k{font-size:28px;font-weight:700;letter-spacing:-.03em;color:var(--ink);line-height:1.05;
-  font-variant-numeric:tabular-nums;margin-top:9px}
+.stat .k{font-size:29px;font-weight:700;letter-spacing:-.028em;color:var(--ink);line-height:1.05;
+  font-variant-numeric:proportional-nums;margin-top:8px}
 .stat .k .u{font-size:12px;font-weight:600;letter-spacing:0;color:var(--small);margin-left:4px}
-.stat .d{font-family:var(--mono);font-size:10px;font-weight:600;margin-top:7px;display:inline-flex;gap:4px;
+.stat .d{font-family:var(--num);font-size:10px;font-weight:600;margin-top:7px;display:inline-flex;gap:4px;
   color:var(--small)}
 .stat .sub{font-size:11.5px;color:var(--small);margin-top:7px;line-height:1.4}
-.meter{height:4px;border-radius:2px;background:var(--tint);overflow:hidden;margin-top:11px}
-.meter i{display:block;height:100%;border-radius:2px;background:var(--accent,var(--teal));
+.meter{height:5px;border-radius:3px;overflow:hidden;margin-top:11px;
+  background:color-mix(in srgb,var(--accent,var(--teal)) 16%,transparent)}
+.meter i{display:block;height:100%;border-radius:3px;background:var(--accent,var(--teal));
   transition:width var(--t-slow)}
 
 .insight{background:var(--insight-bg);border:1px solid var(--insight-line);border-radius:var(--r);
@@ -358,9 +375,13 @@ h1.hl em{font-style:normal;color:var(--teal)}
 .chip.warn{background:var(--amber);color:var(--amber-dk)}
 .chip.tealc{background:var(--tint);color:var(--teal)}
 .chip.mute{background:var(--draft-chip);color:var(--small)}
-.cat{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:8.5px;
-  letter-spacing:.13em;text-transform:uppercase;font-weight:700;color:var(--cc,var(--teal))}
-.cat::before{content:"";width:6px;height:6px;border-radius:2px;background:currentColor;flex-shrink:0}
+/* the swatch carries the category, the label wears a text token. Colouring
+   8.5px text with a chart hue put four of the six under AA, and identity
+   from a coloured mark beside the words is the more robust channel anyway. */
+.cat{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:8.5px;
+  letter-spacing:.13em;text-transform:uppercase;font-weight:700;color:var(--small)}
+.cat::before{content:"";width:7px;height:7px;border-radius:2px;flex-shrink:0;
+  background:var(--cc,var(--teal))}
 
 .toast{display:flex;align-items:center;gap:11px;padding:11px 15px;border-radius:var(--r-ctl);font-size:13px;
   font-weight:600;border:1px solid;margin-bottom:18px;box-shadow:var(--shadow-sm)}
@@ -381,7 +402,8 @@ h1.hl em{font-style:normal;color:var(--teal)}
   color:var(--on-accent)}
 .btn.block{width:100%;justify-content:center;padding:11px 14px;font-size:13.5px}
 .btn.sm{padding:5px 11px;font-size:12px}
-.btn.xs{padding:3px 9px;font-size:11px;font-family:var(--mono);font-weight:600}
+.btn.xs{padding:3px 9px;font-size:11px;font-family:var(--num);font-weight:700;
+  font-variant-numeric:tabular-nums}
 .btn.danger{color:var(--neg);border-color:var(--neg-line)}
 .btn.danger:hover:not(:disabled){background:var(--neg-soft);border-color:var(--neg);color:var(--neg)}
 .btn.go{color:var(--pos);border-color:var(--pos-line)}
@@ -406,9 +428,10 @@ input.search{padding:6px 10px 6px 28px;font-size:12.5px;width:190px;
 .tab{border:0;background:none;border-radius:calc(var(--r-ctl) - 2px);padding:5px 11px;font:inherit;
   font-size:11.5px;font-weight:600;color:var(--small);cursor:pointer;
   transition:background var(--t),color var(--t),box-shadow var(--t);
-  display:inline-flex;align-items:center;gap:6px}
+  display:inline-flex;align-items:baseline;gap:6px}
 .tab:hover{color:var(--ink)}
-.tab .n{font-family:var(--mono);font-size:9.5px;opacity:.7}
+.tab .n{font-family:var(--num);font-variant-numeric:tabular-nums;font-size:10.5px;
+  font-weight:700;opacity:.62}
 .tab[aria-pressed="true"]{background:var(--surface);color:var(--ink);
   box-shadow:0 1px 2.5px rgba(14,65,82,.16),0 0 0 .5px rgba(14,65,82,.05)}
 [data-theme="dark"] .tab[aria-pressed="true"]{box-shadow:0 1px 3px rgba(0,0,0,.45),0 0 0 .5px rgba(255,255,255,.05)}
@@ -445,7 +468,7 @@ tr:last-child td{border-bottom:none}
 .mrow[aria-current="true"] td:first-child{box-shadow:inset 4px 0 0 var(--cc,var(--teal))}
 .mrow.closed td{background:var(--row-dim)}
 .mrow.closed:hover td{background:var(--tint2)}
-.mid{font-family:var(--mono);font-size:10px;color:var(--small);letter-spacing:.06em}
+.mid{font-family:var(--num);font-size:10px;color:var(--small);letter-spacing:.06em}
 td.mid,th:first-child{padding-right:0}
 .qtext{font-weight:600;color:var(--ink);font-size:13px;line-height:1.4;max-width:46ch}
 .qmeta{display:flex;align-items:center;gap:3px 14px;flex-wrap:wrap;margin-top:6px;
@@ -457,9 +480,9 @@ td.mid,th:first-child{padding-right:0}
 
 .prob{display:flex;flex-direction:column;gap:6px;min-width:118px}
 .prob-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
-.prob-val{font-family:var(--mono);font-weight:700;font-size:14.5px;color:var(--ink);
+.prob-val{font-family:var(--num);font-weight:700;font-size:14.5px;color:var(--ink);
   font-variant-numeric:tabular-nums;letter-spacing:-.02em;border-radius:var(--r-chip);padding:0 2px}
-.prob-no{font-family:var(--mono);font-size:9.5px;color:var(--small);letter-spacing:.08em}
+.prob-no{font-family:var(--num);font-size:9.5px;color:var(--small);letter-spacing:.08em}
 .prob-bar{position:relative;height:5px;border-radius:3px;background:var(--tint);overflow:hidden}
 .prob-bar i{position:absolute;inset:0 auto 0 0;border-radius:3px;background:var(--pos);opacity:.9;
   transition:width var(--t-slow)}
@@ -468,7 +491,7 @@ td.mid,th:first-child{padding-right:0}
   100%{background:transparent;box-shadow:0 0 0 3px transparent}}
 .prob-val.flash{animation:flashp 1.2s ease-out}
 .trend{display:flex;align-items:center;gap:9px}
-.tdelta{font-family:var(--mono);font-size:10.5px;font-weight:700;min-width:30px}
+.tdelta{font-family:var(--num);font-size:10.5px;font-weight:700;min-width:30px}
 .pos-txt{color:var(--pos)} .neg-txt{color:var(--neg)}
 
 /* ── predictions · ticket ────────────────────────────────────── */
@@ -510,7 +533,7 @@ td.mid,th:first-child{padding-right:0}
   padding:9px 12px;border:0;background:none;border-radius:calc(var(--r-ctl) - 2px);font:inherit;
   cursor:pointer;color:var(--small);transition:color var(--t)}
 .sidebtn .sb-l{font-family:var(--mono);font-size:9px;letter-spacing:.18em;font-weight:700}
-.sidebtn .sb-p{font-family:var(--mono);font-size:19px;font-weight:700;letter-spacing:-.02em;
+.sidebtn .sb-p{font-family:var(--num);font-size:19px;font-weight:700;letter-spacing:-.02em;
   color:var(--ink);line-height:1;transition:color var(--t)}
 .sidebtn:hover{color:var(--ink)}
 .sidebtn.yes[aria-pressed="true"],.sidebtn.yes[aria-pressed="true"] .sb-p{color:var(--pos)}
@@ -522,7 +545,7 @@ td.mid,th:first-child{padding-right:0}
   border:1px solid var(--hair);border-radius:var(--r-ctl);overflow:hidden}
 .tsum > div{background:var(--tint2);padding:9px 12px 10px}
 .tsum dt{font-family:var(--mono);font-size:8px;letter-spacing:.15em;text-transform:uppercase;color:var(--small)}
-.tsum dd{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--ink);margin-top:5px;
+.tsum dd{font-family:var(--num);font-size:14px;font-weight:700;color:var(--ink);margin-top:5px;
   font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .fine{font-size:11.5px;color:var(--small);line-height:1.55}
 .gov{border-top:1px solid var(--hair);padding:13px 20px;background:var(--tint2);font-size:11.5px;
@@ -557,7 +580,7 @@ td.mid,th:first-child{padding-right:0}
 .log-row.sell .log-dot{background:var(--orange)}
 .log-row.settle .log-dot{background:var(--pos)}
 .log-row.open .log-dot{background:var(--teal-lt)}
-.log-t{font-family:var(--mono);font-size:10px;color:var(--small);padding-top:2px}
+.log-t{font-family:var(--num);font-size:10px;color:var(--small);padding-top:2px}
 .log-why{display:block;color:var(--small);font-style:italic;margin-top:3px}
 
 /* ── comms ───────────────────────────────────────────────────── */
@@ -572,17 +595,17 @@ td.mid,th:first-child{padding-right:0}
 .convo[aria-current="true"]{background:var(--tint);box-shadow:inset 3px 0 0 var(--teal)}
 .convo-top{display:flex;justify-content:space-between;gap:8px}
 .convo-name{font-weight:600;color:var(--ink);font-size:13px}
-.convo-at{font-family:var(--mono);font-size:9.5px;color:var(--small);flex-shrink:0}
+.convo-at{font-family:var(--num);font-size:9.5px;color:var(--small);flex-shrink:0}
 .convo-last{display:block;color:var(--small);font-size:12px;white-space:nowrap;overflow:hidden;
   text-overflow:ellipsis;margin-top:3px}
 .av{width:34px;height:34px;border-radius:var(--r-ctl);color:#fff;display:grid;place-items:center;
-  font-weight:700;font-size:11px;flex-shrink:0;font-family:var(--mono);letter-spacing:.04em}
+  font-weight:700;font-size:11px;flex-shrink:0;font-family:var(--num);letter-spacing:.04em}
 .bubble{max-width:74%;padding:10px 14px;border-radius:var(--r);font-size:13px;line-height:1.5}
 .bubble.them{background:var(--tint2);border:1px solid var(--hair);border-bottom-left-radius:3px}
 .bubble.me{background:var(--teal);color:var(--on-accent);margin-left:auto;border-bottom-right-radius:3px}
 .msg{display:flex;flex-direction:column;align-items:flex-start}
 .msg.mine{align-items:flex-end}
-.mmeta{font-family:var(--mono);font-size:9px;color:var(--small);margin-top:5px}
+.mmeta{font-family:var(--num);font-size:9px;color:var(--small);margin-top:5px}
 .thread{flex:1;padding:20px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;max-height:330px}
 .composer-row{padding:14px;border-top:1px solid var(--hair);display:flex;gap:9px}
 
@@ -856,12 +879,12 @@ const RATES = [
 /* the ticker rail is dark in both themes, so its category tags use fixed
    light values rather than the palette's on-surface ones */
 const CAT_TICK = {
-  "FFA":                    {tag:"FFA",  color:"#5FC2DC"},
-  "Dry bulk":               {tag:"DRY",  color:"#F0B857"},
-  "Tankers":                {tag:"TANK", color:"#8FBFEC"},
-  "Ports & canals":         {tag:"PORT", color:"#C9A9E8"},
-  "Newbuilds & recycling":  {tag:"NEW",  color:"#4FC287"},
-  "Internal":               {tag:"INT",  color:"#A9C9D6"}
+  "FFA":                    {tag:"FFA",  color:"#7FD3E8"},
+  "Dry bulk":               {tag:"DRY",  color:"#EFC169"},
+  "Tankers":                {tag:"TANK", color:"#9CC2F2"},
+  "Ports & canals":         {tag:"PORT", color:"#F2A182"},
+  "Newbuilds & recycling":  {tag:"NEW",  color:"#6FD3A0"},
+  "Internal":               {tag:"INT",  color:"#DDA6E4"}
 };
 
 /* forward curve, nearest three quarters per contract */
@@ -1052,6 +1075,9 @@ function readPalette(){
   C.barTop = v("--chart-bar-top","#0E4152");
   C.pos    = v("--chart-pos","#1F7A4C");
   C.neg    = v("--chart-neg","#C0392B");
+  /* categorical slots, fixed order – a bar keeps its hue whatever it ranks */
+  C.cats   = ["--c-ffa","--c-dry","--c-tank","--c-port","--c-new","--c-int"]
+    .map(n => v(n, "#196579"));
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1059,7 +1085,8 @@ function readPalette(){
    The deck idiom: label the data, drop the axis furniture, keep one
    baseline. Inline SVG, no libraries.
    ═══════════════════════════════════════════════════════════════ */
-const MONO_SVG = "Cascadia Mono,Consolas,ui-monospace,monospace";
+/* chart figures ride the same sans as the rest of the deck */
+const MONO_SVG = "Segoe UI,Segoe UI Variable Text,system-ui,-apple-system,Helvetica Neue,Arial,sans-serif";
 let gradSeq = 0;
 const gradId = () => `g${++gradSeq}`;
 
@@ -1116,14 +1143,22 @@ function barChart(rows, xk, yk){
   const W = 680, H = 210, L = 16, R = 16, T = 30, B = 34;
   const iw = W - L - R, ih = H - T - B;
   const vals = rows.map(r => r[yk]);
-  const max = niceMax(Math.max(...vals)), top = Math.max(...vals);
-  const step = iw / rows.length, bw = Math.min(46, step * 0.52);
+  const max = niceMax(Math.max(...vals));
+  const step = iw / rows.length, bw = Math.min(24, step * 0.52);
   const bars = rows.map((r, j) => {
-    const bh = (r[yk] / max) * ih, x = L + step * j + (step - bw) / 2, by = T + ih - bh;
-    const isTop = r[yk] === top;
-    return `<rect x="${x.toFixed(1)}" y="${by.toFixed(1)}" width="${bw.toFixed(1)}"
-              height="${Math.max(2, bh).toFixed(1)}" rx="2" fill="${isTop ? C.barTop : C.bar}"
-              ${isTop ? "" : 'opacity=".88"'}/>
+    const bh = Math.max(2, (r[yk] / max) * ih);
+    const x = L + step * j + (step - bw) / 2, by = T + ih - bh;
+    /* the hue belongs to the desk, so re-sorting or filtering never
+       repaints the survivors – it used to mark whichever bar was tallest */
+    const fill = C.cats[j % C.cats.length];
+    /* rounded cap, square where it meets the baseline */
+    const cr = Math.min(4, bh / 2, bw / 2);
+    const cap = `M${x.toFixed(1)} ${(by + bh).toFixed(1)} L${x.toFixed(1)} ${(by + cr).toFixed(1)}`
+      + ` Q${x.toFixed(1)} ${by.toFixed(1)} ${(x + cr).toFixed(1)} ${by.toFixed(1)}`
+      + ` L${(x + bw - cr).toFixed(1)} ${by.toFixed(1)}`
+      + ` Q${(x + bw).toFixed(1)} ${by.toFixed(1)} ${(x + bw).toFixed(1)} ${(by + cr).toFixed(1)}`
+      + ` L${(x + bw).toFixed(1)} ${(by + bh).toFixed(1)} Z`;
+    return `<path d="${cap}" fill="${fill}"/>
       <text x="${(x + bw / 2).toFixed(1)}" y="${(by - 9).toFixed(1)}" text-anchor="middle" font-size="13"
             font-weight="700" fill="${C.label}">${r[yk]}</text>
       <text x="${(x + bw / 2).toFixed(1)}" y="${H - 11}" text-anchor="middle" font-size="11"
