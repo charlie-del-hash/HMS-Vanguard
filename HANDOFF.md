@@ -345,6 +345,74 @@ Re-runnable against any static server pointed at the file.
 Render is ~13ms with 12 markets; the in-place paths are 0.1–0.2ms. 200 markets would cost
 ~93ms, which is not worth optimising for at this scale.
 
+## Where to pick this up
+
+A UX and visual audit of this tab ran on 25 Aug 2026. It produced six findings and a menu of 52
+improvements, each with a stable ID (A1, B4, C12 …). **Twenty-four are built and all six findings
+are closed** — see the two commits on `claude/shipping-equities-ux-audit-daxpnh`. The rest of the
+menu is below, still keyed to those IDs so the numbering stays continuous across sessions.
+
+### Take these first
+
+Each is self-contained, none touches the load-bearing layout model, and each is worth more than
+it costs.
+
+| ID | What | Note |
+| --- | --- | --- |
+| C11 | Persist selection, filter, sort and the panel fold | Only the theme survives a reload. Same `localStorage` path `applyTheme` already uses; the state keys are all on `S` |
+| C10 | Hash routing — `#equities/FRO` | Makes a constituent linkable from a desk note. Do it with C11; they share the "restore state on load" work |
+| D2 | Crosshair on the coverage basket and the side-panel chart | `moveCrosshair` is already geometry-independent — it reads its own viewBox. What it still wants is the `data-pts` contract and a `#ph` group on those two charts |
+| B6 | A "vs basket" column | Each name's YTD less the basket's. The tab computes it everywhere except where a reader would use it |
+| F1 | Make the desk view answer to the filter | Filter to car carriers and the prose still discusses Hormuz, boxes and dry bulk |
+| F4 | Mark placeholder data at the figures | "Not a live feed" is currently the last line of a footnote under a table of confident numbers |
+
+### Then, in rough order of value
+
+- **C4 (second half).** Hovering a table row should light its scatter point. The other direction —
+  click a mark to open the name — is done.
+- **B4's siblings:** B5 bar-in-cell for YTD, B7 basket weight, B8 the 52-week range as a row
+  micro-bar, B9 a USD column or currency toggle, B10 group by segment with subtotals.
+- **A6 / A7 density.** Rows are 64px. A compact mode near 40px fits the whole basket on one
+  screen; A7 (inlining exchange and segment beside the ticker) is the cheaper half and ships alone.
+- **A9** a full-width table mode, collapsing the chart panels to a strip.
+- **C6** compare two names side by side, **C7** pin a working set.
+- **D6** size the scatter marks by market cap (the data is already there), **D9** a dispersion
+  strip per segment — the desk view argues dispersion and nothing draws it, **D10** values on the
+  row sparklines.
+- **E4** row semantics: make the table a `grid` with `aria-selected` instead of `role="button"`
+  on each `<tr>`. Best done with the roving tabindex that is already in place. **E6** a visually
+  hidden table behind the scatter.
+
+### These need data that does not exist yet
+
+Don't start them expecting the array to carry it:
+
+- **D4** a 8 / 13 / 52-week window switch — `h` holds eight weekly closes and nothing else.
+- **F3** per-name as-of stamps, **F5** a constituent change log — no fields for either.
+- **F2** the two missing prediction-desk crossings — `EQ_LINK` covers dry, tank, port and car;
+  containers and gas have no market to point at, so this is a markets question, not a basket one.
+
+### Not viable
+
+- **A8** a sticky column header. Tried and removed; see the note under the shed-order section.
+
+### Re-running the checks
+
+The verification table above was produced with headless Chromium driving the file directly
+(`playwright-core` against `/opt/pw-browsers/chromium`), reading the live DOM rather than the
+source. Nothing is committed — rebuild it from these definitions, and beat these numbers:
+
+| Check | How | Beat |
+| --- | --- | --- |
+| Basket width sweep | every 4px, 320→1920, panel open and folded; assert `#eqscroll` `scrollWidth <= clientWidth` and no page overflow | 802 widths, 0 failures |
+| Viewport × theme × view | 14 widths × 2 themes × 4 views; same two assertions on every `.scroll` | 112/112 |
+| Chart type size | for each `svg.chart`, `rect.width / viewBox.width` and every `font-size` × that scale | scale 1.000, 8.5–13px |
+| Chart label collisions | `getBBox()` on every `<text>` in every chart, pairwise overlap | 0 pairs |
+| Contrast | walk DOM and SVG text, composite backgrounds, WCAG AA. **Run it differentially** against the previous build rather than absolutely — the deck has 70 long-standing signatures that are mostly artefacts of gradient backgrounds a naive checker cannot composite, and what matters is that the set does not grow | 70 signatures, 0 new |
+| Interactions | drive clicks and keys, assert on `S` and the DOM | 25/25 deck, 28/28 basket |
+| Touch targets | `pointer:coarse` at 390 and 768, every control ≥44pt on both axes | 0 in the basket |
+| Company reachability | 10 widths × panel open and folded: the name must be reachable by exactly one of column, fold or side panel — never none, never two | 0 failures |
+
 ## Known gaps
 
 Raised and not taken up, in rough order of value:
@@ -367,8 +435,5 @@ Raised and not taken up, in rough order of value:
   ticker / P/NAV / yield triples would be the proper answer and is not there yet.
 - The prediction desk's market table still has no arrow-key navigation; only the basket roves.
 - `moveCrosshair` is still bound to `#pricechart` alone, so the basket, segment, scatter and
-  side-panel charts have no hover readout.
-- The desk-view copy is fixed prose. Filter the basket to car carriers and it still discusses
-  Hormuz, boxes and dry bulk.
-- `EQ_LINK` covers four of the six segments; containers and gas carriers have no crossing to
-  the prediction desk, and the panel simply omits the block rather than saying so.
+  side-panel charts have no hover readout. Its geometry handling is no longer the obstacle —
+  see D2 above.
