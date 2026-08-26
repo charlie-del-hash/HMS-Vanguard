@@ -1521,6 +1521,125 @@ function applyTheme(){
   document.documentElement.setAttribute("data-theme", S.theme);
   try{ window.localStorage.setItem(THEME_KEY, S.theme); }catch{}
 }
+
+/* ── The view survives a reload; the book does not ──────────────
+   Which module is open, what is filtered, sorted, searched and selected all
+   come back. Balance, positions, the log and the open ticket deliberately do
+   not: restoring those would promise a portfolio the deck does not keep, and
+   a stale one is worse than an empty one. Same localStorage path the theme
+   already uses, and the same try/catch — a file:// origin refuses storage
+   outright in some browsers, so every read and write has to survive being
+   turned down. */
+const VIEW_KEY = "affinity-ops-view";
+const PERSIST = ["tab", "selId", "mktFilter", "mktCat", "sort", "query",
+                 "convoFilter", "selConvo",
+                 "rtab", "eqSeg", "eqSort", "eqSel", "eqPanel", "eqQuery"];
+
+/* Everything read back is checked against what the deck actually holds. A
+   ticker that has left the basket, a market that has been removed, a hash
+   somebody typed by hand — none of them may render a broken view, so an
+   unknown value falls through to the default rather than into the view. */
+const isStr = x => typeof x === "string";
+function restoreView(){
+  let v = null;
+  try{
+    const raw = window.localStorage.getItem(VIEW_KEY);
+    if(raw) v = JSON.parse(raw);
+  }catch{}
+  if(!v || typeof v !== "object") return;
+  const ok = {
+    tab:        x => isStr(x) && Object.prototype.hasOwnProperty.call(VIEWS, x),
+    selId:      x => S.markets.some(m => m.id === x),
+    mktFilter:  x => ["open", "settled", "all"].includes(x),
+    mktCat:     x => x === "all" || CATS.includes(x),
+    sort:       x => ["closes", "vol", "price"].includes(x),
+    query:      x => isStr(x) && x.length <= 120,
+    convoFilter:x => x === "all" || Object.prototype.hasOwnProperty.call(CHANNELS, x),
+    selConvo:   x => S.convos.some(c => c.id === x),
+    rtab:       x => RTABS.some(([k]) => k === x),
+    eqSeg:      x => x === "all" || EQ_SEGS.some(g => g.k === x),
+    eqSort:     x => isStr(x) && Object.prototype.hasOwnProperty.call(EQ_SORTS, x),
+    eqSel:      x => x === null || EQUITIES.some(e => e.tk === x),
+    eqPanel:    x => typeof x === "boolean",
+    eqQuery:    x => isStr(x) && x.length <= 120
+  };
+  PERSIST.forEach(k => { if(ok[k](v[k])) S[k] = v[k]; });
+}
+
+/* ── Hash routing ──────────────────────────────────────────────
+   #predict/7, #comms/3, #library, #equities/FRO. A constituent can now be
+   linked from a desk note, which was the whole ask; the rest of the deck gets
+   it for free because the same two functions cover every module.
+
+   The URL is written with replaceState, not by assigning location.hash: the
+   deck's state changes are selections and filters, and one history entry per
+   selection turns the back button into an undo stack nobody asked for. The
+   address bar still holds a link that works. */
+function routeOf(){
+  if(S.tab === "reports")
+    return S.rtab === "equities" ? (S.eqSel ? `equities/${S.eqSel}` : "equities") : "library";
+  if(S.tab === "comms") return `comms/${S.selConvo}`;
+  return `predict/${S.selId}`;
+}
+
+/* A route is an instruction from outside, so it is validated exactly as hard
+   as the store is. Anything it does not recognise leaves the state alone. */
+function applyRoute(hash){
+  const [head, arg] = String(hash || "").replace(/^#\/?/, "").split("/");
+  if(!head) return false;
+  if(head === "predict" || head === "comms"){
+    S.tab = head;
+    const id = Number(arg);
+    if(arg && Number.isFinite(id)){
+      if(head === "predict" && S.markets.some(m => m.id === id)) S.selId = id;
+      if(head === "comms"   && S.convos.some(c => c.id === id))  S.selConvo = id;
+    }
+    return true;
+  }
+  /* the module has a name of its own, and somebody will type it. It lands on
+     whichever of the two tabs was already open rather than forcing one. */
+  if(head === "reports"){ S.tab = "reports"; return true; }
+  if(head === "library" || head === "equities"){
+    S.tab = "reports";
+    S.rtab = head === "equities" ? "equities" : "library";
+    if(head === "equities" && arg !== undefined){
+      let tk = arg;
+      try{ tk = decodeURIComponent(arg); }catch{}
+      tk = tk.toUpperCase();
+      /* A link to a name the filter would hide is still a link to that name,
+         so the filter and the search widen rather than land on an empty table.
+         A name that has left the basket lands on the basket with nothing
+         selected — showing the reader a different name than the one they
+         followed would be the worse answer. */
+      S.eqSel = EQUITIES.some(e => e.tk === tk) ? tk : null;
+      S.eqSeg = "all";
+      S.eqQuery = "";
+    }
+    return true;
+  }
+  return false;
+}
+
+/* Both the URL and the store follow the view, and both are written from
+   render() because that is the one funnel every state change already goes
+   through. Neither writes unless what it carries actually moved: render()
+   also runs on a toast expiring, and a storage write per toast tick is waste
+   the deck does not need to spend. */
+let lastRoute = null, lastSaved = null;
+function syncRoute(){
+  const r = routeOf();
+  if(r !== lastRoute){
+    lastRoute = r;
+    try{ history.replaceState(null, "", `#${r}`); }catch{}
+  }
+  const out = {};
+  PERSIST.forEach(k => { out[k] = S[k]; });
+  const j = JSON.stringify(out);
+  if(j !== lastSaved){
+    lastSaved = j;
+    try{ window.localStorage.setItem(VIEW_KEY, j); }catch{}
+  }
+}
 /* The deck had no live region at all, so a filled trade and a selected name
    were both silent. One region in the shell serves everything: it is mounted
    once, because a region rebuilt by render() is not reliably announced. */
@@ -3574,6 +3693,7 @@ function render(){
 
   syncTicker();
   flashChanges();
+  syncRoute();
 }
 
 /* pulse the YES price of any market whose mark moved since last paint */
@@ -3800,9 +3920,23 @@ document.addEventListener("pointerleave", () => {
   document.getElementById("ph")?.setAttribute("opacity", "0");
 });
 
+/* Boot order matters. The store is the default and the hash is the
+   instruction, so the store is read first and a route that parses overwrites
+   what it covers — otherwise a link shared into a browser that already has a
+   stored view would land somewhere else. */
 applyTheme();
+restoreView();
+applyRoute(location.hash);
 mountShell();
 render();
+
+/* replaceState never fires this, so it only ever carries a hash the reader
+   typed or a link they followed inside the page — both of which mean go
+   there. A hash that parses to nowhere is left alone rather than resetting
+   the view under them. */
+window.addEventListener("hashchange", () => {
+  if(applyRoute(location.hash)){ render(); announceEq(); }
+});
 </script>
 </body>
 </html>
