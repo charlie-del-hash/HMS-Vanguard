@@ -1308,6 +1308,11 @@ const segYTD  = k => {
   return c ? +(segRows(k).reduce((a, e) => a + e.mcap * e.ytd, 0) / c).toFixed(1) : 0;
 };
 const EQ_YTD = EQ_SEGS.map(g => ({s:g.short, v:segYTD(g.k), n:segRows(g.k).length, k:g.k}));
+/* The basket's own year, equal-weighted — which is how the basket is defined,
+   and not the same thing as the cap-weighted segment returns beside it. Rolled
+   up from the rows like everything else, so it cannot come to disagree with
+   the column it is compared against. */
+const BASKET_YTD = +(EQUITIES.reduce((a, e) => a + e.ytd, 0) / EQUITIES.length).toFixed(1);
 
 /* A name in the basket and a question on the prediction desk are often
    the same view expressed twice. Where that holds, the detail panel
@@ -3464,6 +3469,9 @@ function eqDetail(e){
     <dl class="gov">
       <dt>NAV per share</dt><dd>${esc(e.ccy)} ${pxTxt(e.nav)} · market cap $${e.mcap.toFixed(2)}bn</dd>
       <dt>Desk view</dt><dd>${esc(e.note)}</dd>
+      <dt>Against the basket</dt><dd>${pctTxt(e.ytd)} year to date against the basket's
+        ${pctTxt(BASKET_YTD)} — ${Math.abs(e.ytd - BASKET_YTD).toFixed(1)} points
+        ${e.ytd >= BASKET_YTD ? "ahead" : "behind"}.</dd>
       <dt>Source</dt><dd>Indicative placeholder, not a live feed. Shaped like the quote feed that
         replaces it, so nothing here is a quotable print.</dd>
     </dl>
@@ -3564,13 +3572,13 @@ function eqCSV(rows){
     const t = String(v ?? "");
     return /[",\r\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t;
   };
-  const head = ["Ticker","Company","Exchange","Currency","Segment","Last","1D %","YTD %",
+  const head = ["Ticker","Company","Exchange","Currency","Segment","Last","1D %","YTD %","vs basket %",
     "Market cap US$bn","NAV per share","P/NAV","EV/EBITDA","Yield %","52w low","52w high",
     "Vessels","Capacity","Desk view", ...WK.map(w => `${w} close`), "Source"];
   /* the file leaves the building, so the qualification goes with it — a column
      rather than a trailing line, because a trailing line is not CSV */
   const body = rows.map(e => [e.tk, e.co, e.ex, e.ccy, (EQ_SEG[e.seg] || {}).lab || "",
-    e.px, e.d1, e.ytd, e.mcap, e.nav, pnav(e).toFixed(4), e.ev, e.yld, e.lo, e.hi,
+    e.px, e.d1, e.ytd, +(e.ytd - BASKET_YTD).toFixed(1), e.mcap, e.nav, pnav(e).toFixed(4), e.ev, e.yld, e.lo, e.hi,
     e.fleet, e.cap, e.note, ...e.h, "Indicative placeholder, not a live feed"].map(cell).join(","));
   return [head.map(cell).join(","), ...body].join("\r\n");
 }
