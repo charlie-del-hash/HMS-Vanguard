@@ -376,9 +376,19 @@ Three things about the extraction that look like details and are not:
 - **EBITDA is not a tag in either taxonomy.** It is derived as operating income
   plus D&A, only where both come from the same period, and the derivation is
   written into the `src` string so nobody mistakes it for something filed.
-- **A CIK is never guessed.** A wrong one fetches another company's accounts,
-  which is the worst failure this can have, so a name with a null CIK is skipped
-  and says so.
+- **A CIK is never typed.** A wrong one does not error — it fetches a different
+  company's accounts and puts them on the deck under the right ticker, which is
+  the worst failure this pipeline has, and thirteen ten-digit numbers copied by
+  hand is exactly how that happens. `scripts/resolve-ciks.js` reads the SEC's
+  own `company_tickers.json` instead, and the workflow runs it before the fetch.
+
+  It is not blind, because a ticker can be reassigned or collide across
+  registrants: each EDGAR name carries an `expect` field naming the company the
+  deck thinks it is, and the registrant name has to match before the number is
+  accepted. A mismatch is reported and **left unresolved**, because an
+  unresolved name is skipped downstream and a wrongly resolved one is not.
+  `checks/ciks.js` tests that matcher against the thirteen real registrant
+  titles and against collisions it must refuse.
 
 **The splice escapes `<`.** The literal is written into an inline `<script>`,
 where the HTML parser looks for `</script>` before the JS parser sees anything —
