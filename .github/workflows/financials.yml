@@ -55,6 +55,9 @@ jobs:
           # a repository variable; without it the script sends a placeholder
           # that names the omission rather than pretending.
           SEC_USER_AGENT: ${{ vars.SEC_USER_AGENT }}
+          # Passed whether or not the aggregator is on. Which providers run is
+          # decided by "providers" in scripts/sources.json, so turning the other
+          # ten names on is a one-line change there rather than a workflow edit.
           FMP_API_KEY: ${{ secrets.FMP_API_KEY }}
         run: |
           node scripts/refresh-financials.js \
