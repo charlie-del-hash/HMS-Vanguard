@@ -11,8 +11,11 @@ Static HTML, no build step, no dependencies.
 
 Open the deck straight in a browser, or serve the folder with `npx serve .`.
 
-**Live:** https://charlie-del-hash.github.io/HMS-Vanguard/ — `/ops-deck.html` serves the
-same page. Pushes to `main` publish via `.github/workflows/static.yml`.
+**Live:** https://affinity-wine.vercel.app/ — the link to share.
+
+GitHub Pages mirrors it at https://charlie-del-hash.github.io/HMS-Vanguard/. Both publish from
+`main` and serve the same file; on both, `/ops-deck.html` serves the same page. Pages builds via
+`.github/workflows/static.yml`, Vercel from the repo root.
 
 The repo is also connected to two Vercel projects (`affinity`, `hms-vanguard`), both rooted
 at the repo root. `vercel.json` rewrites `/` and `/ops-deck.html` to the deck there, so every
