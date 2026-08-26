@@ -103,6 +103,16 @@ Thresholds are **measured, not chosen**. `#mktscroll` is 567px with the trend co
 410px without, so its break is at 566px. Re-measure with
 `table.style.width = 'min-content'` before moving one.
 
+**The basket's shed order is priority, not position.** It drops the trend, then Company, then
+Yield, Cap, P/NAV and last YTD — measured floors 804 / 716 / 607 / 535 / 457 / 388 / 304 for
+the surviving set, with each break about 12% above the floor it protects. The earlier order
+dropped Cap and P/NAV together at 730 and held Company to 430, so a 1366 laptop lost the
+multiple the whole tab argues from while still showing a name the ticker already identifies.
+Company is the most recoverable fact in the row, so it goes first — and it folds under the
+ticker rather than vanishing (`.cofold`), but only where nothing else carries it: with the
+detail panel open beside the table the name is 350px to the right, and duplicating it would
+cost 20px on every row for nothing.
+
 **A hidden column is not a dropped fact.** The library and the wiring table each keep a
 `.tmeta` line under the row's name, hidden at full width and revealed one item at a time as
 its column goes — so owner, desk, cadence, updated and scope survive on a phone in a
@@ -112,7 +122,14 @@ the selected-name panel for the basket. Those two are the only cases where dropp
 correct, and both are documented in place.
 
 Verified 320 → 1920 in both themes across all four views: 112/112 with no page overflow and
-no table scrolling inside its own panel.
+no table scrolling inside its own panel. The basket is additionally swept at every 4px from
+320 to 1920 with the detail panel both open and folded — 802 widths, 0 overflows.
+
+**A sticky column header was tried and removed.** It needs a scrollport that actually scrolls;
+the nearest one is `.main`, which carries `overflow-y:auto` but never engages because `.shell`
+only sets `min-height`. The header therefore pins to a scrollport that never moves. Making it
+work means giving `.main` a real height or capping and internally scrolling the table, both of
+which are changes to the load-bearing layout model above. Do not retry without reading it.
 
 ## Reports has two tabs
 
@@ -159,6 +176,25 @@ height on empty air. `indexChart` pads the observed range instead and keeps the 
 as the single reference, which is the level a reader actually compares against. Its fill
 colour comes from where the series ends **relative to the rebase**, not from the last tick,
 so one down week does not flip an eight-week gain to red.
+
+**Selection is three states, not two.** `S.eqSel` null means the reader cleared it — Escape, or
+clicking the selected row or mark again — and that is the only way to see all 23 scatter points
+undimmed, because every path used to end in a selection and 22 of 23 marks sat permanently at
+55%. A non-null value the filter excludes still falls back to the top of what is on screen.
+The "Show all" control in the Relative value header is the visible way to reach the cleared
+state; the scatter is where the benefit shows, so that is where the control lives.
+
+**The basket is a single tab stop.** Rows carry a roving `tabindex` — 0 on the selected row, or
+the first when nothing is selected — and the arrow keys move it, with Home and End for the
+ends. Arrows move focus only and never re-render, which is what keeps them instant; Enter and
+Space select. Every path that selects also restores focus afterwards, by giving each row an
+`id` so `render()`'s existing id-based focus restore finds it again. Before that, selecting
+anything dropped focus to `<body>` and a keyboard reader was returned to the top of the page.
+
+**One live region serves the whole deck.** `#live` is mounted with the shell, not by `render()`,
+because a region rebuilt on every paint is not reliably announced. `say()` writes to it and
+`note()` calls it, so toasts speak too; `announceEq()` gives the selected name, its segment,
+its multiple and its year.
 
 **The selected name is the ticket, again.** Clicking or Entering a row fills a `.sticky`
 panel beside the table — the eight-week window at its own geometry, the 52-week range, the
@@ -250,14 +286,18 @@ Re-runnable against any static server pointed at the file.
 | --- | --- |
 | Viewport × theme × view | 112/112 clean — 14 widths, 320→1920, both themes, all four views |
 | Table overflow | 0 tables scroll inside their own panel at any tested width, in any view |
+| Basket width sweep | 802 widths (every 4px, 320→1920 × panel open and folded), 0 overflows |
 | Interaction tests | 25/25 — trade, close, resolve, search, new market, comms, report, basket select/filter/sort/peer/crossing, theme persistence |
+| Basket interactivity | 28/28 — search, chips, clear, roving tabindex, arrows, Home/End, Enter, Escape, deselect, scatter click, tooltips, quadrants, bar filter, live region, CSV |
+| Company-name reachability | 0 failures across 10 widths × panel open and folded: always reachable by exactly one of column, fold or panel, never two |
+| Overlay hues | 24/24 — the basket overlay's label and end dot clear AA and 3:1 for all six segments in both themes |
 | Scatter labels | 23 of 23 placed: 0 overlapping pairs, 0 on a mark, 0 out of frame |
 | Derived figures | Tiles re-checked against the rendered table rows, not against the source array |
-| Contrast (WCAG AA) | 0 failures in the rendered body — all four views, both themes, at 1440 and 390, DOM and SVG text. Channel avatars measured separately: 4.61 / 11.00 / 10.63 |
+| Contrast (WCAG AA) | 0 failures in the rendered body — all four views, both themes, at 1440 and 390, DOM and SVG text. Channel avatars measured separately: 4.61 / 11.00 / 10.63. Re-checked differentially against the previous build: identical failure set, 0 regressions |
 | Tile wash worst case | 4.78:1 light / 5.19:1 dark with the wash forced to full strength across the whole tile |
 | Category palette | Passes the validator in both modes; two accepted warnings, see above |
-| Keyboard | 221 stops across the four views, 0 without a focus ring |
-| Touch targets | Nothing under 44pt under `pointer:coarse` except the qty slider, which the CSS sets to 32px on purpose |
+| Keyboard | 0 stops without a focus ring across the four views. The basket's 23 row stops are now one, because the rows rove |
+| Touch targets | Nothing under 44pt under `pointer:coarse` in the basket. Deck-wide, two pre-existing exceptions remain: the qty slider (32px, deliberate) and two comms filter chips at 42–43px wide. The sortable column headers take their 44pt by moving the cell's vertical padding onto the button and expanding sideways into the cell's own gutter, so no target overhangs the first data row or the neighbouring column |
 | Reduced motion | 0 elements animating or transitioning |
 | Market maker | 9/9 LMSR invariants — complementary prices, convex cost, loss-free round trip, `maxAffordable` exact |
 | Print | Forces light even from dark theme; ticker and spine hidden |
@@ -271,19 +311,33 @@ Render is ~13ms with 12 markets; the in-place paths are 0.1–0.2ms. 200 markets
 Raised and not taken up, in rough order of value:
 
 - No `<noscript>` — the deck is entirely JS-rendered, so scripts-off is a blank page.
-- No hash routing — a module or a specific market cannot be linked to.
-- Only the theme persists; selected market, filter and sort reset on reload.
+- No hash routing — a module, a market or a basket constituent cannot be linked to.
+- Only the theme persists; selected market, basket selection, filters and sort reset on reload.
 - `render`, `buy`, `ticket` and friends are function declarations, so they land on `window`.
 - Market rows have no arrow-key navigation, only Enter/Space on a focused row.
-- The toast has no live region, so a screen reader is not told when a trade fills.
 - The qty slider is 32px tall under `pointer:coarse`, set explicitly by
   `input[type=range]{height:32px}`. Its thumb is 22px. Deliberate, and still under 44pt.
+- Two comms channel-filter chips measure 42–43px wide under `pointer:coarse`.
 - The equities basket is static. Nothing recomputes, so selecting, sorting and filtering are
   the only live parts of the tab; a feed would want `syncTicker`-style in-place updates
   rather than a re-render, for the same reason the ticker has them.
 - The scatter's label widths are estimated from the character count rather than measured.
   Every figure in the deck uses one face, so the estimate holds — but a face change, or a
   ticker with unusually wide glyphs, would need it re-checked.
-- The basket table has no arrow-key navigation either, only Enter and Space on a focused row.
 - Only one name can be selected. Comparing two side by side means reading the peer list,
   which gives P/NAV and YTD but not the rest.
+- The scatter's marks are clickable but not focusable — 23 tab stops inside one chart is worse
+  than none, so the table is the keyboard route in. A visually hidden table of the same
+  ticker / P/NAV / yield triples would be the proper answer and is not there yet.
+- Chart type size is a function of container width, because every chart is a fixed `viewBox`
+  at `width:100%`. On a phone the basket, the segment bars and the scatter render their labels
+  at 4.7–6.4px; on a tablet the side-panel chart runs to 18.7–20.3px. The note above about
+  `indexChart` taking its geometry from the caller is true at 1440, where it was tuned, and
+  not elsewhere. Fixing it means choosing the viewBox from the measured container.
+- The prediction desk's market table still has no arrow-key navigation; only the basket roves.
+- `moveCrosshair` is still bound to `#pricechart` alone, so the basket, segment, scatter and
+  side-panel charts have no hover readout.
+- The desk-view copy is fixed prose. Filter the basket to car carriers and it still discusses
+  Hormuz, boxes and dry bulk.
+- `EQ_LINK` covers four of the six segments; containers and gas carriers have no crossing to
+  the prediction desk, and the panel simply omits the block rather than saying so.
