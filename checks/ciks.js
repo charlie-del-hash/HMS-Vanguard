@@ -64,6 +64,18 @@ t("no CIK is committed unresolved-looking", () => {
   const bad = edgar.filter(([, v]) => v.cik != null && !/^\d{10}$/.test(String(v.cik))).map(([k]) => k);
   assert.deepStrictEqual(bad, [], "a CIK must be ten digits or null");
 });
+t("providers is an explicit, valid allowlist", () => {
+  assert.ok(Array.isArray(cfg.providers) && cfg.providers.length,
+    "an absent or empty list makes EDGAR-only an accident of which secrets are set");
+  const known = new Set(["edgar", "fmp"]);
+  const odd = cfg.providers.filter(p => !known.has(p));
+  assert.deepStrictEqual(odd, [], "a provider nothing implements would silently skip its names");
+});
+t("at least one name runs under the enabled providers", () => {
+  const on = new Set(cfg.providers);
+  const live = Object.values(cfg.names).filter(v => on.has(v.provider)).length;
+  assert.ok(live > 0, "no name would be fetched at all");
+});
 t("every non-EDGAR name has a symbol", () => {
   const bad = Object.entries(cfg.names)
     .filter(([, v]) => v.provider === "fmp" && !v.symbol).map(([k]) => k);

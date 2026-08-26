@@ -576,16 +576,23 @@ variables → Actions, by hand:
 | Name | Kind | Value |
 | --- | --- | --- |
 | `SEC_USER_AGENT` | Variable | SEC asks for a contact, and it travels in a header on every request to them. The repo URL works and carries no personal data; a role address is better if this outlives one inbox |
-| `FMP_API_KEY` | Secret | From the Financial Modeling Prep account. Nothing else can supply it |
+| `FMP_API_KEY` | Secret | Only needed once `"fmp"` is added to `providers`. From the Financial Modeling Prep account; nothing else can supply it |
 
 Then **Actions → Refresh reported figures → Run workflow with dry run ticked.** That resolves the
 CIKs and prints every figure it would write, touching nothing. Read that log before running it for
 real.
 
-**EDGAR-only is a legitimate stopping point.** It needs no key and no spend, covers the 13
-US-listed names, and leaves the other ten showing nothing — which is the correct behaviour, not a
-gap: a name with no entry renders no block and keeps saying it is indicative. Ten names showing
-nothing beats ten names showing something wrong.
+**It is EDGAR-only right now, and that is a switch rather than an accident.** `providers` in
+`scripts/sources.json` lists which providers run, and it holds `["edgar"]`. That is deliberately a
+decision recorded in the repo instead of a side effect of which secrets happen to be set —
+otherwise setting `FMP_API_KEY` for anything else would quietly switch ten names on. Only
+`SEC_USER_AGENT` is needed to run as it stands.
+
+It covers the 13 US-listed names and leaves the other ten showing nothing, which is the correct
+behaviour rather than a gap: a name with no entry renders no block and keeps saying it is
+indicative. Ten names showing nothing beats ten showing something wrong. **To turn the rest on**,
+add `"fmp"` to `providers` and set `FMP_API_KEY` — the symbol mapping for all ten is kept intact
+so that is a one-line change.
 
 ### Then, in order
 
