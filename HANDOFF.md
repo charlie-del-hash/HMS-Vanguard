@@ -3,6 +3,9 @@
 `affinity-ops-deck.html` is one self-contained file — no build step, no dependencies, no
 network calls. Open it directly or serve it; both work.
 
+The checks live beside it in `checks/` and are not part of the deployed page. `node checks/run.js`
+runs all of them; see the Verification section below for what they hold.
+
 **Live:** https://charlie-del-hash.github.io/HMS-Vanguard/ — `/ops-deck.html` serves the
 same page.
 
@@ -191,6 +194,28 @@ Space select. Every path that selects also restores focus afterwards, by giving 
 `id` so `render()`'s existing id-based focus restore finds it again. Before that, selecting
 anything dropped focus to `<body>` and a keyboard reader was returned to the top of the page.
 
+**The desk view answers to the filter.** The three written notes each carry the segment they are
+about, and only the notes whose subject survives the filter are printed — filtering to car
+carriers used to leave the panel discussing Hormuz, boxes and dry bulk, three paragraphs about
+nothing on screen. A segment the desk has not written about still has a view and it is in the
+array: `segNote()` gives the cap-weighted return, the spread inside the segment and the two names
+at its ends, how much of it trades above NAV and at what median, and the crossing to the
+prediction desk where one exists. Computed, like everything else on this tab, so it cannot come to
+disagree with the table under it. With the whole basket showing, the panel reads exactly as
+before; an empty filter says so rather than arguing about names that are not there.
+
+**Placeholder data says so where the figures are.** "Not a live feed" used to be the last line of
+a footnote under a table of confident numbers. It is now a chip in the tab row above the tiles, a
+line directly under them, a Source row in the detail panel — which is a long way from the top of
+the page and carries a name's price, NAV and yield with no other qualification — and a column in
+the CSV, because the file leaves the building and the qualification has to go with it. A trailing
+line would not have been CSV.
+
+**`BASKET_YTD` is the basket's own year, equal-weighted**, which is how the basket is defined and
+not the same thing as the cap-weighted segment returns beside it. The detail panel says how far
+the selected name sits from it and the export carries the same number as a column. The *column* in
+the table is not there, and the measurement is why — see B6 under "Where to pick this up".
+
 **One live region serves the whole deck.** `#live` is mounted with the shell, not by `render()`,
 because a region rebuilt on every paint is not reliably announced. `say()` writes to it and
 `note()` calls it, so toasts speak too; `announceEq()` gives the selected name, its segment,
@@ -231,9 +256,41 @@ labels on top of each other at 4.7px look like texture. `textWidth()` measures t
 the real size through a canvas context, memoised per string. The quadrant captions and the parity
 caption go into the same collision set.
 
-**The crosshair reads its own frame.** `moveCrosshair` mapped the pointer through the `PC.W`
-constant, which stopped being the chart's width once the price chart took its geometry from its
-slot. It reads `viewBox.baseVal.width` instead.
+**Figures are placed against a collision set, not parked above the mark.** Every value label in
+`indexChart` sat at a fixed 13px above its point. That was right while the chart carried one line
+and wrong the moment a second shared the frame: with a name overlaid on the coverage basket,
+102.9, 102.8, 104.6 and 106.2 all had the selected name's line running through them at 1440, and
+the first figure hung 1.8px off the left edge at every width. Each figure now takes the first free
+position from a set holding both series' stroked geometry, the rebase rule, every mark, the x
+labels, the rebase caption, the overlay's ticker and the figures already placed.
+
+Two rules make the result read as a set rather than a scatter of dodges. **The side is decided
+once for the whole series** — below the basket where the second line runs above it, above where it
+does not — and **a figure whose place is taken steps further out on the same side before it
+changes sides**, because two depths on one side still read as a set and one figure alone on the
+other does not. The ends are placed first: the two figures a reader compares are the ones the
+window opened and closed at, and `checks/index-anchors.js` holds them.
+
+The same frame check found two things that had never been looked at. The REBASE caption is wider
+than the right margin it sits in, so the dashed rule ran under the word — the rule stops at the
+caption now, measured. And the overlay's ticker was parked at its end dot's right shoulder, which
+is narrower than the ticker for anything longer than about five characters: MAERSK-B measures 61px
+against a 42px margin at 320 and ran clean off the frame. It takes the shoulder where the shoulder
+fits, and otherwise sits above the dot, right-aligned to the frame.
+
+**One crosshair, three charts.** `moveCrosshair` mapped the pointer through the `PC.W` constant,
+which stopped being the chart's width once the price chart took its geometry from its slot; it
+reads `viewBox.baseVal.width` instead. The reason the basket and the side panel had no readout was
+never geometry, though — it was that both hooks were ids, `#pricechart` and `#ph`, and two ids
+cannot coexist in one document. They are classes now: a chart opts in by carrying `data-pts` and a
+`.ph` layer from `crosshairLayer()`, and **each chart phrases its own readout**, which is what lets
+three frames of different shapes share one handler. Cents on the price chart; week and level on the
+side panel; week, basket and name on the coverage basket, where both series get a dot, because a
+plate that says `FRO 111.3` with nothing marking it is asking to be read off the wrong line. Below
+380px that sentence is wider than the frame, so it drops back to the basket alone. The plate was
+sized at 5.6px a character — the same estimate the scatter was caught out by — and is measured now.
+Only one crosshair is ever lit and the lit one is held rather than looked up again, because this
+runs at pointer rate; `render()` drops the handle with the charts it is about to replace.
 
 **The scatter labels what fits.** Every point used to keep its label, and when the placement ran
 out of room it dropped the ticker at its first candidate anyway. That was survivable only while
@@ -253,6 +310,36 @@ terminal operators. Every point keeps its label; the placement tries right, left
 below, then nudges, testing against the marks as well as the labels already down. Dropping
 labels would have been easier and leaves points nobody can identify. Verified: 23 labels, 0
 overlapping pairs, 0 sitting on a mark, 0 out of frame.
+
+## The view is linkable, and it survives a reload
+
+`#predict/7`, `#comms/3`, `#library`, `#equities/FRO`. A constituent can be linked from a desk
+note, which was the whole ask; the rest of the deck gets it for free because `routeOf()` and
+`applyRoute()` cover every module between them.
+
+The URL is written with `replaceState`, **not** by assigning `location.hash`. The deck's state
+changes are selections and filters, and one history entry per selection turns the back button
+into an undo stack nobody asked for. `hashchange` therefore only ever fires for a hash the reader
+typed or a link they followed inside the page, both of which mean go there.
+
+`PERSIST` covers the view and not the book: which module and tab are open, what is filtered,
+sorted, searched and selected. Balance, positions, the log and the open ticket deliberately do
+**not** persist — restoring those would promise a portfolio the deck does not keep, and a stale one
+is worse than an empty one.
+
+Both are written from `render()`, which is the one funnel every state change already goes through,
+and neither writes unless what it carries actually moved: `render()` also runs when a toast
+expires, and a storage write per toast tick is waste.
+
+**Everything read back is validated against what the deck actually holds**, because the store and
+the hash are both outside input. An unknown module, market, channel, sort or ticker falls through
+to the default rather than into the view; a name that has left the basket lands on the basket with
+nothing selected, because showing a reader a different name than the one they followed is the
+worse answer. A link beats the store — the store is a default and a link is an instruction — which
+is why `restoreView()` runs before `applyRoute()` at boot.
+
+Every read and write is wrapped: a `file://` origin refuses storage outright in some browsers, and
+the deck has to keep working when it is turned down.
 
 ## Colour and type — the rules that are easiest to undo
 
@@ -316,31 +403,48 @@ reporting a false 1.89:1 on a tile that actually measures 4.78:1.
 
 ## Verification
 
-Re-runnable against any static server pointed at the file.
+**The checks are in the repo now.** `checks/` holds the harness that produced this table —
+headless Chromium driving a served copy of the deck and reading the live DOM, never the source.
+Earlier sessions rebuilt it from prose each time; it does not have to be rebuilt again.
+
+```
+node checks/run.js                 # all of them
+node checks/run.js charts routing  # a subset
+```
+
+`run.js` serves the deck on a loopback port and hands each check the URL in `DECK_URL`. See
+`checks/README.md` for what each one asserts and the two footguns that have caught people out.
 
 | Check | Result |
 | --- | --- |
 | Viewport × theme × view | 112/112 clean — 14 widths, 320→1920, both themes, all four views |
-| Table overflow | 0 tables scroll inside their own panel at any tested width, in any view |
 | Basket width sweep | 802 widths (every 4px, 320→1920 × panel open and folded), 0 overflows |
-| Interaction tests | 25/25 — trade, close, resolve, search, new market, comms, report, basket select/filter/sort/peer/crossing, theme persistence |
-| Basket interactivity | 28/28 — search, chips, clear, roving tabindex, arrows, Home/End, Enter, Escape, deselect, scatter click, tooltips, quadrants, bar filter, live region, CSV |
-| Company-name reachability | 0 failures across 10 widths × panel open and folded: always reachable by exactly one of column, fold or panel, never two |
-| Overlay hues | 24/24 — the basket overlay's label and end dot clear AA and 3:1 for all six segments in both themes |
+| Chart type size | scale 1.000 and 8.5–13px rendered, 196 chart instances. Was 4.7–20.3px |
+| Chart label collisions | 0 overlapping text pairs in any chart, 14 widths × 2 themes × 4 views |
+| Index-chart labels | 357/357 renders with no text on a line, no text on text and nothing out of frame — 14 widths × 24 selections, plus every segment filter at three widths. Was 58 hits before the placement pass |
+| Index-chart anchors | 0 first-or-last figures dropped across 1786 chart instances — 19 widths × 2 themes × 24 selections |
+| Crosshair | 9/9 — each of the three charts lights, the plate stays in frame at five positions and is never narrower than its own text, moving between charts leaves exactly one lit, leaving them puts them all out |
+| Routing and persistence | 16/16 — the hash follows the view, a link beats the store, the store survives a reload, the back stack does not grow, and junk (unknown ticker, module or market, markup in the hash, a hand-edited store) falls back rather than through |
+| Interactions | 47/47 — trade, close, resolve, create, search, sort, filter, comms, report, and the basket's select, clear, chips, bar, scatter, peer, crossing, fold, roving tabindex, arrows, Home, End, Enter, Escape, CSV, live region and theme persistence |
+| Contrast (WCAG AA) | Run differentially against the previous build: identical signature set, 0 new, 0 ratios regressed, over both themes × four views at 1440 and 390 |
+| Touch targets | Nothing under 44pt in the basket. Deck-wide, three pre-existing exceptions remain: the qty slider (32px, deliberate) and two comms filter chips at 42–43px wide |
+| Company-name reachability | 20/20 across 10 widths × panel open and folded: the column and the fold are never both drawn, and where neither is, the detail panel is beside the table carrying the name |
+| Reduced motion | 0 elements animating or transitioning |
+| Print | Forces light even from dark theme; ticker and spine hidden |
+| Market maker | 9/9 LMSR invariants — complementary prices, price in band, convex cost, zero costs nothing, loss-free round trip, the seed price is the price, `maxAffordable` fits and is maximal, a resolved market prints its outcome |
 | Scatter labels | 23 of 23 placed: 0 overlapping pairs, 0 on a mark, 0 out of frame |
-| Chart type size | scale 1.000 and 8.5–13px rendered, every chart, 14 widths 320→1920. Was 4.7–20.3px |
-| Chart label collisions | 0 overlapping text pairs in any chart, 13 widths × library and equities |
-| Crosshair | still tracks after the geometry change — reads the viewBox it is drawn in, not a constant |
+| Overlay hues | 24/24 — the basket overlay's label and end dot clear AA and 3:1 for all six segments in both themes |
 | Derived figures | Tiles re-checked against the rendered table rows, not against the source array |
-| Contrast (WCAG AA) | 0 failures in the rendered body — all four views, both themes, at 1440 and 390, DOM and SVG text. Channel avatars measured separately: 4.61 / 11.00 / 10.63. Re-checked differentially against the previous build: identical failure set, 0 regressions |
 | Tile wash worst case | 4.78:1 light / 5.19:1 dark with the wash forced to full strength across the whole tile |
 | Category palette | Passes the validator in both modes; two accepted warnings, see above |
-| Keyboard | 0 stops without a focus ring across the four views. The basket's 23 row stops are now one, because the rows rove |
-| Touch targets | Nothing under 44pt under `pointer:coarse` in the basket. Deck-wide, two pre-existing exceptions remain: the qty slider (32px, deliberate) and two comms filter chips at 42–43px wide. The sortable column headers take their 44pt by moving the cell's vertical padding onto the button and expanding sideways into the cell's own gutter, so no target overhangs the first data row or the neighbouring column |
-| Reduced motion | 0 elements animating or transitioning |
-| Market maker | 9/9 LMSR invariants — complementary prices, convex cost, loss-free round trip, `maxAffordable` exact |
-| Print | Forces light even from dark theme; ticker and spine hidden |
 | Sticky trap | Close button reachable at 640–1100px, and with the main column forced to be the scrollport |
+
+**A note on the contrast number.** The checker was rebuilt this session and is more forgiving than
+the one that recorded "70 signatures" — it finds four. That number is not comparable across
+checkers and was never meant to be: the check is differential by construction, because gradient
+backgrounds cannot be composited from computed style and any checker of this kind carries standing
+artefacts. What matters is that the set does not grow between two builds measured by *the same*
+checker, and it did not.
 
 Render is ~13ms with 12 markets; the in-place paths are 0.1–0.2ms. 200 markets would cost
 ~93ms, which is not worth optimising for at this scale.
@@ -348,9 +452,12 @@ Render is ~13ms with 12 markets; the in-place paths are 0.1–0.2ms. 200 markets
 ## Where to pick this up
 
 A UX and visual audit of this tab ran on 25 Aug 2026. It produced six findings and a menu of 52
-improvements, each with a stable ID (A1, B4, C12 …). **Twenty-four are built and all six findings
-are closed** — see the two commits on `claude/shipping-equities-ux-audit-daxpnh`. The rest of the
-menu is below, still keyed to those IDs so the numbering stays continuous across sessions.
+improvements, each with a stable ID (A1, B4, C12 …). **Thirty are built and all six findings are
+closed.** The rest of the menu is below, still keyed to those IDs so the numbering stays
+continuous across sessions.
+
+Closed since the audit: C10, C11, D2, F1, F4 and half of B6, plus the label-placement work the
+charts needed once a second series shared the frame.
 
 ### Take these first
 
@@ -359,29 +466,38 @@ it costs.
 
 | ID | What | Note |
 | --- | --- | --- |
-| C11 | Persist selection, filter, sort and the panel fold | Only the theme survives a reload. Same `localStorage` path `applyTheme` already uses; the state keys are all on `S` |
-| C10 | Hash routing — `#equities/FRO` | Makes a constituent linkable from a desk note. Do it with C11; they share the "restore state on load" work |
-| D2 | Crosshair on the coverage basket and the side-panel chart | `moveCrosshair` is already geometry-independent — it reads its own viewBox. What it still wants is the `data-pts` contract and a `#ph` group on those two charts |
-| B6 | A "vs basket" column | Each name's YTD less the basket's. The tab computes it everywhere except where a reader would use it |
-| F1 | Make the desk view answer to the filter | Filter to car carriers and the prose still discusses Hormuz, boxes and dry bulk |
-| F4 | Mark placeholder data at the figures | "Not a live feed" is currently the last line of a footnote under a table of confident numbers |
+| C4 (second half) | Hovering a table row lights its scatter point | The other direction — click a mark to open the name — is done |
+| E4 | Row semantics: make the table a `grid` with `aria-selected` instead of `role="button"` on each `<tr>` | Best done with the roving tabindex that is already in place |
+| E6 | A visually hidden table behind the scatter | The marks are clickable but not focusable, and 23 tab stops inside one chart is worse than none, so the table is the keyboard route in. This is the proper answer |
+| D10 | Values on the row sparklines | |
+| A7 | Inline exchange and segment beside the ticker | The cheaper half of the density work, and it ships alone |
+
+### B6 — the "vs basket" column, and why it is not here
+
+The figure is built: `BASKET_YTD` is rolled up from the rows, the detail panel says how far the
+selected name sits from it, and the export carries it as a column. The *table* column is not, and
+this is the measurement to weigh before adding it.
+
+With the detail panel open the basket panel measures **764px at a 1440 viewport** and 924px at
+1600; folded, 1118px and 1278px. A tenth column costs roughly 85px, so on the same rule every
+other break on that table uses — 12% above the floor of the set it protects — it would shed at
+about 894 and be **invisible at 1440 with the panel open**, which is the commonest way this tab is
+read.
+
+The rest is mechanical if it is judged worth it. Shedding it second, straight after the trend,
+leaves every existing break untouched: the surviving sets below it are unchanged, so only
+`break(trend)` moves and one new break is inserted. Re-measure with
+`table.style.width = 'min-content'` per surviving set, then re-run `node checks/run.js overflow`.
 
 ### Then, in rough order of value
 
-- **C4 (second half).** Hovering a table row should light its scatter point. The other direction —
-  click a mark to open the name — is done.
 - **B4's siblings:** B5 bar-in-cell for YTD, B7 basket weight, B8 the 52-week range as a row
   micro-bar, B9 a USD column or currency toggle, B10 group by segment with subtotals.
-- **A6 / A7 density.** Rows are 64px. A compact mode near 40px fits the whole basket on one
-  screen; A7 (inlining exchange and segment beside the ticker) is the cheaper half and ships alone.
+- **A6 density.** Rows are 64px. A compact mode near 40px fits the whole basket on one screen.
 - **A9** a full-width table mode, collapsing the chart panels to a strip.
 - **C6** compare two names side by side, **C7** pin a working set.
 - **D6** size the scatter marks by market cap (the data is already there), **D9** a dispersion
-  strip per segment — the desk view argues dispersion and nothing draws it, **D10** values on the
-  row sparklines.
-- **E4** row semantics: make the table a `grid` with `aria-selected` instead of `role="button"`
-  on each `<tr>`. Best done with the roving tabindex that is already in place. **E6** a visually
-  hidden table behind the scatter.
+  strip per segment — the desk view argues dispersion and nothing draws it.
 
 ### These need data that does not exist yet
 
@@ -396,32 +512,17 @@ Don't start them expecting the array to carry it:
 
 - **A8** a sticky column header. Tried and removed; see the note under the shed-order section.
 
-### Re-running the checks
-
-The verification table above was produced with headless Chromium driving the file directly
-(`playwright-core` against `/opt/pw-browsers/chromium`), reading the live DOM rather than the
-source. Nothing is committed — rebuild it from these definitions, and beat these numbers:
-
-| Check | How | Beat |
-| --- | --- | --- |
-| Basket width sweep | every 4px, 320→1920, panel open and folded; assert `#eqscroll` `scrollWidth <= clientWidth` and no page overflow | 802 widths, 0 failures |
-| Viewport × theme × view | 14 widths × 2 themes × 4 views; same two assertions on every `.scroll` | 112/112 |
-| Chart type size | for each `svg.chart`, `rect.width / viewBox.width` and every `font-size` × that scale | scale 1.000, 8.5–13px |
-| Chart label collisions | `getBBox()` on every `<text>` in every chart, pairwise overlap | 0 pairs |
-| Contrast | walk DOM and SVG text, composite backgrounds, WCAG AA. **Run it differentially** against the previous build rather than absolutely — the deck has 70 long-standing signatures that are mostly artefacts of gradient backgrounds a naive checker cannot composite, and what matters is that the set does not grow | 70 signatures, 0 new |
-| Interactions | drive clicks and keys, assert on `S` and the DOM | 25/25 deck, 28/28 basket |
-| Touch targets | `pointer:coarse` at 390 and 768, every control ≥44pt on both axes | 0 in the basket |
-| Company reachability | 10 widths × panel open and folded: the name must be reachable by exactly one of column, fold or side panel — never none, never two | 0 failures |
-
 ## Known gaps
 
 Raised and not taken up, in rough order of value:
 
 - No `<noscript>` — the deck is entirely JS-rendered, so scripts-off is a blank page.
-- No hash routing — a module, a market or a basket constituent cannot be linked to.
-- Only the theme persists; selected market, basket selection, filters and sort reset on reload.
 - `render`, `buy`, `ticket` and friends are function declarations, so they land on `window`.
-- Market rows have no arrow-key navigation, only Enter/Space on a focused row.
+  (`S` does not — it is a top-level `const`, which is a global *lexical* binding and not a window
+  property. Anything reaching into the deck from outside, a check included, has to reach it by
+  name.)
+- Market rows have no arrow-key navigation, only Enter/Space on a focused row; only the basket
+  roves.
 - The qty slider is 32px tall under `pointer:coarse`, set explicitly by
   `input[type=range]{height:32px}`. Its thumb is 22px. Deliberate, and still under 44pt.
 - Two comms channel-filter chips measure 42–43px wide under `pointer:coarse`.
@@ -432,8 +533,9 @@ Raised and not taken up, in rough order of value:
   which gives P/NAV and YTD but not the rest.
 - The scatter's marks are clickable but not focusable — 23 tab stops inside one chart is worse
   than none, so the table is the keyboard route in. A visually hidden table of the same
-  ticker / P/NAV / yield triples would be the proper answer and is not there yet.
-- The prediction desk's market table still has no arrow-key navigation; only the basket roves.
-- `moveCrosshair` is still bound to `#pricechart` alone, so the basket, segment, scatter and
-  side-panel charts have no hover readout. Its geometry handling is no longer the obstacle —
-  see D2 above.
+  ticker / P/NAV / yield triples would be the proper answer and is not there yet (E6).
+- `areaChart` has no crosshair. The layer is shared now, so giving it one is a `data-pts`
+  attribute and a `crosshairLayer()` call — it was left out only because nothing asked for it.
+- The scatter's tickers cross its own faint dashed gridlines in places. Left as it is: they are
+  background rules at low contrast, and a label crossing one reads as ordinary chart practice
+  rather than as the clash a 2.4px series line makes.
