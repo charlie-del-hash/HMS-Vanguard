@@ -6,8 +6,10 @@ network calls. Open it directly or serve it; both work.
 The checks live beside it in `checks/` and are not part of the deployed page. `node checks/run.js`
 runs all of them; see the Verification section below for what they hold.
 
-**Live:** https://charlie-del-hash.github.io/HMS-Vanguard/ — `/ops-deck.html` serves the
-same page.
+**Live:** https://affinity-wine.vercel.app/ — **this is the link to circulate.** It is the
+Vercel production domain, and it is the one chosen for sharing over the Pages URL. GitHub Pages
+serves the same page at https://charlie-del-hash.github.io/HMS-Vanguard/ and stays as a mirror.
+On both, `/ops-deck.html` serves the same page.
 
 ## Publishing
 
@@ -32,7 +34,17 @@ Two Vercel projects (`affinity` and `hms-vanguard`) also build this repo, both r
 repo root rather than a subfolder — which is why the reader's old `macro-topics-site/vercel.json`
 never took effect. The root `vercel.json` rewrites `/` and `/ops-deck.html` to
 `/affinity-ops-deck.html`, so Vercel and Pages serve the same page at the same two paths.
-Vercel builds every branch, so its previews show a branch before `main` does.
+Vercel builds every branch, so its previews show a branch before `main` does — which is how a
+branch gets tested before it is merged.
+
+**`affinity`'s production domain is the shared link.** Both hosts publish the same file from
+`main`, so this is a choice about which URL circulates rather than about what is deployed: the
+Vercel domain reads as a product, the Pages one reads as somebody's repository. Two things follow.
+Pages is a mirror rather than a fallback, so it must not be allowed to drift or go stale. And
+Vercel serves the **repo root** rather than a staged artifact, so anything committed to the repo
+is reachable on the shared domain — the Pages workflow copies only the deck, but Vercel does not,
+which is why `checks/` is fetchable there and why a `.vercelignore` is worth a thought before the
+repo gains anything that should not be public.
 
 ## Layout model — read this before changing the frame
 
