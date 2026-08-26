@@ -618,6 +618,15 @@ td.mid,th:first-child{padding-right:0}
 .subtabs{display:flex;align-items:center;gap:13px;flex-wrap:wrap;margin-bottom:18px}
 .subtabs .note{font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--small);
   text-transform:uppercase}
+/* Placeholder data has to say so where the figures are, not in the last line
+   of a footnote under them. The chip rides in the tab row above the tiles and
+   the line sits directly under them, so the first confident number on the tab
+   is already qualified by the time a reader reaches it. */
+.subtabs .chip.mute{text-transform:none;letter-spacing:0}
+.stats-note{display:flex;gap:8px;align-items:baseline;margin:-6px 0 18px;
+  font-size:11.5px;line-height:1.55;color:var(--small)}
+.stats-note b{font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--small);white-space:nowrap;flex:none;padding-top:1px}
 
 .eqrow td{transition:background var(--t)}
 .eqrow:hover td{background:var(--tint2)}
@@ -3225,13 +3234,18 @@ function commsView(){
    ═══════════════════════════════════════════════════════════════ */
 const RTABS = [["library", "Library"], ["equities", "Shipping equities"]];
 
-function subTabs(counts, note){
+/* the chip is the same sentence the table's footnote carries, moved to where
+   the figures are — see F4 in the handoff */
+const INDICATIVE_CHIP = `<span class="chip mute" title="Indicative placeholder data shaped like the
+  quote feed that replaces it. Not a live feed.">Indicative data</span>`;
+
+function subTabs(counts, note, extra = ""){
   return `<div class="subtabs">
     <div class="tabrow" role="group" aria-label="Reports view">
       ${RTABS.map(([v, lab]) => `<button class="tab" id="rtab-${v}" data-act="rtab" data-v="${v}"
           aria-pressed="${S.rtab === v}">${lab}<span class="n">${counts[v]}</span></button>`).join("")}
     </div>
-    <span class="note">${esc(note)}</span></div>`;
+    <span class="note">${esc(note)}</span>${extra}</div>`;
 }
 
 /* Below 1180 the detail panel is not beside the table — it is static and, now,
@@ -3450,6 +3464,8 @@ function eqDetail(e){
     <dl class="gov">
       <dt>NAV per share</dt><dd>${esc(e.ccy)} ${pxTxt(e.nav)} · market cap $${e.mcap.toFixed(2)}bn</dd>
       <dt>Desk view</dt><dd>${esc(e.note)}</dd>
+      <dt>Source</dt><dd>Indicative placeholder, not a live feed. Shaped like the quote feed that
+        replaces it, so nothing here is a quotable print.</dd>
     </dl>
     ${peers.length ? `<div class="peers">
       <h6>${esc(seg.lab)} peers</h6>
@@ -3468,23 +3484,67 @@ function eqDetail(e){
 
 /* The figures in the copy are pulled from the same rows the charts read,
    so a rewritten paragraph cannot quietly disagree with the bar above it. */
+/* The three written notes, each tagged with the segment it is about. They used
+   to be printed unconditionally, so filtering the basket to car carriers left
+   the panel discussing Hormuz, boxes and dry bulk — three paragraphs about
+   nothing on screen. Their figures still come out of the array; only which of
+   them appear is new. */
+const DESK_NOTES = [
+  {segs:["tank"], h:"Hormuz still sets the tape", p: () =>
+    `The March closure remains the single biggest input into the basket. Crude and product owners
+     have carried it since, and the move is priced as a longer voyage rather than a higher rate —
+     which is why tanker NAVs have run ahead of the freight curve rather than with it.`},
+  {segs:["box"], h:"The boxes are the laggard, and that is the trade", p: () =>
+    `Containers are up ${segYTD("box").toFixed(1)}% year to date, but the dispersion inside the
+     segment is wider than the segment itself. Maersk has raised 2026 guidance twice and still
+     trades at ${pnav(EQUITIES.find(e => e.tk === "MAERSK-B")).toFixed(2)}× NAV; Hapag-Lloyd carries
+     a Middle East cost charge and a premium multiple.`},
+  {segs:["dry"], h:"Dry bulk, quietly", p: () =>
+    `Up ${segYTD("dry").toFixed(1)}% with far less noise than the tankers. The Cape-weighted owners
+     are the cleanest listed expression of the Q4 5TC question sitting on the prediction desk, so
+     the two are worth reading against each other.`}
+];
+
+/* A segment the desk has not written about still has a view, and it is in the
+   array: the cap-weighted return, the spread inside it, how much of it trades
+   above NAV, and the crossing to the prediction desk where one exists. Written
+   the same way as everything else on this tab — computed, so it cannot come to
+   disagree with the table under it. */
+function segNote(g){
+  const rows = segRows(g.k);
+  if(!rows.length) return "";
+  const byY = [...rows].sort((a, b) => b.ytd - a.ytd);
+  const top = byY[0], bot = byY.at(-1);
+  const above = rows.filter(e => pnav(e) > 1).length;
+  const med = median(rows.map(pnav));
+  const yld = rows.reduce((a, e) => a + e.yld, 0) / rows.length;
+  const mk = EQ_LINK[g.k] ? market(EQ_LINK[g.k]) : null;
+  const spread = rows.length > 1
+    ? `the spread inside it runs ${pctTxt(bot.ytd)} to ${pctTxt(top.ytd)} —
+       ${(top.ytd - bot.ytd).toFixed(1)} points between ${esc(bot.tk)} and ${esc(top.tk)}`
+    : `${esc(top.tk)} is the whole of it, at ${pctTxt(top.ytd)}`;
+  return `<div><h6>${esc(g.lab)} · ${rows.length} name${rows.length === 1 ? "" : "s"}</h6>
+    <p>Cap-weighted the segment is ${pctTxt(segYTD(g.k))} year to date, and ${spread}.
+      ${above} of ${rows.length} trade${above === 1 ? "s" : ""} above NAV at a median
+      ${med.toFixed(2)}×, on an average
+      yield of ${yld.toFixed(1)}%.${mk ? ` The prediction desk carries the same view as a
+      question — ${esc(mk.q)} — currently ${yesC(mk)}c.` : ""}</p></div>`;
+}
+
+/* What the desk says about what is on screen. With the whole basket showing,
+   that is the three written notes, as before. Filtered down to one or two
+   segments, the segment is worked out from the array first and only the notes
+   whose subject survives the filter follow it. */
 function deskView(){
-  const mk = EQUITIES.find(e => e.tk === "MAERSK-B");
-  return `<div class="desknote">
-  <div><h6>Hormuz still sets the tape</h6>
-    <p>The March closure remains the single biggest input into the basket. Crude and product owners
-      have carried it since, and the move is priced as a longer voyage rather than a higher rate —
-      which is why tanker NAVs have run ahead of the freight curve rather than with it.</p></div>
-  <div><h6>The boxes are the laggard, and that is the trade</h6>
-    <p>Containers are up ${segYTD("box").toFixed(1)}% year to date, but the dispersion inside the
-      segment is wider than the segment itself. Maersk has raised 2026 guidance twice and still
-      trades at ${pnav(mk).toFixed(2)}× NAV; Hapag-Lloyd carries a Middle East cost charge and a
-      premium multiple.</p></div>
-  <div><h6>Dry bulk, quietly</h6>
-    <p>Up ${segYTD("dry").toFixed(1)}% with far less noise than the tankers. The Cape-weighted owners
-      are the cleanest listed expression of the Q4 5TC question sitting on the prediction desk, so
-      the two are worth reading against each other.</p></div>
-</div>`;
+  const rows = eqShown();
+  if(!rows.length) return `<div class="desknote"><div><h6>Nothing on screen</h6>
+    <p>The filter has emptied the basket, so there is nothing for the desk to read against.
+      Widen the segment or clear the search to bring the coverage list back.</p></div></div>`;
+  const on = EQ_SEGS.filter(g => rows.some(e => e.seg === g.k));
+  const written = DESK_NOTES.filter(n => on.some(g => n.segs.includes(g.k)));
+  const computed = (on.length <= 2 || !written.length) ? on.slice(0, 3).map(segNote) : [];
+  return `<div class="desknote">${computed.join("")}${written
+    .map(n => `<div><h6>${n.h}</h6><p>${n.p()}</p></div>`).join("")}</div>`;
 }
 
 /* The rows currently on screen. The view and the export both read it, so an
@@ -3506,10 +3566,12 @@ function eqCSV(rows){
   };
   const head = ["Ticker","Company","Exchange","Currency","Segment","Last","1D %","YTD %",
     "Market cap US$bn","NAV per share","P/NAV","EV/EBITDA","Yield %","52w low","52w high",
-    "Vessels","Capacity","Desk view", ...WK.map(w => `${w} close`)];
+    "Vessels","Capacity","Desk view", ...WK.map(w => `${w} close`), "Source"];
+  /* the file leaves the building, so the qualification goes with it — a column
+     rather than a trailing line, because a trailing line is not CSV */
   const body = rows.map(e => [e.tk, e.co, e.ex, e.ccy, (EQ_SEG[e.seg] || {}).lab || "",
     e.px, e.d1, e.ytd, e.mcap, e.nav, pnav(e).toFixed(4), e.ev, e.yld, e.lo, e.hi,
-    e.fleet, e.cap, e.note, ...e.h].map(cell).join(","));
+    e.fleet, e.cap, e.note, ...e.h, "Indicative placeholder, not a live feed"].map(cell).join(","));
   return [head.map(cell).join(","), ...body].join("\r\n");
 }
 
@@ -3609,9 +3671,12 @@ function equitiesView(counts){
   return head("03 · Shipping equities", `${EQUITIES.length} names · ${EQ_SEGS.length} segments`,
       "Shipping equities", "– where the cycle is being priced",
       "A coverage basket of listed owners and terminal operators, run over the same eight-week window as the library.")
-    + subTabs(counts, "W34 · listed coverage")
+    + subTabs(counts, "W34 · listed coverage", INDICATIVE_CHIP)
     + toastView()
     + `<div class="stats">${tiles}</div>`
+    + `<p class="stats-note"><b>Indicative</b><span>Every figure on this tab — prices, NAVs,
+        market caps and the returns computed from them — is placeholder data shaped like the quote
+        feed that replaces it. It is not a live feed, and no figure here should be quoted.</span></p>`
     + `<div class="grid half" style="margin-bottom:18px">
         <div class="panel"><div class="panel-h"><h3>Coverage basket</h3>
           <span class="note">Rebased ${REBASE} · ${BASKET[0].w} to ${BASKET.at(-1).w}</span></div>
