@@ -3,40 +3,124 @@
     "Where each name's headline figures come from. Two providers, because no",
     "single free and official source covers nine exchanges.",
     "",
-    "  edgar — SEC EDGAR XBRL companyfacts. Free, keyless, and the numbers are",
+    "  edgar - SEC EDGAR XBRL companyfacts. Free, keyless, and the numbers are",
     "          tagged in the company's own filing, which is as close to the",
     "          original as this gets. Needs a CIK.",
-    "  fmp   — a licensed aggregator, for the venues EDGAR has nothing for.",
+    "  fmp   - a licensed aggregator, for the venues EDGAR has nothing for.",
     "          Needs FMP_API_KEY in the environment.",
     "",
-    "cik is left null until it has been looked up against",
-    "https://www.sec.gov/files/company_tickers.json — a guessed CIK fetches",
-    "some other company's accounts, which is the worst failure this can have.",
-    "Names with a null cik are skipped, not guessed."
+    "cik is null until scripts/resolve-ciks.js fills it from the SEC's own",
+    "ticker map. Nobody types these by hand: a wrong CIK does not error, it",
+    "fetches a different company's accounts and puts them on the deck under the",
+    "right ticker. `expect` is the company the deck thinks the ticker is, and the",
+    "resolver checks the SEC registrant name against it before accepting a",
+    "number. A name left unresolved is skipped by the fetcher, not guessed."
   ],
   "names": {
-    "MAERSK-B":   { "provider": "fmp",   "symbol": "MAERSK-B.CO" },
-    "HLAG":       { "provider": "fmp",   "symbol": "HLAG.DE" },
-    "DAC":        { "provider": "edgar", "cik": null },
-    "CMRE":       { "provider": "edgar", "cik": null },
-    "SBLK":       { "provider": "edgar", "cik": null },
-    "GNK":        { "provider": "edgar", "cik": null },
-    "SB":         { "provider": "edgar", "cik": null },
-    "HSHP":       { "provider": "edgar", "cik": null },
-    "FRO":        { "provider": "edgar", "cik": null },
-    "HAFNI":      { "provider": "fmp",   "symbol": "HAFNI.OL" },
-    "TRMD":       { "provider": "edgar", "cik": null },
-    "INSW":       { "provider": "edgar", "cik": null },
-    "DHT":        { "provider": "edgar", "cik": null },
-    "ADANIPORTS": { "provider": "fmp",   "symbol": "ADANIPORTS.NS" },
-    "ICT":        { "provider": "fmp",   "symbol": "ICT.PS" },
-    "0144":       { "provider": "fmp",   "symbol": "0144.HK" },
-    "GLNG":       { "provider": "edgar", "cik": null },
-    "BWLPG":      { "provider": "fmp",   "symbol": "BWLPG.OL" },
-    "CCEC":       { "provider": "edgar", "cik": null },
-    "FLNG":       { "provider": "edgar", "cik": null },
-    "WAWI":       { "provider": "fmp",   "symbol": "WAWI.OL" },
-    "HAUTO":      { "provider": "fmp",   "symbol": "HAUTO.OL" },
-    "9171":       { "provider": "fmp",   "symbol": "9171.T" }
+    "MAERSK-B": {
+      "provider": "fmp",
+      "symbol": "MAERSK-B.CO"
+    },
+    "HLAG": {
+      "provider": "fmp",
+      "symbol": "HLAG.DE"
+    },
+    "DAC": {
+      "provider": "edgar",
+      "cik": null,
+      "expect": "Danaos"
+    },
+    "CMRE": {
+      "provider": "edgar",
+      "cik": null,
+      "expect": "Costamare"
+    },
+    "SBLK": {
+      "provider": "edgar",
+      "cik": null,
+      "expect": "Star Bulk Carriers"
+    },
+    "GNK": {
+      "provider": "edgar",
+      "cik": null,
+      "expect": "Genco Shipping & Trading"
+    },
+    "SB": {
+      "provider": "edgar",
+      "cik": null,
+      "expect": "Safe Bulkers"
+    },
+    "HSHP": {
+      "provider": "edgar",
+      "cik": null,
+      "expect": "Himalaya Shipping"
+    },
+    "FRO": {
+      "provider": "edgar",
+      "cik": null,
+      "expect": "Frontline"
+    },
+    "HAFNI": {
+      "provider": "fmp",
+      "symbol": "HAFNI.OL"
+    },
+    "TRMD": {
+      "provider": "edgar",
+      "cik": null,
+      "expect": "Torm"
+    },
+    "INSW": {
+      "provider": "edgar",
+      "cik": null,
+      "expect": "International Seaways"
+    },
+    "DHT": {
+      "provider": "edgar",
+      "cik": null,
+      "expect": "DHT Holdings"
+    },
+    "ADANIPORTS": {
+      "provider": "fmp",
+      "symbol": "ADANIPORTS.NS"
+    },
+    "ICT": {
+      "provider": "fmp",
+      "symbol": "ICT.PS"
+    },
+    "0144": {
+      "provider": "fmp",
+      "symbol": "0144.HK"
+    },
+    "GLNG": {
+      "provider": "edgar",
+      "cik": null,
+      "expect": "Golar LNG"
+    },
+    "BWLPG": {
+      "provider": "fmp",
+      "symbol": "BWLPG.OL"
+    },
+    "CCEC": {
+      "provider": "edgar",
+      "cik": null,
+      "expect": "Capital Clean Energy Carriers"
+    },
+    "FLNG": {
+      "provider": "edgar",
+      "cik": null,
+      "expect": "Flex LNG"
+    },
+    "WAWI": {
+      "provider": "fmp",
+      "symbol": "WAWI.OL"
+    },
+    "HAUTO": {
+      "provider": "fmp",
+      "symbol": "HAUTO.OL"
+    },
+    "9171": {
+      "provider": "fmp",
+      "symbol": "9171.T"
+    }
   }
 }
