@@ -204,9 +204,45 @@ question. It reuses `.sticky`, so it inherits the measured height cap along with
 behaviour. The table sheds columns as it narrows for the same reason the market table does:
 this panel is where the shed detail lives.
 
-**`indexChart` takes its geometry from the caller.** The side panel is half the width of a
-full panel, so a shared viewBox would render the type at half the size. It runs at 680×210
-in a full panel and 440×200 in the side one, and the labels come out the same size on screen.
+**Charts are drawn at the size they are displayed, not scaled to it.** Every chart used to be a
+fixed `viewBox` at `width:100%`, which made its type size a function of the container: the
+coverage basket, the segment bars and the scatter rendered their labels at 4.7–6.4px on a phone,
+and the side-panel chart ran to 18.7–20.3px on a tablet. The old note here — that `indexChart`'s
+two geometries make the labels "come out the same size on screen" — was true at 1440, where it
+was tuned, and nowhere else. A `font-size` attribute inside a scaled viewBox is not a size, it
+is a ratio.
+
+A chart is therefore no longer built during `render()`. It reserves a slot (`chartSlot`), and
+`paintCharts()` runs once the column is in the document, measures each slot and asks for an SVG
+drawn at exactly that width. viewBox width equals CSS width, scale is 1, and 9.5 means 9.5px at
+every viewport. A debounced `resize` listener repaints without a full render. Measured after:
+scale 1.000 and 8.5–13px across all fourteen widths, in every chart in the deck.
+
+Drawing at true size makes crowding real rather than invisible, so each chart thins its own
+labels instead of shrinking them: the line charts drop intermediate value labels below 40px of
+point spacing and every other x label below 30px; the bar chart wraps a two-word name before it
+reduces type, floors at 8.5px, and compacts "4 NAMES" to "n=4" under a 50px step; the scatter
+places a label only where a free position exists and leaves it off otherwise.
+
+**The scatter measures its labels now.** It used to estimate them at 5.75px a character, listed
+here as a known gap on the grounds that one face makes the estimate safe. It was not safe — the
+tickers measure 5.8 to 7.9 per character, up to 37% wider — it was merely invisible, because two
+labels on top of each other at 4.7px look like texture. `textWidth()` measures the real face at
+the real size through a canvas context, memoised per string. The quadrant captions and the parity
+caption go into the same collision set.
+
+**The crosshair reads its own frame.** `moveCrosshair` mapped the pointer through the `PC.W`
+constant, which stopped being the chart's width once the price chart took its geometry from its
+slot. It reads `viewBox.baseVal.width` instead.
+
+**The scatter labels what fits.** Every point used to keep its label, and when the placement ran
+out of room it dropped the ticker at its first candidate anyway. That was survivable only while
+the frame was scaled down; at true size it is two tickers on top of each other, which is worse
+than one missing. A label is now drawn where a free position exists and left off where none
+does, so the count degrades with the frame instead of the type size. Nothing is lost: the mark
+keeps shape and hue, the legend keeps the segment, and the tooltip and the tap both give the
+name. The selected name is placed first, so the plot always has one anchor. With measured
+widths, all 23 still place with zero overlaps down to 320px.
 
 **The scatter carries segment as shape *and* hue.** It is the one place in the deck with no
 label beside the mark, and the palette's two accepted contrast warnings are only legal while
@@ -292,6 +328,9 @@ Re-runnable against any static server pointed at the file.
 | Company-name reachability | 0 failures across 10 widths × panel open and folded: always reachable by exactly one of column, fold or panel, never two |
 | Overlay hues | 24/24 — the basket overlay's label and end dot clear AA and 3:1 for all six segments in both themes |
 | Scatter labels | 23 of 23 placed: 0 overlapping pairs, 0 on a mark, 0 out of frame |
+| Chart type size | scale 1.000 and 8.5–13px rendered, every chart, 14 widths 320→1920. Was 4.7–20.3px |
+| Chart label collisions | 0 overlapping text pairs in any chart, 13 widths × library and equities |
+| Crosshair | still tracks after the geometry change — reads the viewBox it is drawn in, not a constant |
 | Derived figures | Tiles re-checked against the rendered table rows, not against the source array |
 | Contrast (WCAG AA) | 0 failures in the rendered body — all four views, both themes, at 1440 and 390, DOM and SVG text. Channel avatars measured separately: 4.61 / 11.00 / 10.63. Re-checked differentially against the previous build: identical failure set, 0 regressions |
 | Tile wash worst case | 4.78:1 light / 5.19:1 dark with the wash forced to full strength across the whole tile |
@@ -321,19 +360,11 @@ Raised and not taken up, in rough order of value:
 - The equities basket is static. Nothing recomputes, so selecting, sorting and filtering are
   the only live parts of the tab; a feed would want `syncTicker`-style in-place updates
   rather than a re-render, for the same reason the ticker has them.
-- The scatter's label widths are estimated from the character count rather than measured.
-  Every figure in the deck uses one face, so the estimate holds — but a face change, or a
-  ticker with unusually wide glyphs, would need it re-checked.
 - Only one name can be selected. Comparing two side by side means reading the peer list,
   which gives P/NAV and YTD but not the rest.
 - The scatter's marks are clickable but not focusable — 23 tab stops inside one chart is worse
   than none, so the table is the keyboard route in. A visually hidden table of the same
   ticker / P/NAV / yield triples would be the proper answer and is not there yet.
-- Chart type size is a function of container width, because every chart is a fixed `viewBox`
-  at `width:100%`. On a phone the basket, the segment bars and the scatter render their labels
-  at 4.7–6.4px; on a tablet the side-panel chart runs to 18.7–20.3px. The note above about
-  `indexChart` taking its geometry from the caller is true at 1440, where it was tuned, and
-  not elsewhere. Fixing it means choosing the viewBox from the measured container.
 - The prediction desk's market table still has no arrow-key navigation; only the basket roves.
 - `moveCrosshair` is still bound to `#pricechart` alone, so the basket, segment, scatter and
   side-panel charts have no hover readout.

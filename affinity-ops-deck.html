@@ -908,6 +908,9 @@ td.mid,th:first-child{padding-right:0}
 .eqleg-i .lgl{width:15px;height:3px;border-radius:2px;flex-shrink:0;display:block}
 
 svg.chart{display:block;width:100%;height:auto}
+/* the slot is what the chart measures itself against, so it has to be a
+   full-width block before anything is drawn into it */
+.cslot{display:block;width:100%}
 /* a mark is a way into a name now, so it has to behave like one — and hovering
    a dimmed point brings it back to full strength, which is how a reader picks
    an outlier out of the crowd without selecting it first */
@@ -1636,6 +1639,44 @@ const MONO_SVG = "Segoe UI,Segoe UI Variable Text,system-ui,-apple-system,Helvet
 let gradSeq = 0;
 const gradId = () => `g${++gradSeq}`;
 
+/* ── charts are drawn at the size they are displayed ───────────
+   Every chart used to be a fixed viewBox at width:100%, which meant its type
+   size was whatever the container made it: the coverage basket, the segment
+   bars and the scatter rendered their labels at 4.7–6.4px on a phone, and the
+   side-panel chart ran to 20px on a tablet. A font-size attribute inside a
+   scaled viewBox is not a size, it is a ratio.
+
+   So a chart is no longer built during render(). It reserves a slot, and once
+   the column is in the document and has a real width, the slot measures itself
+   and asks for an SVG drawn at exactly that width — viewBox width equals CSS
+   width, scale is 1, and a font-size of 9.5 is 9.5px on screen at every
+   viewport. Drawing at true size then makes crowding real rather than
+   invisible, which is why the chart functions below thin their own labels
+   instead of shrinking them. */
+let chartSlots = [], chartSeq = 0;
+function chartSlot(draw){
+  const id = `cslot${++chartSeq}`;
+  chartSlots.push({id, draw});
+  return `<div class="cslot" id="${id}"></div>`;
+}
+function paintCharts(){
+  chartSlots.forEach(sl => {
+    const host = document.getElementById(sl.id);
+    if(!host) return;
+    const w = Math.round(host.getBoundingClientRect().width);
+    if(w < 1 || host.dataset.w === String(w)) return;  /* nothing has moved */
+    host.dataset.w = String(w);
+    host.innerHTML = sl.draw(w);
+  });
+}
+/* a resize changes the width without changing the state, so the charts are
+   repainted on their own rather than through a full render() */
+let paintTimer = null;
+window.addEventListener("resize", () => {
+  clearTimeout(paintTimer);
+  paintTimer = setTimeout(paintCharts, 120);
+});
+
 function spark(vals, color, tip, {w = 78, h = 24} = {}){
   const iw = w - 3;
   const d = vals.length < 2 ? [vals[0], vals[0]] : vals;
@@ -1652,9 +1693,15 @@ function spark(vals, color, tip, {w = 78, h = 24} = {}){
 }
 
 /* area chart with a dashed mean reference */
-function areaChart(rows, xk, yk, label){
-  const W = 680, H = 210, L = 18, R = 66, T = 30, B = 30;
+function areaChart(rows, xk, yk, label, w){
+  const W = Math.max(260, Math.round(w || 680)), H = 210, T = 30, B = 30;
+  const L = 18, R = clamp(W * 0.1, 44, 66);
   const iw = W - L - R, ih = H - T - B, id = gradId();
+  /* Drawn at true size, so crowding is real. Where the points sit closer than
+     a label is wide the labels thin out rather than shrink — a 6px figure is
+     not a smaller label, it is an unreadable one. */
+  const gap = rows.length > 1 ? iw / (rows.length - 1) : iw;
+  const allVals = gap >= 40, xEvery = gap < 30 ? 2 : 1;
   const vals = rows.map(r => r[yk]);
   const max = niceMax(Math.max(...vals));
   const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
@@ -1662,12 +1709,15 @@ function areaChart(rows, xk, yk, label){
   const ys = v => T + ih - (v / max) * ih;
   const line = rows.map((r, j) => `${j ? "L" : "M"}${xs(j).toFixed(1)} ${ys(r[yk]).toFixed(1)}`).join(" ");
   const area = `${line} L${xs(rows.length - 1).toFixed(1)} ${ys(0).toFixed(1)} L${xs(0).toFixed(1)} ${ys(0).toFixed(1)} Z`;
+  const last = rows.length - 1;
   const marks = rows.map((r, j) => {
     const x = xs(j).toFixed(1), y = ys(r[yk]);
+    const showV = allVals || j === 0 || j === last;
+    const showX = j % xEvery === 0 || j === last;
     return `<circle cx="${x}" cy="${y.toFixed(1)}" r="4" fill="${C.marker}" stroke="${C.line}" stroke-width="2"/>
-      <text x="${x}" y="${(y - 13).toFixed(1)}" text-anchor="middle" font-size="13" font-weight="700"
-            fill="${C.label}">${r[yk]}</text>
-      <text x="${x}" y="${H - 9}" text-anchor="middle" font-size="11.5" fill="${C.axis}">${esc(r[xk])}</text>`;
+      ${showV ? `<text x="${x}" y="${(y - 13).toFixed(1)}" text-anchor="middle" font-size="13" font-weight="700"
+            fill="${C.label}">${r[yk]}</text>` : ""}
+      ${showX ? `<text x="${x}" y="${H - 9}" text-anchor="middle" font-size="11.5" fill="${C.axis}">${esc(r[xk])}</text>` : ""}`;
   }).join("");
 
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label || "")}">
@@ -1680,7 +1730,7 @@ function areaChart(rows, xk, yk, label){
       <line x1="${L}" y1="${ys(mean).toFixed(1)}" x2="${W - R + 8}" y2="${ys(mean).toFixed(1)}"
             stroke="${C.axis}" stroke-width="1" stroke-dasharray="4 4"/>
       <text x="${W - 6}" y="${(ys(mean) + 3.5).toFixed(1)}" text-anchor="end" font-size="9.5"
-            letter-spacing="1" fill="${C.axis}">MEAN ${mean.toFixed(1)}</text>
+            letter-spacing="1" fill="${C.axis}">${R < 60 ? "" : "MEAN "}${mean.toFixed(1)}</text>
       <path d="${line}" fill="none" stroke="${C.line}" stroke-width="2.4" stroke-linejoin="round"/>
       ${marks}</svg>`;
 }
@@ -1690,12 +1740,38 @@ function areaChart(rows, xk, yk, label){
    segment returns read very differently once you can see that one of them is
    four names and another is five, and the bar chart is the only place that
    fact fits. `act` makes the bars a way into the filter. */
-function barChart(rows, xk, yk, label = "Reports published by desk", nk, act){
-  const W = 680, H = 210, L = 16, R = 16, T = 30, B = 34;
-  const iw = W - L - R, ih = H - T - B;
+function barChart(rows, xk, yk, label = "Reports published by desk", nk, act, w){
+  const W = Math.max(260, Math.round(w || 680)), H = 210, L = 16, R = 16, T = 30;
+  const iw = W - L - R;
   const vals = rows.map(r => r[yk]);
   const max = niceMax(Math.max(...vals));
   const step = iw / rows.length, bw = Math.min(24, step * 0.52);
+
+  /* At true size a label has to fit the step it sits under, and "Car carriers"
+     does not fit a 50px column at 11px. A two-word name breaks over two lines
+     first, because that keeps the type at full size; only then does the size
+     come down, and never below 8.5px — under that it stops being a label. */
+  const PER = 0.55;                       /* width per character per px of type */
+  const fitLabel = t => {
+    let lines = [String(t)];
+    if(lines[0].length * PER * 11 > step - 4 && lines[0].includes(" ")){
+      const i = lines[0].lastIndexOf(" ");
+      lines = [lines[0].slice(0, i), lines[0].slice(i + 1)];
+    }
+    const longest = Math.max(...lines.map(l => l.length));
+    return {lines, fs: clamp((step - 4) / (longest * PER), 8.5, 11)};
+  };
+  const fits = rows.map(r => fitLabel(r[xk]));
+  const maxLines = Math.max(...fits.map(f => f.lines.length));
+  /* the frame gives back exactly the room the labels turned out to need */
+  const LINE = 13;
+  const B = 22 + maxLines * LINE + (nk ? 11 : 0);
+  /* "4 NAMES" is 43px with its letter-spacing and does not fit a 46px column,
+     so where the step is tight the count says the same thing in a third of the
+     room. It is never the only thing identifying the bar — the segment name is
+     directly above it. */
+  const cntTxt = n => (step - 4) >= 50 ? `${n} NAME${n === 1 ? "" : "S"}` : `n=${n}`;
+  const ih = H - T - B;
   const bars = rows.map((r, j) => {
     const bh = Math.max(2, (r[yk] / max) * ih);
     const x = L + step * j + (step - bw) / 2, by = T + ih - bh;
@@ -1713,13 +1789,15 @@ function barChart(rows, xk, yk, label = "Reports published by desk", nk, act){
     const g = act && r.k
       ? `<g class="barhit" data-act="${act}" data-v="${esc(r.k)}"><title>${esc(r[xk])}: filter the basket to this segment</title>`
       : "<g>";
+    const f = fits[j];
+    const labelTop = H - B + 14;
     return `${g}<path d="${cap}" fill="${fill}"/>
       <text x="${mid}" y="${(by - 9).toFixed(1)}" text-anchor="middle" font-size="13"
             font-weight="700" fill="${C.label}">${r[yk]}</text>
-      <text x="${mid}" y="${nk ? H - 15 : H - 11}" text-anchor="middle" font-size="11"
-            fill="${C.axis}">${esc(r[xk])}</text>
-      ${nk ? `<text x="${mid}" y="${H - 4}" text-anchor="middle" font-size="8.5" letter-spacing=".9"
-            fill="${C.axis}">${r[nk]} NAME${r[nk] === 1 ? "" : "S"}</text>` : ""}
+      ${f.lines.map((ln, k) => `<text x="${mid}" y="${(labelTop + k * LINE).toFixed(1)}" text-anchor="middle"
+            font-size="${f.fs.toFixed(1)}" fill="${C.axis}">${esc(ln)}</text>`).join("")}
+      ${nk ? `<text x="${mid}" y="${(labelTop + maxLines * LINE + 1).toFixed(1)}" text-anchor="middle"
+            font-size="8.5" letter-spacing="${(step - 4) >= 50 ? ".9" : "0"}" fill="${C.axis}">${cntTxt(r[nk])}</text>` : ""}
       ${act && r.k ? `<rect x="${(L + step * j).toFixed(1)}" y="${T}" width="${step.toFixed(1)}"
             height="${ih.toFixed(1)}" fill="transparent"/>` : ""}
       </g>`;
@@ -1740,6 +1818,10 @@ function indexChart(rows, xk, yk, base, label, box, ov){
      caller instead, and the labels stay the same on screen either way. */
   const {W, H, L, R, T, B} = box || {W:680, H:210, L:18, R:76, T:30, B:30};
   const iw = W - L - R, ih = H - T - B, id = gradId();
+  /* the same thinning rule the area chart uses: at true size the labels crowd
+     for real, so they drop out rather than shrink */
+  const gap = rows.length > 1 ? iw / (rows.length - 1) : iw;
+  const allVals = gap >= 40, xEvery = gap < 30 ? 2 : 1, lastIdx = rows.length - 1;
   /* an optional second series on the same rebase — the selected name against
      the basket it belongs to. It has to share the scale, so its values go
      into the range before the padding is worked out, not after. */
@@ -1762,10 +1844,12 @@ function indexChart(rows, xk, yk, base, label, box, ov){
     + ` L${xs(0).toFixed(1)} ${(T + ih).toFixed(1)} Z`;
   const marks = rows.map((r, j) => {
     const x = xs(j).toFixed(1), y = ys(r[yk]);
+    const showV = allVals || j === 0 || j === lastIdx;
+    const showX = j % xEvery === 0 || j === lastIdx;
     return `<circle cx="${x}" cy="${y.toFixed(1)}" r="4" fill="${C.marker}" stroke="${col}" stroke-width="2"/>
-      <text x="${x}" y="${(y - 13).toFixed(1)}" text-anchor="middle" font-size="12.5" font-weight="700"
-            fill="${C.label}">${r[yk].toFixed(dp)}</text>
-      <text x="${x}" y="${H - 9}" text-anchor="middle" font-size="11.5" fill="${C.axis}">${esc(r[xk])}</text>`;
+      ${showV ? `<text x="${x}" y="${(y - 13).toFixed(1)}" text-anchor="middle" font-size="12.5" font-weight="700"
+            fill="${C.label}">${r[yk].toFixed(dp)}</text>` : ""}
+      ${showX ? `<text x="${x}" y="${H - 9}" text-anchor="middle" font-size="11.5" fill="${C.axis}">${esc(r[xk])}</text>` : ""}`;
   }).join("");
 
   /* The overlay is the quiet one: a thinner line, no fill and no per-point
@@ -1802,10 +1886,45 @@ function indexChart(rows, xk, yk, base, label, box, ov){
         <line x1="${L}" y1="${ys(base).toFixed(1)}" x2="${W - R + 8}" y2="${ys(base).toFixed(1)}"
               stroke="${C.axis}" stroke-width="1" stroke-dasharray="4 4"/>
         <text x="${W - 6}" y="${(ys(base) + 3.5).toFixed(1)}" text-anchor="end" font-size="9.5"
-              letter-spacing="1" fill="${C.axis}">REBASE ${base}</text>`}
+              letter-spacing="1" fill="${C.axis}">${R < 62 ? "" : "REBASE "}${base}</text>`}
       ${ovLayer}
       <path d="${line}" fill="none" stroke="${col}" stroke-width="2.4" stroke-linejoin="round"/>
       ${marks}</svg>`;
+}
+
+/* The index chart in its two homes. Both take their width from the slot that
+   measured itself, so the only difference left is the right margin: a full
+   panel has room to caption the rebase line, a side panel does not, and below
+   about 620px neither does — the caption drops to the bare number and the
+   margin comes back as plot. */
+const idxGeom = (w, side) => {
+  const W = Math.max(240, Math.round(w));
+  return side
+    ? {W, H:200, L:16, R:16, T:30, B:28}
+    : {W, H:210, L:18, R:Math.round(clamp(W * 0.11, 42, 76)), T:30, B:30};
+};
+
+/* Real text measurement, memoised.
+   The scatter used to estimate a label at 5.75px a character. Measured, the
+   tickers run 5.8 to 7.9 — up to 37% wider than the estimate — and the handoff
+   listed that estimate as a known gap on the grounds that "every figure in the
+   deck uses one face, so the estimate holds". It did not hold; it was hidden,
+   because the whole frame was being scaled down to illegibility and two labels
+   on top of each other at 4.7px look like texture. Drawing at true size made
+   it visible immediately. A canvas context measures the real face at the real
+   size, which costs one measurement per distinct string per session. */
+let measureCtx = null;
+const measureCache = new Map();
+function textWidth(t, px, weight = 600, tracking = 0){
+  const key = `${weight}|${px}|${tracking}|${t}`;
+  const hit = measureCache.get(key);
+  if(hit !== undefined) return hit;
+  if(!measureCtx) measureCtx = document.createElement("canvas").getContext("2d");
+  const fam = getComputedStyle(document.body).fontFamily || "sans-serif";
+  measureCtx.font = `${weight} ${px}px ${fam}`;
+  const w = measureCtx.measureText(t).width + t.length * tracking;
+  measureCache.set(key, w);
+  return w;
 }
 
 /* Marks for the scatter. Six shapes at roughly equal visual weight, so a
@@ -1839,11 +1958,22 @@ function eqMark(shape, cx, cy, r, fill){
    2x are the same distance from parity, and a linear axis would squash
    twenty names into the left third to make room for two terminal operators.
    The parity line is the reference, the way 50c is on the price chart. */
-const SC = {W:680, H:310, L:34, R:22, T:22, B:46};
-function scatterChart(rows, sel){
-  const {W, H, L, R, T, B} = SC;
+const SC = {H:310, L:34, R:22, T:22, B:46};
+function scatterChart(rows, sel, w){
+  const {H, L, R, T, B} = SC;
+  const W = Math.max(260, Math.round(w || 680));
   const iw = W - L - R, ih = H - T - B;
   if(!rows.length) return "";
+  /* Labels used to be forced on: when the placement ran out of room it dropped
+     the ticker at its first candidate anyway, which was fine while the whole
+     frame was scaled down to illegibility and invisible. Drawn at true size
+     that becomes two tickers on top of each other, which is worse than one
+     missing. So a label is drawn if a free position exists and left off if it
+     does not — the count degrades with the frame instead of the type size.
+     Nothing is lost: the mark keeps its shape and hue, the legend keeps the
+     segment, and the tooltip and the tap both give the name. The selected
+     name is placed first, so the plot always has one anchor a reader can
+     name. */
   const xv = rows.map(r => Math.log10(pnav(r))).concat(0);
   const yv = rows.map(r => r.yld);
   const xlo0 = Math.min(...xv), xhi0 = Math.max(...xv);
@@ -1853,7 +1983,8 @@ function scatterChart(rows, sel){
   const xs = v => L + ((Math.log10(v) - xlo) / (xhi - xlo)) * iw;
   const ys = v => T + ih - (v / ymax) * ih;
 
-  const xTicks = [0.5, 0.75, 1, 1.5, 2, 3].filter(v => Math.log10(v) >= xlo && Math.log10(v) <= xhi);
+  const xTicks = (W < 430 ? [0.5, 1, 2] : [0.5, 0.75, 1, 1.5, 2, 3])
+    .filter(v => Math.log10(v) >= xlo && Math.log10(v) <= xhi);
   const yTicks = [0, ymax / 2, ymax];
 
   const grid = yTicks.map(v => `
@@ -1873,8 +2004,8 @@ function scatterChart(rows, sel){
      collision set as the labels, so a label never lands on a point.
      Widths are estimated from the character count; the face is the same
      one every figure in the deck uses, so the estimate holds. */
-  const LH = 10.5;
-  const lw = t => t.length * 5.75 + 2;
+  const LH = 11.5;
+  const lw = t => textWidth(t, 9.5, 600) + 3;
   const boxes = rows.map(r => {
     const cx = xs(pnav(r)), cy = ys(r.yld);
     return {x1:cx - 7, x2:cx + 7, y1:cy - 7, y2:cy + 7};
@@ -1884,20 +2015,40 @@ function scatterChart(rows, sel){
      left, and paying is a high yield, so it is up. Saying it on the plot is
      both shorter and harder to get backwards. These go into the collision set
      before any ticker is placed, so a label never lands on one. */
+  const terse = W < 430;
   const quads = [
-    {t:"CHEAP · PAYING",    x:L + 2,     y:T + 10,      anchor:"start"},
-    {t:"EXPENSIVE · THIN",  x:W - R - 2, y:T + ih - 5,  anchor:"end"}
+    {t: terse ? "CHEAP" : "CHEAP · PAYING",       x:L + 2,     y:T + 10,     anchor:"start"},
+    {t: terse ? "EXPENSIVE" : "EXPENSIVE · THIN", x:W - R - 2, y:T + ih - 5, anchor:"end"}
   ];
+  /* measured with its letter-spacing, not guessed — the old estimate ran about
+     10px short, which let a ticker be placed into a caption that was really
+     there. The parity caption goes in too, and a quadrant caption that would
+     land on it steps down a line. */
+  const capBox = (q, dy = 0) => {
+    const w = textWidth(q.t, 8.5, 400, 1.1) + 4, y = q.y + dy;
+    return {x1: q.anchor === "end" ? q.x - w : q.x, x2: q.anchor === "end" ? q.x : q.x + w,
+            y1: y - 9, y2: y + 3};
+  };
+  const navBox = {x1: xs(1) + 3, x2: xs(1) + 30, y1: T, y2: T + 12};
+  boxes.push(navBox);
   quads.forEach(q => {
-    const w = q.t.length * 5.2;
-    boxes.push({x1: q.anchor === "end" ? q.x - w : q.x, x2: q.anchor === "end" ? q.x : q.x + w,
-                y1: q.y - 9, y2: q.y + 3});
+    let bx = capBox(q);
+    for(const dy of [0, 13, 26]){
+      bx = capBox(q, dy);
+      if(!boxes.some(b => bx.x1 < b.x2 && bx.x2 > b.x1 && bx.y1 < b.y2 && bx.y2 > b.y1)){
+        q.y += dy; break;
+      }
+    }
+    boxes.push(bx);
   });
   const clash = a => boxes.some(b => a.x1 < b.x2 && a.x2 > b.x1 && a.y1 < b.y2 && a.y2 > b.y1);
 
   /* densest first: the crowded middle gets the good positions, and the
      names out on their own are still easy to place with what is left */
   const order = rows.map((r, i) => i).sort((a, c) => {
+    /* the selected name is the one label the plot must not lose */
+    const selA = sel && rows[a].tk === sel.tk, selC = sel && rows[c].tk === sel.tk;
+    if(selA !== selC) return selA ? -1 : 1;
     const near = i => rows.reduce((n, o) => {
       const dx = xs(pnav(o)) - xs(pnav(rows[i])), dy = ys(o.yld) - ys(rows[i].yld);
       return n + (dx * dx + dy * dy < 3600 ? 1 : 0);
@@ -1910,6 +2061,7 @@ function scatterChart(rows, sel){
     const r = rows[i];
     const g = EQ_SEG[r.seg] || EQ_SEGS[0];
     const cx = xs(pnav(r)), cy = ys(r.yld);
+    const on = sel && r.tk === sel.tk;
     const w = lw(r.tk);
     const cands = [
       {lx:cx + 8,  anchor:"start",  x1:cx + 8,      dy:3.4},
@@ -1922,20 +2074,19 @@ function scatterChart(rows, sel){
     for(const nudge of [0, -LH, LH, -2 * LH, 2 * LH, -3 * LH, 3 * LH]){
       for(const c of cands){
         const y = cy + c.dy + nudge;
-        const bx = {x1:c.x1, x2:c.x1 + w, y1:y - 8, y2:y + 2.5};
+        const bx = {x1:c.x1, x2:c.x1 + w, y1:y - 8.5, y2:y + 3};
         if(bx.x1 < 2 || bx.x2 > W - 2 || bx.y1 < T - 8 || bx.y2 > T + ih + 8) continue;
         if(clash(bx)) continue;
         best = {...c, y, bx};
         break outer;
       }
     }
-    if(!best){ const c = cands[0], y = cy + c.dy;
-      best = {...c, y, bx:{x1:c.x1, x2:c.x1 + w, y1:y - 8, y2:y + 2.5}}; }
+    if(!best){ pts.push({r, g, cx, cy, on, hide:true}); return; }
     boxes.push(best.bx);
-    pts.push({r, g, cx, cy, lx:best.lx, ly:best.y, anchor:best.anchor,
-              on: sel && r.tk === sel.tk});
+    pts.push({r, g, cx, cy, lx:best.lx, ly:best.y, anchor:best.anchor, on});
   });
 
+  const named = pts.filter(p => !p.hide).length;
   const marks = pts.map(p => {
     const fill = C.cats[EQ_SEGS.findIndex(g => g.k === p.r.seg)] || C.line;
     /* only the dimming is written down. With nothing selected there is no
@@ -1946,14 +2097,16 @@ function scatterChart(rows, sel){
       ${p.on ? `<circle cx="${p.cx.toFixed(1)}" cy="${p.cy.toFixed(1)}" r="11"
                         fill="none" stroke="${fill}" stroke-width="1.6" opacity=".55"/>` : ""}
       ${eqMark(p.g.mk, p.cx, p.cy, 5.6, fill)}
-      <text x="${p.lx.toFixed(1)}" y="${p.ly.toFixed(1)}" text-anchor="${p.anchor}" font-size="9.5"
-            font-weight="${p.on ? 700 : 600}" fill="${p.on ? C.label : C.axis}">${esc(p.r.tk)}</text>
+      ${p.hide ? "" : `<text x="${p.lx.toFixed(1)}" y="${p.ly.toFixed(1)}" text-anchor="${p.anchor}" font-size="9.5"
+            font-weight="${p.on ? 700 : 600}" fill="${p.on ? C.label : C.axis}">${esc(p.r.tk)}</text>`}
       <circle cx="${p.cx.toFixed(1)}" cy="${p.cy.toFixed(1)}" r="9" fill="transparent"/>
     </g>`;
   }).join("");
 
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img"
-      aria-label="Price to net asset value against dividend yield, ${rows.length} names, marked and shaped by segment">
+      aria-label="Price to net asset value against dividend yield, ${rows.length} names, marked and shaped by segment${
+        named === rows.length ? ", each labelled with its ticker"
+                              : `, ${named} of them labelled; the rest carry their ticker on the mark`}">
       ${grid}
       <line x1="${xs(1).toFixed(1)}" y1="${T}" x2="${xs(1).toFixed(1)}" y2="${T + ih}"
             stroke="${C.axis}" stroke-width="1" stroke-dasharray="4 4"/>
@@ -1986,8 +2139,9 @@ const basketLegend = (e, ovColor) => `<div class="eqleg">
 /* price chart – dashed 50c parity line, tinted regions above and
    below it, and a hover crosshair driven by #pricechart's data-pts */
 const PC = {W:460, H:190, L:32, R:46, T:20, B:32};
-function priceChart(m){
-  const {W, H, L, R, T, B} = PC;
+function priceChart(m, w){
+  const {H, L, R, T, B} = PC;
+  const W = Math.max(260, Math.round(w || PC.W));
   const iw = W - L - R, ih = H - T - B, id = gradId();
   const rows = win(m.hist, 24);
   const xs = i => L + (rows.length < 2 ? iw / 2 : (i / (rows.length - 1)) * iw);
@@ -2581,7 +2735,7 @@ function ticketPanel(){
       </div>
       <h3>${esc(sel.q)}</h3>
     </div>
-    <div class="chartwrap">${priceChart(sel)}</div>
+    <div class="chartwrap">${chartSlot(w => priceChart(sel, w))}</div>
     <div class="chart-foot">
       <span>YES price · cents</span>
       <span>${esc(rows[0].t)} → ${esc(rows.at(-1).t)} · volume ${cr0(sel.vol)} cr</span>
@@ -2871,10 +3025,12 @@ function libraryView(counts){
     + `<div class="grid half" style="margin-bottom:18px">
         <div class="panel"><div class="panel-h"><h3>Published by week</h3>
           <span class="note">8 weeks to W34</span></div>
-          <div style="padding:12px 12px 6px">${areaChart(WEEKLY, "w", "v", "Reports published per week")}</div></div>
+          <div style="padding:12px 12px 6px">${chartSlot(w =>
+            areaChart(WEEKLY, "w", "v", "Reports published per week", w))}</div></div>
         <div class="panel"><div class="panel-h"><h3>By desk · year to date</h3>
           <span class="note">Dry Cargo leads</span></div>
-          <div style="padding:12px 12px 6px">${barChart(DESKS, "d", "v")}</div></div>
+          <div style="padding:12px 12px 6px">${chartSlot(w =>
+            barChart(DESKS, "d", "v", undefined, undefined, undefined, w))}</div></div>
       </div>`
     + `<div class="panel cqpanel">
         <div class="panel-h"><h3>Library</h3>
@@ -3013,9 +3169,8 @@ function eqDetail(e){
         <span class="cat" style="${segStyle(e.seg)}">${esc(seg.lab)}</span>
         <span class="exch">${e.fleet} vessels · ${esc(e.cap)}</span></div>
     </div>
-    <div class="chartwrap">${indexChart(win, "w", "v", null,
-      `${e.tk} weekly close, ${win[0].w} to ${win.at(-1).w}`,
-      {W:440, H:200, L:16, R:16, T:30, B:28})}</div>
+    <div class="chartwrap">${chartSlot(w => indexChart(win, "w", "v", null,
+      `${e.tk} weekly close, ${win[0].w} to ${win.at(-1).w}`, idxGeom(w, true)))}</div>
     <div class="chart-foot">
       <span>${esc(e.ccy)} ${pxTxt(e.px)} last</span>
       <span class="mono ${pnlClass(move)}">${pctTxt(move)} over the window</span>
@@ -3200,16 +3355,16 @@ function equitiesView(counts){
     + `<div class="grid half" style="margin-bottom:18px">
         <div class="panel"><div class="panel-h"><h3>Coverage basket</h3>
           <span class="note">Rebased ${REBASE} · ${BASKET[0].w} to ${BASKET.at(-1).w}</span></div>
-          <div style="padding:12px 12px 6px">
-            ${indexChart(BASKET, "w", "v", REBASE, ovLabel, null, ovSeries)}</div>
+          <div style="padding:12px 12px 6px">${chartSlot(w =>
+            indexChart(BASKET, "w", "v", REBASE, ovLabel, idxGeom(w), ovSeries))}</div>
           ${basketLegend(sel, ovColor)}
           <div class="panel-f">Equal-weighted across all ${EQUITIES.length} names, rolled up from
             their own weekly closes.${sel ? ` The second line is ${esc(sel.tk)} on the same rebase,
             so the name and the basket are read off one scale.` : ""}</div></div>
         <div class="panel"><div class="panel-h"><h3>Year to date by segment</h3>
           <span class="note">Cap-weighted</span></div>
-          <div style="padding:12px 12px 6px">
-            ${barChart(EQ_YTD, "s", "v", "Year-to-date return by segment, per cent", "n", "eqseg")}</div>
+          <div style="padding:12px 12px 6px">${chartSlot(w =>
+            barChart(EQ_YTD, "s", "v", "Year-to-date return by segment, per cent", "n", "eqseg", w))}</div>
           <div class="panel-f">Each bar is the market-cap weighted return of its constituents, and carries
             how many names that is — six segments averaging four and five names read very differently once
             you can see it. Click a bar to filter the basket to that segment.</div></div>
@@ -3218,7 +3373,7 @@ function equitiesView(counts){
         <div class="panel"><div class="panel-h"><h3>Relative value</h3>
           <span class="note">P/NAV × yield</span>
           ${sel ? `<div style="margin-left:auto"><button class="btn sm" data-act="eqclearsel">Show all ${shown.length}</button></div>` : ""}</div>
-          <div style="padding:12px 12px 2px">${scatterChart(shown, sel)}</div>
+          <div style="padding:12px 12px 2px">${chartSlot(w => scatterChart(shown, sel, w))}</div>
           ${eqLegend()}
           <div class="panel-f">Cheap and paying sits top-left of the parity line — a low multiple is to
             the left and a high yield is up; expensive and thin sits bottom-right. Shape and hue both
@@ -3282,7 +3437,12 @@ function render(){
 
   document.getElementById("spinebrand").innerHTML = spineView();
   document.getElementById("nav").innerHTML = navView();
+  /* the queue is rebuilt with the body, and painted the moment the body is in
+     the document — before the scroll restore, so the heights have settled by
+     the time a scrollTop is written back */
+  chartSlots = []; chartSeq = 0;
   document.getElementById("mainbody").innerHTML = (VIEWS[S.tab] || predictView)();
+  paintCharts();
 
   SCROLLERS.forEach(id => {
     const n = document.getElementById(id);
@@ -3325,12 +3485,15 @@ function moveCrosshair(e){
   const pts = svg._pts || (svg._pts = JSON.parse(svg.dataset.pts));
   const box = svg.getBoundingClientRect();
   if(!box.width) return;
-  const ux = (e.clientX - box.left) / box.width * PC.W;
+  /* the chart is sized from its slot now, so the mapping reads the frame it is
+     actually drawn in rather than the constant it used to be drawn at */
+  const VW = svg.viewBox.baseVal.width || PC.W;
+  const ux = (e.clientX - box.left) / box.width * VW;
   const near = pts.reduce((best, p) => Math.abs(p.x - ux) < Math.abs(best.x - ux) ? p : best, pts[0]);
 
   const text = `${near.t} · ${near.p}c`;
   const w = Math.max(40, text.length * 5.6 + 14);
-  const cx = clamp(near.x, PC.L + w / 2, PC.W - w / 2 - 2);
+  const cx = clamp(near.x, PC.L + w / 2, VW - w / 2 - 2);
 
   g.querySelector("#ph-line").setAttribute("x1", near.x);
   g.querySelector("#ph-line").setAttribute("x2", near.x);
