@@ -36,7 +36,9 @@ async function newPage(b, opts = {}){
   const errs = [];
   page.on("pageerror", e => errs.push("pageerror: " + e.message));
   page.on("console", m => { if(m.type() === "error") errs.push("console: " + m.text()); });
-  await page.goto(URLBASE + (opts.hash || ""));
+  /* opts.url lets a check serve its own variant of the deck — the splice check
+     builds one in memory and needs to point at that rather than at DECK_URL */
+  await page.goto((opts.url || URLBASE) + (opts.hash || ""));
   await page.waitForTimeout(350);
   page.__errs = errs;
   page.__ctx = ctx;
