@@ -28,7 +28,27 @@ there is no second committed copy to drift:
 The deck is the site root now that the Macro Topics reader has been removed from the repo;
 `/ops-deck.html` is kept as an alias so the URL that was already circulated still resolves.
 
-A push to `main` deploys in roughly 20 seconds.
+A push to `main` deploys in roughly 20 seconds — **when the push actually creates a run**, which
+as of 26 Aug 2026 it does not.
+
+**Publishing has a fault right now, and it is GitHub's rather than this repo's.** Push events
+stopped creating Pages runs: merges to `main` produced no run at all, while `workflow_dispatch`
+worked every time. Run #22 has also been wedged since 15:14 in a state before *queued* — it
+accepts neither a re-run (`403 already running`) nor a cancel (`409 not queued yet`).
+
+Two things follow. **Dispatch is the workaround**: Actions → Deploy static content to Pages → Run
+workflow, which builds from `main` and publishes normally. And **#22 is a hazard if it ever
+wakes**: it deploys `757f14e`, so it would republish an older deck over the current one. It did
+not block anything — a dispatched run completed alongside it — so an early diagnosis that it held
+the concurrency group was wrong.
+
+It has already happened once that a long-delayed push run fired late and won the race, leaving
+Pages on `4e90e04` while `main` was `007ed4c`. That was harmless only because those two commits
+carry an identical deck, and the workflow publishes the deck alone. **Check the published ref
+after any merge that changes `affinity-ops-deck.html`**, and dispatch if the push run never came.
+
+Vercel is unaffected — it builds from its own integration, not from Actions, and has deployed every
+merge within a minute or two.
 
 Two Vercel projects (`affinity` and `hms-vanguard`) also build this repo, both rooted at the
 repo root rather than a subfolder — which is why the reader's old `macro-topics-site/vercel.json`
@@ -510,6 +530,9 @@ node checks/run.js charts routing  # a subset
 | Chart label collisions | 0 overlapping text pairs in any chart, 14 widths × 2 themes × 4 views |
 | Index-chart labels | 357/357 renders with no text on a line, no text on text and nothing out of frame — 14 widths × 24 selections, plus every segment filter at three widths. Was 58 hits before the placement pass |
 | Index-chart anchors | 0 first-or-last figures dropped across 1786 chart instances — 19 widths × 2 themes × 24 selections |
+| Sourced figures | 14/14 — `EQ_IR` and `EQ_FIN` ship empty, so the deck is identical without them and correct with them. Injected fixture: the block appears only with data, figures scale, a loss is coloured, nulls render as a dash, the Source row switches from tab-wide to per-name, every outbound link is https with `rel="noopener"`, and a `javascript:` URL is refused rather than rendered |
+| Splice | 12/12, offline — the refresh script rewrites the deck in place, so: round-trip, idempotency, nothing outside the markers moves, and a hostile provider value cannot escape the literal. Then it loads the rewritten deck and asserts the figures reach the panel. This is the check that found the `</script>` bug |
+| CIK resolution | 25/25, offline — the registrant-name matcher against the thirteen real titles and against collisions it must refuse, plus `sources.json` held to `EQUITIES`: every name has a source, no `expect` has drifted, no malformed CIK can land |
 | Crosshair | 9/9 — each of the three charts lights, the plate stays in frame at five positions and is never narrower than its own text, moving between charts leaves exactly one lit, leaving them puts them all out |
 | Routing and persistence | 16/16 — the hash follows the view, a link beats the store, the store survives a reload, the back stack does not grow, and junk (unknown ticker, module or market, markup in the hash, a hand-edited store) falls back rather than through |
 | Interactions | 47/47 — trade, close, resolve, create, search, sort, filter, comms, report, and the basket's select, clear, chips, bar, scatter, peer, crossing, fold, roving tabindex, arrows, Home, End, Enter, Escape, CSV, live region and theme persistence |
@@ -538,60 +561,63 @@ Render is ~13ms with 12 markets; the in-place paths are 0.1–0.2ms. 200 markets
 
 ## Where to pick this up
 
-A UX and visual audit of this tab ran on 25 Aug 2026. It produced six findings and a menu of 52
-improvements, each with a stable ID (A1, B4, C12 …). **Thirty are built and all six findings are
-closed.** The rest of the menu is below, still keyed to those IDs so the numbering stays
-continuous across sessions.
+The 25 Aug audit produced six findings and a menu of 52 improvements with stable IDs. **All six
+findings are closed and thirty of the menu are built.** The equities tab then went further than
+the audit asked: it now has the machinery to carry each company's own reported figures, and the
+next step is data rather than code.
 
-Closed since the audit: C10, C11, D2, F1, F4 and half of B6, plus the label-placement work the
-charts needed once a second series shared the frame.
+### The one thing standing in the way
 
-### Take these first
+**Two credentials, and neither can be set from a Claude Code session.** There is no MCP tool for
+repository variables or secrets, and the proxy refuses that API path outright
+(`GET /actions/variables → 403, "not permitted through this proxy"`). Settings → Secrets and
+variables → Actions, by hand:
 
-Each is self-contained, none touches the load-bearing layout model, and each is worth more than
-it costs.
-
-| ID | What | Note |
+| Name | Kind | Value |
 | --- | --- | --- |
-| C4 (second half) | Hovering a table row lights its scatter point | The other direction — click a mark to open the name — is done |
-| E4 | Row semantics: make the table a `grid` with `aria-selected` instead of `role="button"` on each `<tr>` | Best done with the roving tabindex that is already in place |
-| E6 | A visually hidden table behind the scatter | The marks are clickable but not focusable, and 23 tab stops inside one chart is worse than none, so the table is the keyboard route in. This is the proper answer |
-| D10 | Values on the row sparklines | |
-| A7 | Inline exchange and segment beside the ticker | The cheaper half of the density work, and it ships alone |
+| `SEC_USER_AGENT` | Variable | SEC asks for a contact, and it travels in a header on every request to them. The repo URL works and carries no personal data; a role address is better if this outlives one inbox |
+| `FMP_API_KEY` | Secret | From the Financial Modeling Prep account. Nothing else can supply it |
 
-### B6 — the "vs basket" column, and why it is not here
+Then **Actions → Refresh reported figures → Run workflow with dry run ticked.** That resolves the
+CIKs and prints every figure it would write, touching nothing. Read that log before running it for
+real.
 
-The figure is built: `BASKET_YTD` is rolled up from the rows, the detail panel says how far the
-selected name sits from it, and the export carries it as a column. The *table* column is not, and
-this is the measurement to weigh before adding it.
+**EDGAR-only is a legitimate stopping point.** It needs no key and no spend, covers the 13
+US-listed names, and leaves the other ten showing nothing — which is the correct behaviour, not a
+gap: a name with no entry renders no block and keeps saying it is indicative. Ten names showing
+nothing beats ten names showing something wrong.
 
-With the detail panel open the basket panel measures **764px at a 1440 viewport** and 924px at
-1600; folded, 1118px and 1278px. A tenth column costs roughly 85px, so on the same rule every
-other break on that table uses — 12% above the floor of the set it protects — it would shed at
-about 894 and be **invisible at 1440 with the panel open**, which is the commonest way this tab is
-read.
+### Then, in order
 
-The rest is mechanical if it is judged worth it. Shedding it second, straight after the trend,
-leaves every existing break untouched: the surviving sets below it are unchanged, so only
-`break(trend)` moves and one new break is inserted. Re-measure with
-`table.style.width = 'min-content'` per surviving set, then re-run `node checks/run.js overflow`.
+| What | Note |
+| --- | --- |
+| **23 IR landing pages** into `EQ_IR` | Editorial and hand-curated. Each one has to be opened by a human first — a Claude Code session cannot reach them (see below), and a dead IR link on a public deck is worse than none |
+| **C4 (second half)** | Hovering a table row lights its scatter point. The other direction is done |
+| **E4** | Make the table a `grid` with `aria-selected` rather than `role="button"` per `<tr>`, on the roving tabindex already in place |
+| **E6** | A visually hidden table behind the scatter — the marks are clickable but not focusable, and this is the proper keyboard route in |
+| **D10 / A7** | Values on the row sparklines; exchange and segment inlined beside the ticker |
 
-### Then, in rough order of value
+**B6's table column** keeps its own section above, with the measurement that argues against it.
 
-- **B4's siblings:** B5 bar-in-cell for YTD, B7 basket weight, B8 the 52-week range as a row
-  micro-bar, B9 a USD column or currency toggle, B10 group by segment with subtotals.
-- **A6 density.** Rows are 64px. A compact mode near 40px fits the whole basket on one screen.
-- **A9** a full-width table mode, collapsing the chart panels to a strip.
-- **C6** compare two names side by side, **C7** pin a working set.
-- **D6** size the scatter marks by market cap (the data is already there), **D9** a dispersion
-  strip per segment — the desk view argues dispersion and nothing draws it.
+### What a session here can and cannot reach
+
+Worth knowing before designing anything that fetches, because it cost this session a detour:
+
+| Host | |
+| --- | --- |
+| `raw.githubusercontent.com`, `api.github.com` | ✅ reachable — enough to fetch the published deck and read deployments |
+| `sec.gov`, `data.sec.gov` | ❌ blocked — the CIKs cannot be resolved from here, which is why `resolve-ciks.js` runs on the Actions runner instead |
+| `vercel.app`, `github.io` | ❌ blocked — the live pages cannot be opened; verify by fetching the file from `raw.githubusercontent.com` and checking that, and by reading deployment states from the API |
+| `api.github.com/repos/…/actions/variables` or `/secrets` | ❌ 403 at the proxy |
+
+The pattern that works: fetch the exact file at the head of `main`, confirm its hash matches, serve
+it locally and run `checks/` against **that** copy rather than the working tree.
 
 ### These need data that does not exist yet
 
-Don't start them expecting the array to carry it:
-
-- **D4** a 8 / 13 / 52-week window switch — `h` holds eight weekly closes and nothing else.
-- **F3** per-name as-of stamps, **F5** a constituent change log — no fields for either.
+- **D4** an 8 / 13 / 52-week window switch — `h` holds eight weekly closes and nothing else.
+- **F5** a constituent change log — no field for it. (**F3**, per-name as-of stamps, is solved: the
+  reported block carries the filing date.)
 - **F2** the two missing prediction-desk crossings — `EQ_LINK` covers dry, tank, port and car;
   containers and gas have no market to point at, so this is a markets question, not a basket one.
 
@@ -623,6 +649,15 @@ Raised and not taken up, in rough order of value:
   ticker / P/NAV / yield triples would be the proper answer and is not there yet (E6).
 - `areaChart` has no crosshair. The layer is shared now, so giving it one is a `data-pts`
   attribute and a `crosshairLayer()` call — it was left out only because nothing asked for it.
+- `EQ_IR` is empty, so no name yet offers a way through to the company itself. Twenty-three
+  landing pages, each needing a human to open it once.
+- EBITDA from EDGAR is derived rather than filed, and only where operating income and D&A share a
+  period. Where they do not, the figure is null and the panel shows a dash — correct, but it means
+  a name can carry three headline figures rather than four.
+- The refresh job has never run against a live provider. The splice, the resolver's matcher and the
+  rendering are all checked offline against fixtures; what no check covers is what EDGAR and the
+  aggregator actually return for these particular issuers. Expect the first dry run to be where
+  that is found out — which is what the dry run is for.
 - The scatter's tickers cross its own faint dashed gridlines in places. Left as it is: they are
   background rules at low contrast, and a label crossing one reads as ordinary chart practice
   rather than as the clash a 2.4px series line makes.
