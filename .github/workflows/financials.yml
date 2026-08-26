@@ -1,0 +1,77 @@
+# Refresh the basket's headline reported figures.
+#
+# The deck is one self-contained file with no build step, so this does not
+# publish anything itself: it rewrites the EQ_FIN literal in place and commits,
+# and the existing Pages workflow and Vercel take it from there. Refreshing the
+# feed stays a data change.
+#
+# It is safe before it is configured. Every EDGAR name has a null CIK until one
+# has been looked up by hand, and the aggregator is skipped without a key, so a
+# run with nothing set up fetches nothing and commits nothing.
+name: Refresh reported figures
+
+on:
+  schedule:
+    # Mondays, early. Shipping reports quarterly and nothing is gained by
+    # asking a filings API more often than the filings arrive.
+    - cron: "17 5 * * 1"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Fetch and print, write nothing"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-financials
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: Fetch headline figures
+        env:
+          # SEC asks for a declared contact and rate limits on it. Set this as
+          # a repository variable; without it the script sends a placeholder
+          # that names the omission rather than pretending.
+          SEC_USER_AGENT: ${{ vars.SEC_USER_AGENT }}
+          FMP_API_KEY: ${{ secrets.FMP_API_KEY }}
+        run: |
+          node scripts/refresh-financials.js \
+            ${{ inputs.dry_run && '--dry-run' || '' }}
+
+      # The deck has to still work after the rewrite, so the splice check runs
+      # against the file that is about to be committed rather than after it.
+      - name: Check the rewritten deck
+        if: ${{ !inputs.dry_run }}
+        run: |
+          npm i --no-save playwright@1.56.1 >/dev/null 2>&1
+          npx playwright install --with-deps chromium >/dev/null 2>&1
+          node checks/run.js splice sourced overflow
+
+      - name: Commit if anything moved
+        if: ${{ !inputs.dry_run }}
+        run: |
+          if git diff --quiet -- affinity-ops-deck.html; then
+            echo "no change"
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add affinity-ops-deck.html
+          git commit -m "Refresh the basket's reported figures
+
+          Written by scripts/refresh-financials.js. Headline figures only, from
+          each company's own filing where EDGAR carries it and from the licensed
+          aggregator otherwise. Market data on the tab is unchanged and remains
+          indicative."
+          git push

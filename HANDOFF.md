@@ -330,6 +330,64 @@ below, then nudges, testing against the marks as well as the labels already down
 labels would have been easier and leaves points nobody can identify. Verified: 23 labels, 0
 overlapping pairs, 0 sitting on a mark, 0 out of frame.
 
+## Reported figures come from the company; market data still does not
+
+The basket carries two kinds of number now, and they are kept visibly apart
+because only one of them is real.
+
+**`EQ_IR` is editorial.** The company's own investor-relations landing page,
+curated once and rarely touched. The landing page rather than a deep link to a
+results PDF, deliberately: the deep link is the fresher answer and the one that
+rots, because IR sites reorganise and nobody finds out until a reader gets a 404
+on a public deck. `irOf()` checks the scheme at the point of use rather than
+trusting the file because it lives in the repo, so a non-https URL is refused
+rather than rendered.
+
+**`EQ_FIN` is generated.** `scripts/refresh-financials.js` rewrites it in place
+and commits; the existing Pages workflow and Vercel deploy from that commit. The
+deck therefore stays one self-contained file with no build step and no network
+call at load — refreshing the feed is a data change, exactly like `RATES` and
+`FFA`. Do not hand-edit it; the script splices between `EQ_FIN:BEGIN` and
+`EQ_FIN:END` and anything else in there is overwritten.
+
+**Both start empty, and that is the point.** A name shows nothing until it has
+real entries, because a real filing link beside an invented figure is worse than
+no link at all — it lends the invented figure the document's authority, which is
+the opposite of what F4 was for. Adding a name is what takes it from indicative
+to reported, and **only for the figures actually fetched**: price, NAV, market
+cap and the weekly closes stay placeholder until a quote feed is wired, and the
+panel's Source row says so per name rather than letting the tab speak for all
+23.
+
+**Two providers, because no single free and official source covers nine
+exchanges.** SEC EDGAR's XBRL `companyfacts` covers the 13 US-listed names, is
+free and keyless, and gives figures as tagged in the company's own filing — as
+close to the original as this gets. The other ten span seven venues with nothing
+in common, and go through a licensed aggregator. Yahoo was considered and
+dropped: it has no official public API, the endpoints are undocumented and get
+gated, and its terms prohibit redistributing the data — which is exactly what a
+public deck does.
+
+Three things about the extraction that look like details and are not:
+
+- **Most of this basket files under IFRS**, not US-GAAP — Greek, Norwegian,
+  Cypriot and Bermudan issuers — so the `ifrs-full` tags are the common case
+  here rather than the fallback. `TAGS` tries both taxonomies per figure.
+- **EBITDA is not a tag in either taxonomy.** It is derived as operating income
+  plus D&A, only where both come from the same period, and the derivation is
+  written into the `src` string so nobody mistakes it for something filed.
+- **A CIK is never guessed.** A wrong one fetches another company's accounts,
+  which is the worst failure this can have, so a name with a null CIK is skipped
+  and says so.
+
+**The splice escapes `<`.** The literal is written into an inline `<script>`,
+where the HTML parser looks for `</script>` before the JS parser sees anything —
+so a provider string containing it would end the script element however well the
+JS quoting was done, and `esc()` cannot help because the value is in JS, not
+markup. `\u003C` is still `<` at runtime, so the round-trip is unchanged and the
+parser never sees a close tag. `checks/splice.js` holds this with a deliberately
+hostile fixture; it is the check that found the bug.
+
 ## The view is linkable, and it survives a reload
 
 `#predict/7`, `#comms/3`, `#library`, `#equities/FRO`. A constituent can be linked from a desk
