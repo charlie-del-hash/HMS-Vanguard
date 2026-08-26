@@ -554,6 +554,7 @@ td.mid,th:first-child{padding-right:0}
   color:var(--teal-mid);font-weight:700}
 .gov dd{margin:2px 0 9px;color:var(--body)}
 .gov dd:last-child{margin-bottom:0}
+.eqpanel .subbar{border-bottom:0;padding-bottom:9px}
 .subbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 20px;
   border-bottom:1px solid var(--hair);background:var(--tint2)}
 .subbar .right{margin-left:auto}
@@ -627,10 +628,96 @@ td.mid,th:first-child{padding-right:0}
 .exch{font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;
   color:var(--small);font-weight:700}
 .coname{font-size:12.5px;color:var(--body);line-height:1.4;max-width:24ch}
+/* the company name once its own column has gone. A hidden column is not a
+   dropped fact — the library already folds owner, desk and cadence under the
+   report name, and this is the same move for the one column the basket now
+   sheds early. Revealed by the 799 break, nowhere else. */
+.cofold{display:none;font-size:11.5px;color:var(--body);line-height:1.38;
+  margin-top:4px;max-width:32ch}
 /* the currency rides at label weight so the figure stays the loud part */
 .eqccy{font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;color:var(--small);margin-right:6px}
 .eqpx{font-family:var(--num);font-variant-numeric:tabular-nums;font-weight:700;color:var(--ink)}
 .eqd{font-family:var(--num);font-variant-numeric:tabular-nums;font-size:12.5px;font-weight:700}
+
+/* for a caption or a label that belongs to the screen reader and not the page */
+.vh{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip-path:inset(50%);white-space:nowrap;border:0}
+
+/* The header is a control now. It has to read as one without turning a row of
+   9px small-caps into a row of buttons, so it inherits the label's type
+   entirely and earns its weight only when it is the column doing the sorting.
+   The caret appears on that one column alone — a caret on all nine is noise,
+   and what the reader needs to see is state, not affordance. */
+.colsort{border:0;background:none;font:inherit;color:inherit;letter-spacing:inherit;
+  text-transform:inherit;padding:0;margin:0;cursor:pointer;display:inline-flex;
+  align-items:center;gap:5px;transition:color var(--t)}
+.colsort:hover{color:var(--ink)}
+.colsort.on{color:var(--teal)}
+.num .colsort{flex-direction:row-reverse}
+.colsort .cs{display:none}
+/* The header is a control now, so under a coarse pointer it has to be a real
+   target. The cell's vertical padding moves onto the button, so the hit area
+   reaches 44px without an invisible target overhanging the first data row —
+   which is what a negative margin here would have produced. */
+@media (pointer:coarse){
+  #eqscroll thead th{padding-top:0;padding-bottom:0}
+  /* vertically the padding moves onto the button, so nothing overhangs the
+     first data row. Horizontally it expands into the cell's own 15px gutter,
+     which is dead space — two adjacent headers meet there exactly and never
+     overlap, so a tap can only ever land on the column it looks like. */
+  .colsort{padding:16px 15px;min-width:44px;min-height:44px;margin-inline:-15px}
+}
+.colsort.on .cs{display:block;width:0;height:0;
+  border-left:3.5px solid transparent;border-right:3.5px solid transparent}
+.colsort.on.desc .cs{border-top:4px solid currentColor}
+.colsort.on.asc  .cs{border-bottom:4px solid currentColor}
+
+/* A sticky column header was tried here and taken out again. It needs a
+   scrollport that actually scrolls, and the nearest one is `.main` — which
+   carries overflow-y:auto but never engages, because `.shell` only sets
+   min-height and grows to its content. So the header pins to the top of a
+   scrollport that never moves and never travels. Making it work means either
+   giving `.main` a real height or capping this table and scrolling it
+   internally, and both are changes to the frame the layout model at the top of
+   HANDOFF.md warns about. Not worth a pinned header. Do not retry without
+   reading that section first.
+*/
+
+/* P/NAV is the figure the whole tab argues from and the one that asks the most
+   of a reader: 0.58, 1.42 and 2.90 are a discount, a premium and a different
+   business, and nothing in a column of decimals says so. The track puts parity
+   at the centre on a log scale — 0.5x and 2x sit the same distance out, the
+   same reason the scatter's axis is log — and the fill runs from parity to the
+   value. It sits under the figure inside the cell's existing slack, so it
+   costs no row height. Discount reads positive, which is the convention the
+   detail panel already sets. */
+.pnv{display:inline-flex;flex-direction:column;align-items:flex-end;gap:4px}
+.pnv-t{position:relative;display:block;width:46px;height:3px;border-radius:2px;
+  background:var(--tint)}
+.pnv-f{position:absolute;top:0;bottom:0;border-radius:2px;background:var(--teal-lt)}
+.pnv-f.over{background:var(--neg-line)}
+.pnv-p{position:absolute;top:-1.5px;bottom:-1.5px;left:50%;width:1px;
+  background:var(--small);opacity:.55}
+
+/* The segment filter was a select, which hid six colour-coded categories
+   inside a control that shows one line of text at a time. As chips it filters,
+   carries its count, and doubles as the legend for the hue used in every row's
+   edge and every mark in the scatter — the same swatch rule as .cat, so the
+   colour is on the dot and never on the 8.5px label. */
+.eqchips{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:0 20px 12px;border-bottom:1px solid var(--hair)}
+.eqchips .tabrow{flex-wrap:wrap}
+.cdot{width:7px;height:7px;border-radius:2px;flex-shrink:0;
+  background:var(--cc,var(--teal));display:block}
+.eqchips .tab{display:inline-flex;align-items:center;gap:6px}
+
+/* when the column carrying the active sort has been shed, the figure the rows
+   are ordered by folds under the ticker instead — otherwise a narrow table
+   reorders itself against a number that is nowhere on screen */
+.sortfold{display:none;align-items:baseline;gap:5px;font-family:var(--num);
+  font-variant-numeric:tabular-nums;font-size:11px;font-weight:700;color:var(--ink)}
+.sortfold b{font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--small);font-weight:700}
 
 /* Nine columns need about 920px. The spine is 240px wide above 960px and gone
    below it, so a 768px viewport leaves this table less room than a 960px one
@@ -639,24 +726,54 @@ td.mid,th:first-child{padding-right:0}
    measures itself instead, and the steps are the measured breaks. */
 .panel.eqpanel,.panel.cqpanel{container-type:inline-size}
 #eqscroll th,#eqscroll td{padding-left:15px;padding-right:15px}
-@container (max-width:930px){       /* sparkline: the YTD column carries the trend */
+/* Shed order, least load-bearing first: trend, then Company, then Yield,
+   Cap, P/NAV and last YTD. The earlier order dropped Cap and P/NAV together
+   at 730 and kept Company down to 430, which meant a 1366 laptop lost the
+   multiple the whole tab argues from while still showing a name the first
+   cell's ticker already identifies. Company is the most recoverable fact in
+   the row and now goes first — and it does not vanish, it folds under the
+   ticker (see .cofold), so the rule that a hidden column is not a dropped
+   fact still holds.
+
+   Measured, not chosen. Table min-content per surviving set, at 15px cell
+   padding: 804 / 716 / 607 / 535 / 457 / 388 / 304. Each break sits ~12%
+   above the floor of the set it protects, which is the headroom the old
+   930-for-804 step carried — enough that the last column to survive a step
+   is not wrapping when it does. Re-measure with
+   table.style.width = 'min-content' before moving one. */
+@container (max-width:899px){       /* trend: the YTD column carries direction */
   #eqscroll th:nth-child(9),#eqscroll td:nth-child(9){display:none}
 }
-@container (max-width:830px){       /* yield */
+@container (max-width:799px){       /* company: folds under the ticker instead */
+  #eqscroll th:nth-child(2),#eqscroll td:nth-child(2){display:none}
+  /* The fold costs 20px on every row, so it is only drawn where nothing else
+     carries the name — which is the same test the deck already applies to a
+     dropped column. With the detail panel open beside the table the name is
+     350px to the right and the fold would be pure duplication; folded away,
+     or pushed below the table under 1180, it is the only copy there is. */
+  .solo #eqscroll .cofold{display:block}
+}
+@media(max-width:1180px){
+  @container (max-width:799px){ #eqscroll .cofold{display:block} }
+}
+@container (max-width:679px){       /* yield */
   #eqscroll th:nth-child(8),#eqscroll td:nth-child(8){display:none}
 }
-@container (max-width:730px){       /* the two valuation columns go together */
-  #eqscroll th:nth-child(6),#eqscroll td:nth-child(6),
+@container (max-width:599px){       /* market cap */
+  #eqscroll th:nth-child(6),#eqscroll td:nth-child(6){display:none}
+}
+@container (max-width:511px){       /* P/NAV holds on past cap and yield */
   #eqscroll th:nth-child(7),#eqscroll td:nth-child(7){display:none}
-  .coname{max-width:none}
 }
-@container (max-width:430px){       /* the first cell already carries ticker,
-                                       exchange and segment, so the name goes */
-  #eqscroll th:nth-child(2),#eqscroll td:nth-child(2){display:none}
-}
-@container (max-width:380px){       /* last out: the sort still orders on YTD */
+@container (max-width:433px){       /* last out: the sort still orders on YTD */
   #eqscroll th:nth-child(5),#eqscroll td:nth-child(5){display:none}
 }
+/* each of these fires exactly where the column above it goes, and only for the
+   sort that column serves — so at most one sort fold is ever on a row */
+@container (max-width:679px){ .sk-yld  #eqscroll .sortfold{display:inline-flex} }
+@container (max-width:599px){ .sk-mcap #eqscroll .sortfold{display:inline-flex} }
+@container (max-width:511px){ .sk-pnav #eqscroll .sortfold{display:inline-flex} }
+@container (max-width:433px){ .sk-ytd  #eqscroll .sortfold{display:inline-flex} }
 
 /* ── narrow tables · columns fold into the row, they do not vanish ──
    Same measuring trick as the basket, for the same reason: the spine
@@ -733,7 +850,16 @@ td.mid,th:first-child{padding-right:0}
 /* the selected name sits beside the table, at a fixed width — it does not
    need to grow, and every pixel it does not take is a column the table keeps */
 .grid.withside{grid-template-columns:minmax(0,1fr) 336px;align-items:start}
-@media(max-width:1180px){ .grid.withside{grid-template-columns:1fr} }
+/* the panel folded away: the table takes the 336px back, which is what puts
+   the valuation columns back on a 1366 laptop */
+.grid.withside.solo{grid-template-columns:minmax(0,1fr)}
+@media(max-width:1180px){
+  .grid.withside{grid-template-columns:1fr}
+  /* the panel is static below this width, so left in source order it lands
+     two screens under the row that fills it. Ahead of the table it is at
+     least on the way to the list rather than past the end of it. */
+  .grid.withside > .panel.sticky{order:-1}
+}
 
 .eqrow{cursor:pointer}
 .eqrow[aria-current="true"] td{background:var(--tint)}
@@ -755,11 +881,16 @@ td.mid,th:first-child{padding-right:0}
   font-variant-numeric:tabular-nums;font-size:10.5px;color:var(--small)}
 
 .peers{border-top:1px solid var(--hair);padding:13px 20px 15px}
-.peer{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:baseline;width:100%;
-  border:0;background:none;font:inherit;text-align:left;cursor:pointer;padding:7px 0;
-  border-bottom:1px solid var(--row-line);transition:opacity var(--t)}
+/* The hover state used to be opacity:.62 — the feedback for pointing at a
+   control was that it became harder to read, which is backwards, and it took
+   the row under AA on the way. A surface does the same job by adding. */
+.peer{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:baseline;
+  width:calc(100% + 16px);margin-inline:-8px;
+  border:0;background:none;font:inherit;text-align:left;cursor:pointer;padding:7px 8px;
+  border-bottom:1px solid var(--row-line);border-radius:var(--r-chip);
+  transition:background var(--t)}
 .peer:last-child{border-bottom:0}
-.peer:hover{opacity:.62}
+.peer:hover{background:var(--tint2)}
 .peer .p-t{font-family:var(--num);font-variant-numeric:tabular-nums;font-weight:700;font-size:12.5px;
   color:var(--ink)}
 .peer .p-n,.peer .p-y{font-size:11.5px;font-weight:600}
@@ -774,8 +905,16 @@ td.mid,th:first-child{padding-right:0}
 .eqleg-i{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:8.5px;
   letter-spacing:.13em;text-transform:uppercase;font-weight:700;color:var(--small)}
 .eqleg-i svg{flex-shrink:0;display:block}
+.eqleg-i .lgl{width:15px;height:3px;border-radius:2px;flex-shrink:0;display:block}
 
 svg.chart{display:block;width:100%;height:auto}
+/* a mark is a way into a name now, so it has to behave like one — and hovering
+   a dimmed point brings it back to full strength, which is how a reader picks
+   an outlier out of the crowd without selecting it first */
+.scatpt{cursor:pointer}
+.scatpt:hover{opacity:1}
+.barhit{cursor:pointer}
+.barhit:hover path{opacity:.78}
 
 @media(max-width:1180px){
   .two{grid-template-columns:1fr}
@@ -1156,7 +1295,7 @@ const segYTD  = k => {
   const c = segCap(k);
   return c ? +(segRows(k).reduce((a, e) => a + e.mcap * e.ytd, 0) / c).toFixed(1) : 0;
 };
-const EQ_YTD = EQ_SEGS.map(g => ({s:g.short, v:segYTD(g.k)}));
+const EQ_YTD = EQ_SEGS.map(g => ({s:g.short, v:segYTD(g.k), n:segRows(g.k).length, k:g.k}));
 
 /* A name in the basket and a question on the prediction desk are often
    the same view expressed twice. Where that holds, the detail panel
@@ -1367,7 +1506,7 @@ const S = {
   selId:1, side:"yes", qty:"10", why:"", newQ:"", newCat:"FFA",
   mktFilter:"open", mktCat:"all", query:"", sort:"closes", showResolve:false,
   convoFilter:"all", selConvo:1, draft:"",
-  rtab:"library", eqSeg:"all", eqSort:"ytd", eqSel:"FRO",
+  rtab:"library", eqSeg:"all", eqSort:"ytd", eqSel:"FRO", eqPanel:true, eqQuery:"",
   note:null
 };
 S.markets.forEach(m => seedPrice(m, m.p0));
@@ -1379,8 +1518,27 @@ function applyTheme(){
   document.documentElement.setAttribute("data-theme", S.theme);
   try{ window.localStorage.setItem(THEME_KEY, S.theme); }catch{}
 }
+/* The deck had no live region at all, so a filled trade and a selected name
+   were both silent. One region in the shell serves everything: it is mounted
+   once, because a region rebuilt by render() is not reliably announced. */
+function say(text){
+  const el = document.getElementById("live");
+  if(el) el.textContent = text;
+}
+/* what changed in the basket, in the order a reader would want it */
+function announceEq(){
+  if(S.tab !== "reports" || S.rtab !== "equities") return;
+  if(S.eqSel === null){ say("Selection cleared. All names shown."); return; }
+  const e = EQUITIES.find(x => x.tk === S.eqSel);
+  if(!e) return;
+  const g = EQ_SEG[e.seg] || {lab:""};
+  say(`${e.tk} selected. ${e.co}, ${g.lab}, ${pnav(e).toFixed(2)} times NAV, `
+    + `${pctTxt(e.ytd)} year to date.`);
+}
+
 function note(ok, text){
   S.note = {ok, text};
+  say(text);
   clearTimeout(noteTimer);
   noteTimer = setTimeout(() => { S.note = null; render(); }, 4600);
 }
@@ -1511,6 +1669,7 @@ function areaChart(rows, xk, yk, label){
             fill="${C.label}">${r[yk]}</text>
       <text x="${x}" y="${H - 9}" text-anchor="middle" font-size="11.5" fill="${C.axis}">${esc(r[xk])}</text>`;
   }).join("");
+
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label || "")}">
       <defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="${C.line}" stop-opacity=".24"/>
@@ -1527,7 +1686,11 @@ function areaChart(rows, xk, yk, label){
 }
 
 /* bar chart – leader picked out, direct labels, baseline only */
-function barChart(rows, xk, yk, label = "Reports published by desk"){
+/* `nk` is an optional key holding how many things each bar is averaging. Six
+   segment returns read very differently once you can see that one of them is
+   four names and another is five, and the bar chart is the only place that
+   fact fits. `act` makes the bars a way into the filter. */
+function barChart(rows, xk, yk, label = "Reports published by desk", nk, act){
   const W = 680, H = 210, L = 16, R = 16, T = 30, B = 34;
   const iw = W - L - R, ih = H - T - B;
   const vals = rows.map(r => r[yk]);
@@ -1546,11 +1709,20 @@ function barChart(rows, xk, yk, label = "Reports published by desk"){
       + ` L${(x + bw - cr).toFixed(1)} ${by.toFixed(1)}`
       + ` Q${(x + bw).toFixed(1)} ${by.toFixed(1)} ${(x + bw).toFixed(1)} ${(by + cr).toFixed(1)}`
       + ` L${(x + bw).toFixed(1)} ${(by + bh).toFixed(1)} Z`;
-    return `<path d="${cap}" fill="${fill}"/>
-      <text x="${(x + bw / 2).toFixed(1)}" y="${(by - 9).toFixed(1)}" text-anchor="middle" font-size="13"
+    const mid = (x + bw / 2).toFixed(1);
+    const g = act && r.k
+      ? `<g class="barhit" data-act="${act}" data-v="${esc(r.k)}"><title>${esc(r[xk])}: filter the basket to this segment</title>`
+      : "<g>";
+    return `${g}<path d="${cap}" fill="${fill}"/>
+      <text x="${mid}" y="${(by - 9).toFixed(1)}" text-anchor="middle" font-size="13"
             font-weight="700" fill="${C.label}">${r[yk]}</text>
-      <text x="${(x + bw / 2).toFixed(1)}" y="${H - 11}" text-anchor="middle" font-size="11"
-            fill="${C.axis}">${esc(r[xk])}</text>`;
+      <text x="${mid}" y="${nk ? H - 15 : H - 11}" text-anchor="middle" font-size="11"
+            fill="${C.axis}">${esc(r[xk])}</text>
+      ${nk ? `<text x="${mid}" y="${H - 4}" text-anchor="middle" font-size="8.5" letter-spacing=".9"
+            fill="${C.axis}">${r[nk]} NAME${r[nk] === 1 ? "" : "S"}</text>` : ""}
+      ${act && r.k ? `<rect x="${(L + step * j).toFixed(1)}" y="${T}" width="${step.toFixed(1)}"
+            height="${ih.toFixed(1)}" fill="transparent"/>` : ""}
+      </g>`;
   }).join("");
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label)}">
       ${bars}
@@ -1562,13 +1734,19 @@ function barChart(rows, xk, yk, label = "Reports published by desk"){
    so areaChart's zero baseline would spend the whole frame on empty air.
    This one pads the observed range instead and keeps the rebase line as
    the single reference, which is the level a reader actually compares to. */
-function indexChart(rows, xk, yk, base, label, box){
+function indexChart(rows, xk, yk, base, label, box, ov){
   /* the side panel is half the width of a full panel, so a shared viewBox
      would render this type at half the size. The geometry travels with the
      caller instead, and the labels stay the same on screen either way. */
   const {W, H, L, R, T, B} = box || {W:680, H:210, L:18, R:76, T:30, B:30};
   const iw = W - L - R, ih = H - T - B, id = gradId();
-  const vals = rows.map(r => r[yk]).concat(base == null ? [] : [base]);
+  /* an optional second series on the same rebase — the selected name against
+     the basket it belongs to. It has to share the scale, so its values go
+     into the range before the padding is worked out, not after. */
+  const ovr = ov && ov.rows && ov.rows.length === rows.length ? ov : null;
+  const vals = rows.map(r => r[yk])
+    .concat(base == null ? [] : [base])
+    .concat(ovr ? ovr.rows.map(r => r[yk]) : []);
   const lo0 = Math.min(...vals), hi0 = Math.max(...vals);
   const pad = Math.max((hi0 - lo0) * 0.22, 0.5);
   const lo = lo0 - pad, hi = hi0 + pad;
@@ -1589,6 +1767,32 @@ function indexChart(rows, xk, yk, base, label, box){
             fill="${C.label}">${r[yk].toFixed(dp)}</text>
       <text x="${x}" y="${H - 9}" text-anchor="middle" font-size="11.5" fill="${C.axis}">${esc(r[xk])}</text>`;
   }).join("");
+
+  /* The overlay is the quiet one: a thinner line, no fill and no per-point
+     figures, so the basket keeps the reading and the name is the comparison
+     rather than a competing series. It carries its ticker at its own end, and
+     that ticker is set in the text token, not in the segment hue: the six
+     category colours are validated as marks and four of the six go under AA
+     the moment they are used as small text. The end dot is the mark and wears
+     the hue; the label beside it is the name. That label and the REBASE
+     caption share the right margin, so where they would land on each other
+     the ticker steps clear. */
+  let ovLayer = "";
+  if(ovr){
+    const oy = j => ys(ovr.rows[j][yk]);
+    const oline = ovr.rows.map((r, j) => `${j ? "L" : "M"}${xs(j).toFixed(1)} ${oy(j).toFixed(1)}`).join(" ");
+    const ex = xs(ovr.rows.length - 1), ey = oy(ovr.rows.length - 1);
+    let ly = ey + 3.4;
+    if(base != null && Math.abs(ly - (ys(base) + 3.5)) < 11){
+      ly = ey < ys(base) ? ys(base) - 8.5 : ys(base) + 15.5;
+    }
+    ly = clamp(ly, T + 8, T + ih + 9);
+    ovLayer = `<path d="${oline}" fill="none" stroke="${ovr.color}" stroke-width="1.8"
+        stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="3.2" fill="${ovr.color}"/>
+      <text x="${(ex + 7).toFixed(1)}" y="${ly.toFixed(1)}" font-size="10.5" font-weight="700"
+            fill="${C.label}">${esc(ovr.name)}</text>`;
+  }
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label || "")}">
       <defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="${col}" stop-opacity=".22"/>
@@ -1599,6 +1803,7 @@ function indexChart(rows, xk, yk, base, label, box){
               stroke="${C.axis}" stroke-width="1" stroke-dasharray="4 4"/>
         <text x="${W - 6}" y="${(ys(base) + 3.5).toFixed(1)}" text-anchor="end" font-size="9.5"
               letter-spacing="1" fill="${C.axis}">REBASE ${base}</text>`}
+      ${ovLayer}
       <path d="${line}" fill="none" stroke="${col}" stroke-width="2.4" stroke-linejoin="round"/>
       ${marks}</svg>`;
 }
@@ -1674,6 +1879,20 @@ function scatterChart(rows, sel){
     const cx = xs(pnav(r)), cy = ys(r.yld);
     return {x1:cx - 7, x2:cx + 7, y1:cy - 7, y2:cy + 7};
   });
+  /* The panel used to explain the quadrants in a sentence under the chart, and
+     had them the wrong way round: cheap is a low multiple, so it is to the
+     left, and paying is a high yield, so it is up. Saying it on the plot is
+     both shorter and harder to get backwards. These go into the collision set
+     before any ticker is placed, so a label never lands on one. */
+  const quads = [
+    {t:"CHEAP · PAYING",    x:L + 2,     y:T + 10,      anchor:"start"},
+    {t:"EXPENSIVE · THIN",  x:W - R - 2, y:T + ih - 5,  anchor:"end"}
+  ];
+  quads.forEach(q => {
+    const w = q.t.length * 5.2;
+    boxes.push({x1: q.anchor === "end" ? q.x - w : q.x, x2: q.anchor === "end" ? q.x : q.x + w,
+                y1: q.y - 9, y2: q.y + 3});
+  });
   const clash = a => boxes.some(b => a.x1 < b.x2 && a.x2 > b.x1 && a.y1 < b.y2 && a.y2 > b.y1);
 
   /* densest first: the crowded middle gets the good positions, and the
@@ -1719,12 +1938,17 @@ function scatterChart(rows, sel){
 
   const marks = pts.map(p => {
     const fill = C.cats[EQ_SEGS.findIndex(g => g.k === p.r.seg)] || C.line;
-    return `<g${p.on ? "" : ` opacity="${sel ? 0.55 : 1}"`}>
+    /* only the dimming is written down. With nothing selected there is no
+       opacity attribute at all, which is what "all 23 at full strength" should
+       look like in the DOM as well as on screen. */
+    return `<g class="scatpt" data-act="seleq" data-v="${esc(p.r.tk)}"${!p.on && sel ? ` opacity="0.55"` : ""}>
+      <title>${esc(p.r.tk)} · ${esc(p.r.co)} — ${pnav(p.r).toFixed(2)}× NAV, ${p.r.yld.toFixed(1)}% yield</title>
       ${p.on ? `<circle cx="${p.cx.toFixed(1)}" cy="${p.cy.toFixed(1)}" r="11"
                         fill="none" stroke="${fill}" stroke-width="1.6" opacity=".55"/>` : ""}
       ${eqMark(p.g.mk, p.cx, p.cy, 5.6, fill)}
       <text x="${p.lx.toFixed(1)}" y="${p.ly.toFixed(1)}" text-anchor="${p.anchor}" font-size="9.5"
             font-weight="${p.on ? 700 : 600}" fill="${p.on ? C.label : C.axis}">${esc(p.r.tk)}</text>
+      <circle cx="${p.cx.toFixed(1)}" cy="${p.cy.toFixed(1)}" r="9" fill="transparent"/>
     </g>`;
   }).join("");
 
@@ -1736,6 +1960,8 @@ function scatterChart(rows, sel){
       <text x="${(xs(1) + 5).toFixed(1)}" y="${T + 9}" font-size="9.5" letter-spacing="1"
             fill="${C.axis}">NAV</text>
       ${marks}
+      ${quads.map(q => `<text x="${q.x.toFixed(1)}" y="${q.y.toFixed(1)}" text-anchor="${q.anchor}"
+            font-size="8.5" letter-spacing="1.1" fill="${C.axis}">${q.t}</text>`).join("")}
       <text x="${L}" y="${H - 6}" font-size="9.5" letter-spacing=".8" fill="${C.axis}">PRICE / NAV →</text>
       <text x="${W - R}" y="${H - 6}" text-anchor="end" font-size="9.5" letter-spacing=".8"
             fill="${C.axis}">↑ DIVIDEND YIELD %</text>
@@ -1747,6 +1973,15 @@ function scatterChart(rows, sel){
 const eqLegend = () => `<div class="eqleg">${EQ_SEGS.map((g, i) => `
   <span class="eqleg-i"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
     ${eqMark(g.mk, 7, 7, 5, `var(${g.v})`)}</svg>${esc(g.short)}</span>`).join("")}</div>`;
+
+/* Two lines on one scale have to say which is which. The swatch is a line
+   segment rather than a dot because a line is what it stands for, and the
+   name is spelled out beside it — the overlay hue is never carrying the
+   identification on its own. */
+const basketLegend = (e, ovColor) => `<div class="eqleg">
+  <span class="eqleg-i"><i class="lgl" style="background:${BASKET.at(-1).v >= REBASE ? C.pos : C.neg}"></i>Coverage basket</span>
+  ${e ? `<span class="eqleg-i"><i class="lgl" style="background:${ovColor}"></i>${esc(e.tk)} rebased</span>` : ""}
+</div>`;
 
 /* price chart – dashed 50c parity line, tinted regions above and
    below it, and a hover crosshair driven by #pricechart's data-pts */
@@ -2579,10 +2814,29 @@ const RTABS = [["library", "Library"], ["equities", "Shipping equities"]];
 function subTabs(counts, note){
   return `<div class="subtabs">
     <div class="tabrow" role="group" aria-label="Reports view">
-      ${RTABS.map(([v, lab]) => `<button class="tab" data-act="rtab" data-v="${v}"
+      ${RTABS.map(([v, lab]) => `<button class="tab" id="rtab-${v}" data-act="rtab" data-v="${v}"
           aria-pressed="${S.rtab === v}">${lab}<span class="n">${counts[v]}</span></button>`).join("")}
     </div>
     <span class="note">${esc(note)}</span></div>`;
+}
+
+/* Below 1180 the detail panel is not beside the table — it is static and, now,
+   ahead of it. Either way a tap can change something a long way off screen,
+   which is the whole of the "selecting a name does nothing" problem. Bring it
+   into view, but only when it is actually out of view and only at those
+   widths: beside the table it is already visible, and moving the page there
+   would be the worse behaviour. */
+function revealEqDetail(){
+  if(S.tab !== "reports" || S.rtab !== "equities" || !S.eqPanel) return;
+  if(!window.matchMedia("(max-width:1180px)").matches) return;
+  const panel = document.querySelector(".grid.withside > .panel.sticky");
+  if(!panel) return;
+  const r = panel.getBoundingClientRect();
+  if(r.top >= 0 && r.bottom <= window.innerHeight) return;
+  panel.scrollIntoView({
+    behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+    block: "start"
+  });
 }
 
 function reportsView(){
@@ -2646,6 +2900,28 @@ function libraryView(counts){
 }
 
 /* ── 12b · shipping equities ──────────────────────────────────── */
+/* One description of the columns. The header, the sort control, the aria-sort
+   state and the "your sort key has been shed" fold all read it, so they cannot
+   drift apart the way a second hand-typed list would. `n` is the nth-child the
+   container queries key on; `dir` is which way that column's sort actually
+   runs, which is not the same for all of them — cheapest P/NAV is ascending. */
+const EQ_COLS = [
+  {n:1, key:"tk",   lab:"Instrument", num:false, dir:"ascending"},
+  {n:2, key:null,   lab:"Company",    num:false},
+  {n:3, key:null,   lab:"Last",       num:true},
+  {n:4, key:"d1",   lab:"1D",         num:true,  dir:"descending"},
+  {n:5, key:"ytd",  lab:"YTD",        num:true,  dir:"descending"},
+  {n:6, key:"mcap", lab:"Cap $bn",    num:true,  dir:"descending"},
+  {n:7, key:"pnav", lab:"P/NAV",      num:true,  dir:"ascending"},
+  {n:8, key:"yld",  lab:"Yield",      num:true,  dir:"descending"},
+  {n:9, key:null,   lab:"8 weeks",    num:false}
+];
+const EQ_COL = Object.fromEntries(EQ_COLS.filter(c => c.key).map(c => [c.key, c]));
+
+const EQ_SORT_LABEL = {
+  ytd:"best year to date", d1:"biggest move today", mcap:"largest market cap",
+  pnav:"cheapest on P/NAV", yld:"highest yield", tk:"ticker A\u2013Z"
+};
 const EQ_SORTS = {
   ytd:  (a, b) => b.ytd - a.ytd,
   d1:   (a, b) => b.d1 - a.d1,
@@ -2655,23 +2931,57 @@ const EQ_SORTS = {
   tk:   (a, b) => a.tk.localeCompare(b.tk)
 };
 
-function eqRow(e, sel){
+/* Parity sits at the centre of the track on a log scale, so 0.5x and 2x are
+   the same distance from it — a ratio does not read on a linear axis, which is
+   why the scatter's x is log too. The window is 0.32x to 3.16x, which holds
+   every name in the basket with room either side. */
+function parityBar(pv){
+  const p = clamp((Math.log10(pv) + 0.5) / 1, 0, 1) * 100;
+  return p >= 50 ? `left:50%;width:${(p - 50).toFixed(1)}%`
+                 : `left:${p.toFixed(1)}%;width:${(50 - p).toFixed(1)}%`;
+}
+const SORT_FOLD = {
+  ytd:  e => pctTxt(e.ytd),
+  mcap: e => `$${e.mcap.toFixed(2)}bn`,
+  pnav: e => `${pnav(e).toFixed(2)}×`,
+  yld:  e => `${e.yld.toFixed(1)}%`
+};
+
+function eqRow(e, sel, i){
   const seg = EQ_SEG[e.seg] || {lab:"—"};
   /* the sparkline reads the eight-week direction, not the last tick */
   const up = e.h.at(-1) >= e.h[0];
   const on = sel && sel.tk === e.tk;
-  return `<tr class="eqrow" style="${segStyle(e.seg)}" tabindex="0" role="button"
+  const pv = pnav(e);
+  /* the figure the rows are ordered by, carried into the first cell for the
+     widths where its own column has been shed. Empty for the two sorts whose
+     column never goes (1D) or is the first cell already (ticker). */
+  const sf = SORT_FOLD[S.eqSort] ? {lab:EQ_COL[S.eqSort].lab, txt:SORT_FOLD[S.eqSort](e)} : null;
+  /* the id is what lets render()'s focus restore put the caret back on this
+     row after a selection rewrites the column — the same mechanism the search
+     field and the ticket inputs already ride on */
+  /* One tab stop for the whole table rather than 23. The row that holds it is
+     the selected one, or the first when nothing is selected; the arrow keys
+     move it from there. Tab now reaches the basket and leaves it, which is
+     what a list of 23 rows inside a page of controls needs. */
+  const rove = on || (!sel && i === 0);
+  return `<tr class="eqrow" id="eqrow-${esc(e.tk)}" style="${segStyle(e.seg)}" tabindex="${rove ? 0 : -1}" role="button"
       data-act="seleq" data-v="${esc(e.tk)}" aria-current="${on}"
       aria-label="${esc(e.co)}, ${esc(e.tk)}, ${pctTxt(e.ytd)} year to date">
     <td><span class="tkr">${esc(e.tk)}</span>
+      <div class="cofold">${esc(e.co)}</div>
       <div class="eqmeta"><span class="exch">${esc(e.ex)}</span>
-        <span class="cat" style="${segStyle(e.seg)}">${esc(seg.lab)}</span></div></td>
+        <span class="cat" style="${segStyle(e.seg)}">${esc(seg.lab)}</span>
+        ${sf ? `<span class="sortfold"><b>${esc(sf.lab)}</b>${esc(sf.txt)}</span>` : ""}</div></td>
     <td><div class="coname">${esc(e.co)}</div></td>
     <td class="num"><span class="eqccy">${esc(e.ccy)}</span><span class="eqpx">${pxTxt(e.px)}</span></td>
     <td class="num"><span class="eqd ${pnlClass(e.d1)}">${pctTxt(e.d1)}</span></td>
     <td class="num"><span class="eqd ${pnlClass(e.ytd)}">${pctTxt(e.ytd)}</span></td>
     <td class="num mono">${e.mcap.toFixed(2)}</td>
-    <td class="num mono">${pnav(e).toFixed(2)}×</td>
+    <td class="num"><span class="pnv">
+      <span class="mono">${pv.toFixed(2)}×</span>
+      <i class="pnv-t"><i class="pnv-f${pv >= 1 ? " over" : ""}" style="${parityBar(pv)}"></i>
+        <i class="pnv-p"></i></i></span></td>
     <td class="num mono">${e.yld.toFixed(1)}%</td>
     <td><div class="trend">${spark(e.h, up ? C.pos : C.neg, `${e.tk} eight-week trend`, {w:58})}</div></td>
   </tr>`;
@@ -2762,6 +3072,32 @@ function deskView(){
 </div>`;
 }
 
+/* The rows currently on screen. The view and the export both read it, so an
+   export can never quietly disagree with the table it was taken from. */
+function eqShown(){
+  const q = S.eqQuery.trim().toLowerCase();
+  return EQUITIES
+    .filter(e => S.eqSeg === "all" || e.seg === S.eqSeg)
+    .filter(e => !q || e.tk.toLowerCase().includes(q) || e.co.toLowerCase().includes(q)
+                    || e.ex.toLowerCase().includes(q))
+    .sort(EQ_SORTS[S.eqSort] || EQ_SORTS.ytd);
+}
+
+/* every field behind the tab, in the listing currency it is quoted in */
+function eqCSV(rows){
+  const cell = v => {
+    const t = String(v ?? "");
+    return /[",\r\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t;
+  };
+  const head = ["Ticker","Company","Exchange","Currency","Segment","Last","1D %","YTD %",
+    "Market cap US$bn","NAV per share","P/NAV","EV/EBITDA","Yield %","52w low","52w high",
+    "Vessels","Capacity","Desk view", ...WK.map(w => `${w} close`)];
+  const body = rows.map(e => [e.tk, e.co, e.ex, e.ccy, (EQ_SEG[e.seg] || {}).lab || "",
+    e.px, e.d1, e.ytd, e.mcap, e.nav, pnav(e).toFixed(4), e.ev, e.yld, e.lo, e.hi,
+    e.fleet, e.cap, e.note, ...e.h].map(cell).join(","));
+  return [head.map(cell).join(","), ...body].join("\r\n");
+}
+
 function equitiesView(counts){
   const basketMove = ((BASKET.at(-1).v / REBASE) - 1) * 100;
   const cap    = EQUITIES.reduce((a, e) => a + e.mcap, 0);
@@ -2783,36 +3119,72 @@ function equitiesView(counts){
       sub:`${venues} exchanges, converted to US dollars`})
   ].join("");
 
-  const shown = EQUITIES
-    .filter(e => S.eqSeg === "all" || e.seg === S.eqSeg)
-    .sort(EQ_SORTS[S.eqSort] || EQ_SORTS.ytd);
-  /* the selection survives a re-sort but not a filter that excludes it, so
-     the panel falls back to the top of what is actually on screen */
-  const sel = shown.find(e => e.tk === S.eqSel) || shown[0] || null;
+  const q = S.eqQuery.trim().toLowerCase();
+  const shown = eqShown();
+  /* Three states, not two. A null eqSel means the reader has actively cleared
+     the selection — the scatter comes back to full strength and the panel goes
+     to its empty state. A non-null one that the filter has excluded falls back
+     to the top of what is on screen, which is the old behaviour. Without the
+     first case there is no way to see all 23 points undimmed, because every
+     path used to end in a selection. */
+  const sel = S.eqSel === null
+    ? null
+    : (shown.find(e => e.tk === S.eqSel) || shown[0] || null);
 
-  const table = `<div class="panel eqpanel">
+  /* The selected name on the basket's own rebase. It is derived from the same
+     `h` the sparkline and the side panel read, so the three cannot disagree —
+     and it is the comparison the tab's headline claims but never drew. The
+     hue is the name's segment, taken from the fixed C.cats order, so it
+     matches the mark it already has in the scatter and the swatch in its row. */
+  const segIdx   = sel ? EQ_SEGS.findIndex(g => g.k === sel.seg) : -1;
+  const ovColor  = segIdx >= 0 ? (C.cats[segIdx] || C.line) : C.line;
+  const ovSeries = sel ? {name:sel.tk, color:ovColor,
+    rows: sel.h.map((v, i) => ({w:WK[i] || `W${27 + i}`, v:+(v / sel.h[0] * REBASE).toFixed(1)}))} : null;
+  const ovLabel  = sel
+    ? `Coverage basket rebased to 100 at W27, with ${sel.tk} on the same rebase`
+    : "Coverage basket rebased to 100 at W27";
+
+  const table = `<div class="panel eqpanel sk-${S.eqSort}">
     <div class="panel-h"><h3>Constituents</h3>
       <span class="note">${shown.length} of ${EQUITIES.length} names</span>
-      <div style="display:flex;gap:9px"><button class="btn" data-act="eqexport">Export basket</button></div>
+      <div style="display:flex;gap:9px">
+        <button class="btn" id="eqpaneltoggle" data-act="eqpanel">${S.eqPanel ? "Hide detail" : "Show detail"}</button>
+        <button class="btn" data-act="eqexport">Export ${shown.length === EQUITIES.length ? "basket" : "view"}</button></div>
     </div>
     <div class="subbar">
-      <select class="mini" data-bind="eqSeg" aria-label="Segment filter">
-        <option value="all"${S.eqSeg === "all" ? " selected" : ""}>All segments</option>
-        ${EQ_SEGS.map(g => `<option value="${g.k}"${S.eqSeg === g.k ? " selected" : ""}>${esc(g.lab)}</option>`).join("")}
-      </select>
+      <input class="search" id="eqsearch" data-bind="eqQuery" data-live value="${esc(S.eqQuery)}"
+             placeholder="Search ticker, company or venue" aria-label="Search the basket">
       <select class="mini right" data-bind="eqSort" aria-label="Sort">
-        ${[["ytd","Best year to date"],["d1","Biggest move today"],["mcap","Largest market cap"],
-           ["pnav","Cheapest on P/NAV"],["yld","Highest yield"],["tk","Ticker A–Z"]]
-          .map(([v, lab]) => `<option value="${v}"${S.eqSort === v ? " selected" : ""}>${lab}</option>`).join("")}
+        ${Object.entries(EQ_SORT_LABEL).map(([v, lab]) =>
+          `<option value="${v}"${S.eqSort === v ? " selected" : ""}>${esc(lab[0].toUpperCase() + lab.slice(1))}</option>`).join("")}
       </select>
+    </div>
+    <div class="eqchips" role="group" aria-label="Segment filter">
+      <div class="tabrow">
+        <button class="tab" data-act="eqseg" data-v="all" aria-pressed="${S.eqSeg === "all"}">All
+          <span class="n">${EQUITIES.length}</span></button>
+        ${EQ_SEGS.map(g => `<button class="tab" data-act="eqseg" data-v="${g.k}"
+            aria-pressed="${S.eqSeg === g.k}"><i class="cdot" style="${segStyle(g.k)}"></i>${esc(g.short)}
+            <span class="n">${segRows(g.k).length}</span></button>`).join("")}
+      </div>
+      ${S.eqQuery || S.eqSeg !== "all" ? `<button class="btn sm" data-act="eqclear">Clear filters</button>` : ""}
     </div>
     <div class="scroll" id="eqscroll">
       ${shown.length ? `<table>
-        <thead><tr><th>Instrument</th><th>Company</th><th class="num">Last</th><th class="num">1D</th>
-          <th class="num">YTD</th><th class="num">Cap $bn</th><th class="num">P/NAV</th>
-          <th class="num">Yield</th><th>8 weeks</th></tr></thead>
-        <tbody>${shown.map(e => eqRow(e, sel)).join("")}</tbody></table>`
-        : blank("Nothing in this segment", "No name in the basket sits in this segment. Widen the filter to see the full coverage list.")}
+        <caption class="vh">Coverage basket constituents, ${shown.length} of ${EQUITIES.length} names,
+          sorted by ${esc(EQ_SORT_LABEL[S.eqSort] || "year to date")}.</caption>
+        <thead><tr>${EQ_COLS.map(c => {
+          const on = c.key && S.eqSort === c.key;
+          const inner = c.key
+            ? `<button class="colsort${on ? ` on ${c.dir === "ascending" ? "asc" : "desc"}` : ""}" data-act="eqsortcol" data-v="${c.key}"
+                 title="Sort by ${esc(c.lab)}">${esc(c.lab)}<i class="cs" aria-hidden="true"></i></button>`
+            : esc(c.lab);
+          return `<th scope="col"${c.num ? ` class="num"` : ``}${on ? ` aria-sort="${c.dir}"` : ``}>${inner}</th>`;
+        }).join("")}</tr></thead>
+        <tbody>${shown.map((e, i) => eqRow(e, sel, i)).join("")}</tbody></table>`
+        : blank(q ? `Nothing matches \u201C${esc(S.eqQuery.trim())}\u201D` : "Nothing in this segment",
+                q ? "No ticker, company or venue in the basket matches that. Clear the search to see the full coverage list."
+                  : "No name in the basket sits in this segment. Widen the filter to see the full coverage list.")}
     </div>
     <div class="panel-f">Indicative placeholder prices in the listing currency — not a live feed.
       Market cap is converted to US dollars at the W34 close. P/NAV is computed from NAV per share.
@@ -2829,26 +3201,32 @@ function equitiesView(counts){
         <div class="panel"><div class="panel-h"><h3>Coverage basket</h3>
           <span class="note">Rebased ${REBASE} · ${BASKET[0].w} to ${BASKET.at(-1).w}</span></div>
           <div style="padding:12px 12px 6px">
-            ${indexChart(BASKET, "w", "v", REBASE, "Coverage basket rebased to 100 at W27")}</div>
+            ${indexChart(BASKET, "w", "v", REBASE, ovLabel, null, ovSeries)}</div>
+          ${basketLegend(sel, ovColor)}
           <div class="panel-f">Equal-weighted across all ${EQUITIES.length} names, rolled up from
-            their own weekly closes.</div></div>
+            their own weekly closes.${sel ? ` The second line is ${esc(sel.tk)} on the same rebase,
+            so the name and the basket are read off one scale.` : ""}</div></div>
         <div class="panel"><div class="panel-h"><h3>Year to date by segment</h3>
           <span class="note">Cap-weighted</span></div>
           <div style="padding:12px 12px 6px">
-            ${barChart(EQ_YTD, "s", "v", "Year-to-date return by segment, per cent")}</div>
-          <div class="panel-f">Each bar is the market-cap weighted return of its constituents.</div></div>
+            ${barChart(EQ_YTD, "s", "v", "Year-to-date return by segment, per cent", "n", "eqseg")}</div>
+          <div class="panel-f">Each bar is the market-cap weighted return of its constituents, and carries
+            how many names that is — six segments averaging four and five names read very differently once
+            you can see it. Click a bar to filter the basket to that segment.</div></div>
       </div>`
     + `<div class="grid two" style="margin-bottom:18px">
         <div class="panel"><div class="panel-h"><h3>Relative value</h3>
-          <span class="note">P/NAV × yield</span></div>
+          <span class="note">P/NAV × yield</span>
+          ${sel ? `<div style="margin-left:auto"><button class="btn sm" data-act="eqclearsel">Show all ${shown.length}</button></div>` : ""}</div>
           <div style="padding:12px 12px 2px">${scatterChart(shown, sel)}</div>
           ${eqLegend()}
-          <div class="panel-f">Cheap and paying sits bottom-right of the parity line; expensive and
-            thin sits top-left. Shape and hue both carry the segment, so neither has to be read alone.</div></div>
+          <div class="panel-f">Cheap and paying sits top-left of the parity line — a low multiple is to
+            the left and a high yield is up; expensive and thin sits bottom-right. Shape and hue both
+            carry the segment, so neither has to be read alone. Click a mark to open that name.</div></div>
         <div class="panel"><div class="panel-h"><h3>Desk view</h3>
           <span class="note">W34 · research</span></div>${deskView()}</div>
       </div>`
-    + `<div class="grid withside">${table}${eqDetail(sel)}</div>`;
+    + `<div class="grid withside${S.eqPanel ? "" : " solo"}">${table}${S.eqPanel ? eqDetail(sel) : ""}</div>`;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -2875,6 +3253,7 @@ function mountShell(){
       </nav>
       <main class="main" id="main">
         <div class="mainbody" id="mainbody"></div>
+        <div id="live" class="vh" role="status" aria-live="polite" aria-atomic="true"></div>
         <div class="attrib">
           <span>Affinity (Shipping) LLP · Private &amp; confidential</span>
           <span>${VERSION} · ${BUILD}</span>
@@ -3009,7 +3388,29 @@ app.addEventListener("click", e => {
     case "genreport": addReport(); break;
     case "export":    note(true, `Export queued for ${S.reports.length} reports.`); render(); break;
     case "rtab":      S.rtab = v; render(); break;
-    case "seleq":     S.eqSel = v; render(); break;
+    /* folding the panel away hands its 336px back to the table, which is what
+       returns the valuation columns on a laptop. The toggle carries an id, so
+       render()'s focus restore leaves the caret on it. */
+    case "eqpanel":   S.eqPanel = !S.eqPanel; render(); break;
+    /* the header is the other way into the sort. It sets the same state the
+       select does, so the two can never show different things. */
+    case "eqsortcol": S.eqSort = v; render(); break;
+    case "eqseg":     S.eqSeg = v; render(); break;
+    case "eqclear":   S.eqSeg = "all"; S.eqQuery = ""; render(); break;
+    case "seleq": {
+      /* clicking the name that is already selected clears it, which is the
+         other half of Escape — and the only way back to an undimmed scatter */
+      S.eqSel = S.eqSel === v ? null : v;
+      render();
+      announceEq();
+      /* render() puts focus back by id, which covers a click or Enter on the
+         row itself. A peer button inside the panel does not survive the
+         rewrite, so in that case the row it selected takes the focus. */
+      if(document.activeElement === document.body)
+        document.getElementById(`eqrow-${v}`)?.focus({preventScroll:true});
+      revealEqDetail();
+      break;
+    }
     /* the crossing to the prediction desk – the market a segment's names are
        another expression of. Widen the market filters so it cannot land on a
        question the current view happens to be filtering out. */
@@ -3019,14 +3420,59 @@ app.addEventListener("click", e => {
       render();
       document.getElementById("nav-predict")?.focus();
       break;
-    case "eqexport":
-      note(true, `Basket snapshot queued – ${EQUITIES.length} names across ${EQ_SEGS.length} segments.`);
+    /* This raised a toast and did nothing. A button that does not do what it
+       says is a trust cost on a portal, and the rows it would export are
+       already in memory. It exports what is on screen, filters and sort
+       included, which is what "export" means when a view is filtered. */
+    case "eqexport": {
+      const rows = eqShown();
+      const url = URL.createObjectURL(new Blob([eqCSV(rows)], {type:"text/csv;charset=utf-8"}));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `affinity-shipping-basket-${BUILD.replace(/\//g, "-")}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      note(true, `Exported ${rows.length} name${rows.length === 1 ? "" : "s"} to CSV.`);
       render();
       break;
+    }
+    case "eqclearsel": S.eqSel = null; render(); announceEq(); break;
   }
 });
 
+/* Arrow keys walk the basket without selecting, so a reader can run down the
+   names at speed and open the one they want with Enter. Moving the roving
+   tabindex with the caret keeps the table a single tab stop. No render() here:
+   this is focus only, which is why it stays instant. */
+function eqArrow(e, row){
+  const rows = [...document.querySelectorAll(".eqrow")];
+  const i = rows.indexOf(row);
+  if(i < 0) return false;
+  let j = null;
+  if(e.key === "ArrowDown")      j = Math.min(i + 1, rows.length - 1);
+  else if(e.key === "ArrowUp")   j = Math.max(i - 1, 0);
+  else if(e.key === "Home")      j = 0;
+  else if(e.key === "End")       j = rows.length - 1;
+  if(j === null) return false;
+  e.preventDefault();
+  rows[i].tabIndex = -1;
+  rows[j].tabIndex = 0;
+  rows[j].focus();
+  return true;
+}
+
 app.addEventListener("keydown", e => {
+  const inEq = S.tab === "reports" && S.rtab === "equities";
+  const eqrow = e.target.closest ? e.target.closest(".eqrow") : null;
+  if(eqrow && eqArrow(e, eqrow)) return;
+  /* Escape backs out one step at a time: the search first, then the selection,
+     which is what lets the scatter be seen with nothing held down. */
+  if(e.key === "Escape" && inEq){
+    if(e.target.id === "eqsearch" && S.eqQuery){ e.preventDefault(); S.eqQuery = ""; render(); return; }
+    if(S.eqSel !== null){ e.preventDefault(); S.eqSel = null; render(); return; }
+  }
   if(e.key !== "Enter" && e.key !== " ") return;
   const row = e.target.closest ? e.target.closest(".mrow") : null;
   if(row){
@@ -3039,8 +3485,9 @@ app.addEventListener("keydown", e => {
   const eqr = e.target.closest ? e.target.closest(".eqrow") : null;
   if(eqr){
     e.preventDefault();
-    S.eqSel = eqr.dataset.v;
+    S.eqSel = S.eqSel === eqr.dataset.v ? null : eqr.dataset.v;
     render();
+    announceEq();
     return;
   }
   if(e.key !== "Enter") return;
