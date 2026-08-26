@@ -43,8 +43,15 @@ Vercel domain reads as a product, the Pages one reads as somebody's repository. 
 Pages is a mirror rather than a fallback, so it must not be allowed to drift or go stale. And
 Vercel serves the **repo root** rather than a staged artifact, so anything committed to the repo
 is reachable on the shared domain — the Pages workflow copies only the deck, but Vercel does not,
-which is why `checks/` is fetchable there and why a `.vercelignore` is worth a thought before the
-repo gains anything that should not be public.
+so `checks/`, `HANDOFF.md` and everything else answer on the shared URL.
+
+**That is not currently worth acting on, and here is why, so it does not get re-raised.** The
+repository is public, so a `.vercelignore` would hide a file from one public URL while leaving it
+on another; it buys no confidentiality, and it invites the worse mistake of trusting it as though
+it did. The control that matters is the repository's visibility, not this file. It becomes worth
+adding in exactly one case: the repo goes private and the Vercel deployment stays public, at which
+point the shared domain is the only public surface and `.vercelignore` is what stands in front of
+it.
 
 ## Layout model — read this before changing the frame
 
