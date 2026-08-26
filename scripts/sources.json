@@ -5,9 +5,18 @@
     "",
     "  edgar - SEC EDGAR XBRL companyfacts. Free, keyless, and the numbers are",
     "          tagged in the company's own filing, which is as close to the",
-    "          original as this gets. Needs a CIK.",
+    "          original as this gets. Covers the 13 US-listed names.",
     "  fmp   - a licensed aggregator, for the venues EDGAR has nothing for.",
     "          Needs FMP_API_KEY in the environment.",
+    "",
+    "`providers` is the switch, and it is deliberately a decision recorded here",
+    "rather than a side effect of which secrets happen to be set. Only providers",
+    "listed run; a name on any other provider is skipped and says so. Right now",
+    "that is edgar alone: no key, no spend, 13 of 23 names, and the other ten",
+    "showing nothing \u2014 which is the correct behaviour rather than a gap, because",
+    "ten names showing nothing beats ten showing something wrong. To turn the",
+    "rest on, add \"fmp\" here and set FMP_API_KEY. The symbol mapping below is",
+    "kept intact so that is a one-line change.",
     "",
     "cik is null until scripts/resolve-ciks.js fills it from the SEC's own",
     "ticker map. Nobody types these by hand: a wrong CIK does not error, it",
@@ -15,6 +24,9 @@
     "right ticker. `expect` is the company the deck thinks the ticker is, and the",
     "resolver checks the SEC registrant name against it before accepting a",
     "number. A name left unresolved is skipped by the fetcher, not guessed."
+  ],
+  "providers": [
+    "edgar"
   ],
   "names": {
     "MAERSK-B": {

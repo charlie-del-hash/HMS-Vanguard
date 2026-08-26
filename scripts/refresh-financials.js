@@ -225,14 +225,22 @@ async function main() {
   const out = readExisting(html);
   const fmpKey = process.env.FMP_API_KEY || "";
 
+  /* Which providers run is a decision recorded in sources.json, not a side
+     effect of which secrets happen to be set — otherwise setting FMP_API_KEY
+     for something else would quietly switch ten names on. */
+  const enabled = Array.isArray(cfg.providers) && cfg.providers.length
+    ? new Set(cfg.providers) : new Set(["edgar", "fmp"]);
+  console.log(`providers enabled: ${[...enabled].join(", ")}`);
+
   const names = Object.entries(cfg.names).filter(([tk]) => !only || only.split(",").includes(tk));
-  let ok = 0, skipped = 0, failed = 0;
+  let ok = 0, skipped = 0, failed = 0, off = 0;
 
   for (const [tk, src] of names) {
+    if (!enabled.has(src.provider)) { off++; continue; }
     try {
       let fin;
       if (src.provider === "edgar") {
-        if (!src.cik) { console.log(`skip  ${tk}  no CIK in sources.json — look it up rather than guess`); skipped++; continue; }
+        if (!src.cik) { console.log(`skip  ${tk}  no CIK yet — run scripts/resolve-ciks.js`); skipped++; continue; }
         fin = await fromEdgar(src.cik);
       } else if (src.provider === "fmp") {
         if (!fmpKey) { console.log(`skip  ${tk}  FMP_API_KEY not set`); skipped++; continue; }
@@ -252,6 +260,8 @@ async function main() {
   }
 
   console.log(`\n${ok} fetched, ${skipped} skipped, ${failed} failed, ${Object.keys(out).length} names in the deck`);
+  if (off) console.log(`${off} name(s) on a provider that is off in sources.json — `
+    + `add it to "providers" to turn them on`);
   if (dry) { console.log("--dry-run: nothing written"); return; }
 
   const next = spliceFin(html, out);
