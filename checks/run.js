@@ -15,7 +15,7 @@ const path = require("path");
 const ROOT = path.resolve(__dirname, "..");
 const FILE = path.join(ROOT, "affinity-ops-deck.html");
 const ORDER = ["overflow", "charts", "index-labels", "index-anchors",
-               "routing", "crosshair", "sourced", "splice", "interact", "rest"];
+               "routing", "crosshair", "sourced", "splice", "ciks", "interact", "rest"];
 
 const wanted = process.argv.slice(2).filter(a => !a.startsWith("-"));
 const checks = wanted.length ? wanted : ORDER;

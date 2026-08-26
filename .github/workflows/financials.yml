@@ -38,6 +38,17 @@ jobs:
         with:
           node-version: "22"
 
+      # Nobody types a CIK. A wrong one does not error — it fetches a different
+      # company's accounts under the right ticker — so the SEC's own ticker map
+      # is the authority, and the registrant name is checked against the company
+      # the deck thinks it is before a number is accepted.
+      - name: Resolve any missing CIKs
+        env:
+          SEC_USER_AGENT: ${{ vars.SEC_USER_AGENT }}
+        run: |
+          node scripts/resolve-ciks.js \
+            ${{ inputs.dry_run && '--dry-run' || '' }}
+
       - name: Fetch headline figures
         env:
           # SEC asks for a declared contact and rate limits on it. Set this as
@@ -56,18 +67,18 @@ jobs:
         run: |
           npm i --no-save playwright@1.56.1 >/dev/null 2>&1
           npx playwright install --with-deps chromium >/dev/null 2>&1
-          node checks/run.js splice sourced overflow
+          node checks/run.js splice sourced ciks overflow
 
       - name: Commit if anything moved
         if: ${{ !inputs.dry_run }}
         run: |
-          if git diff --quiet -- affinity-ops-deck.html; then
+          if git diff --quiet -- affinity-ops-deck.html scripts/sources.json; then
             echo "no change"
             exit 0
           fi
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add affinity-ops-deck.html
+          git add affinity-ops-deck.html scripts/sources.json
           git commit -m "Refresh the basket's reported figures
 
           Written by scripts/refresh-financials.js. Headline figures only, from
