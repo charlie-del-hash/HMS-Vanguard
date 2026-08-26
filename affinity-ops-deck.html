@@ -1927,6 +1927,27 @@ function barChart(rows, xk, yk, label = "Reports published by desk", nk, act, w)
     </svg>`;
 }
 
+/* A chart opts into the hover readout by carrying data-pts and one of these
+   layers. Both hooks used to be ids — #pricechart and #ph — which is exactly
+   why the coverage basket and the side-panel chart had no readout: two ids
+   cannot coexist in one document, so only the market's price chart could ever
+   have one. They are classes now, and the geometry travels with the chart, so
+   the handler reads the frame it is actually drawn in. */
+function crosshairLayer(T, ih, col, col2){
+  return `<g class="ph" opacity="0" pointer-events="none">
+      <line class="ph-line" y1="${T}" y2="${(T + ih).toFixed(1)}" stroke="${C.axis}" stroke-width="1" stroke-dasharray="3 3"/>
+      ${col2 ? `<circle class="ph-dot2" r="3.4" fill="${col2}" stroke="${C.marker}" stroke-width="1.6"/>` : ""}
+      <circle class="ph-dot" r="4" fill="${col}" stroke="${C.marker}" stroke-width="1.6"/>
+      <rect class="ph-box" y="${T - 4}" height="16" rx="3" fill="${C.label}" opacity=".92"/>
+      <text class="ph-lab" y="${T + 7.5}" text-anchor="middle" font-size="9.5" font-weight="700"
+            font-family="${MONO_SVG}" fill="${C.marker}"></text>
+    </g>`;
+}
+/* the payload rides in a single-quoted attribute, so the quote and the two
+   characters that could end the attribute or open a tag are escaped */
+const attrJSON = o => JSON.stringify(o)
+  .replace(/&/g, "&amp;").replace(/'/g, "&#39;").replace(/</g, "&lt;");
+
 /* Does a line segment cross an axis-aligned box? Used to keep a chart's
    figures off the lines they describe. Cheap enough to run per candidate
    position: four corner crossings plus the two containment cases. */
@@ -2108,7 +2129,18 @@ function indexChart(rows, xk, yk, base, label, box, ov){
       ${showX ? `<text x="${px.toFixed(1)}" y="${H - 9}" text-anchor="middle" font-size="11.5" fill="${C.axis}">${esc(r[xk])}</text>` : ""}`;
   }).join("");
 
-  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label || "")}">
+  /* The readout names the week and the level, and where a second series shares
+     the frame it names both — reading one name against the basket at a given
+     week is the whole point of overlaying them. Below about 380px the frame is
+     narrower than that sentence, so it drops back to the basket alone. */
+  const phPts = rows.map((r, j) => ({
+    x:+pt[j][0].toFixed(1), y:+pt[j][1].toFixed(1),
+    oy:opt ? +opt[j][1].toFixed(1) : null,
+    t:`${r[xk]} · ${r[yk].toFixed(dp)}`
+      + (ovr && W >= 380 ? ` · ${ovr.name} ${ovr.rows[j][yk].toFixed(dp)}` : "")
+  }));
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label || "")}"
+       data-pts='${attrJSON(phPts)}'>
       <defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="${col}" stop-opacity=".22"/>
         <stop offset="100%" stop-color="${col}" stop-opacity=".01"/></linearGradient></defs>
@@ -2120,7 +2152,8 @@ function indexChart(rows, xk, yk, base, label, box, ov){
               letter-spacing="1" fill="${C.axis}">${capTxt}</text>`}
       ${ovLayer}
       <path d="${line}" fill="none" stroke="${col}" stroke-width="2.4" stroke-linejoin="round"/>
-      ${marks}</svg>`;
+      ${marks}
+      ${crosshairLayer(T, ih, col, ovr && ovr.color)}</svg>`;
 }
 
 /* The index chart in its two homes. Both take their width from the slot that
@@ -2368,7 +2401,7 @@ const basketLegend = (e, ovColor) => `<div class="eqleg">
 </div>`;
 
 /* price chart – dashed 50c parity line, tinted regions above and
-   below it, and a hover crosshair driven by #pricechart's data-pts */
+   below it, and a hover crosshair driven by its own data-pts */
 const PC = {W:460, H:190, L:32, R:46, T:20, B:32};
 function priceChart(m, w){
   const {H, L, R, T, B} = PC;
@@ -2393,9 +2426,11 @@ function priceChart(m, w){
     : `<circle cx="${xN}" cy="${pts.at(-1).y}" r="3.6" fill="${C.marker}" stroke="${col}" stroke-width="2"/>`;
 
   const last = pts.at(-1);
+  /* the readout is phrased where the chart is, not in the handler — that is
+     what lets three charts of different shapes share one crosshair */
   return `<svg class="chart" id="pricechart" viewBox="0 0 ${W} ${H}" role="img"
        aria-label="YES price history in cents, ${rows[0].t} to ${rows.at(-1).t}"
-       data-pts='${JSON.stringify(pts)}'>
+       data-pts='${attrJSON(pts.map(p => ({x:p.x, y:p.y, t:`${p.t} · ${p.p}c`})))}'>
       <defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="${col}" stop-opacity=".22"/>
         <stop offset="100%" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>
@@ -2418,13 +2453,7 @@ function priceChart(m, w){
               fill="${C.axis}">${esc(rows[0].t)}</text>
         <text x="${xN}" y="${H - 8}" text-anchor="end" font-size="9.5" font-family="${MONO_SVG}"
               fill="${C.axis}">${esc(rows.at(-1).t)}</text>` : ""}
-      <g id="ph" opacity="0" pointer-events="none">
-        <line id="ph-line" y1="${T}" y2="${T + ih}" stroke="${C.axis}" stroke-width="1" stroke-dasharray="3 3"/>
-        <circle id="ph-dot" r="4" fill="${col}" stroke="${C.marker}" stroke-width="1.6"/>
-        <rect id="ph-box" y="${T - 4}" height="16" rx="3" fill="${C.label}" opacity=".92"/>
-        <text id="ph-lab" y="${T + 7.5}" text-anchor="middle" font-size="9.5" font-weight="700"
-              font-family="${MONO_SVG}" fill="${C.marker}"></text>
-      </g>
+      ${crosshairLayer(T, ih, col)}
     </svg>`;
 }
 
@@ -3672,6 +3701,9 @@ function render(){
      the document — before the scroll restore, so the heights have settled by
      the time a scrollTop is written back */
   chartSlots = []; chartSeq = 0;
+  /* the crosshair lives inside a chart, and the charts are about to be
+     replaced — drop the handle with them rather than hold a detached node */
+  phOn = null;
   document.getElementById("mainbody").innerHTML = (VIEWS[S.tab] || predictView)();
   paintCharts();
 
@@ -3708,36 +3740,58 @@ function flashChanges(){
 }
 
 /* ── price chart crosshair ───────────────────────────────────── */
+/* One crosshair, three charts. A chart opts in by carrying data-pts and a
+   .ph layer; the handler reads the frame it is actually drawn in, so nothing
+   here knows a constant. Only one is ever lit, and the one that was lit is
+   held rather than looked up again — this runs at pointer rate. */
+let phOn = null;
+function hideCrosshair(){
+  if(phOn){ phOn.setAttribute("opacity", "0"); phOn = null; }
+}
 function moveCrosshair(e){
-  const g = document.getElementById("ph");
-  if(!g) return;
-  const svg = e.target.closest ? e.target.closest("#pricechart") : null;
-  if(!svg){ g.setAttribute("opacity", "0"); return; }
+  const svg = e.target.closest ? e.target.closest("svg.chart[data-pts]") : null;
+  if(!svg){ hideCrosshair(); return; }
+  const g = svg.querySelector(".ph");
+  if(!g){ hideCrosshair(); return; }
+  if(phOn && phOn !== g) hideCrosshair();
 
   const pts = svg._pts || (svg._pts = JSON.parse(svg.dataset.pts));
   const box = svg.getBoundingClientRect();
   if(!box.width) return;
   /* the chart is sized from its slot now, so the mapping reads the frame it is
      actually drawn in rather than the constant it used to be drawn at */
-  const VW = svg.viewBox.baseVal.width || PC.W;
+  const VW = svg.viewBox.baseVal.width;
   const ux = (e.clientX - box.left) / box.width * VW;
   const near = pts.reduce((best, p) => Math.abs(p.x - ux) < Math.abs(best.x - ux) ? p : best, pts[0]);
 
-  const text = `${near.t} · ${near.p}c`;
-  const w = Math.max(40, text.length * 5.6 + 14);
-  const cx = clamp(near.x, PC.L + w / 2, VW - w / 2 - 2);
+  /* the plate used to be sized at 5.6px a character, which is the estimate the
+     scatter was already caught out by. It is measured now, and it has to be:
+     the readout carries a ticker and two figures on the basket, not four
+     characters of cents. */
+  const w = Math.max(40, textWidth(near.t, 9.5, 700) + 16);
+  const cx = clamp(near.x, w / 2 + 2, VW - w / 2 - 2);
 
-  g.querySelector("#ph-line").setAttribute("x1", near.x);
-  g.querySelector("#ph-line").setAttribute("x2", near.x);
-  g.querySelector("#ph-dot").setAttribute("cx", near.x);
-  g.querySelector("#ph-dot").setAttribute("cy", near.y);
-  const rect = g.querySelector("#ph-box");
+  const ln = g.querySelector(".ph-line");
+  ln.setAttribute("x1", near.x);
+  ln.setAttribute("x2", near.x);
+  const dot = g.querySelector(".ph-dot");
+  dot.setAttribute("cx", near.x);
+  dot.setAttribute("cy", near.y);
+  /* where the readout names two series, both get a dot — a plate that says
+     FRO 111.3 with nothing marking it is asking to be read off the wrong line */
+  const dot2 = g.querySelector(".ph-dot2");
+  if(dot2 && near.oy != null){
+    dot2.setAttribute("cx", near.x);
+    dot2.setAttribute("cy", near.oy);
+  }
+  const rect = g.querySelector(".ph-box");
   rect.setAttribute("x", cx - w / 2);
   rect.setAttribute("width", w);
-  const lab = g.querySelector("#ph-lab");
+  const lab = g.querySelector(".ph-lab");
   lab.setAttribute("x", cx);
-  lab.textContent = text;
+  lab.textContent = near.t;
   g.setAttribute("opacity", "1");
+  phOn = g;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -3916,9 +3970,7 @@ app.addEventListener("change", e => {
 });
 
 app.addEventListener("pointermove", moveCrosshair);
-document.addEventListener("pointerleave", () => {
-  document.getElementById("ph")?.setAttribute("opacity", "0");
-});
+document.addEventListener("pointerleave", hideCrosshair);
 
 /* Boot order matters. The store is the default and the hash is the
    instruction, so the store is read first and a route that parses overwrites
