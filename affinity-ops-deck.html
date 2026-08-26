@@ -618,6 +618,15 @@ td.mid,th:first-child{padding-right:0}
 .subtabs{display:flex;align-items:center;gap:13px;flex-wrap:wrap;margin-bottom:18px}
 .subtabs .note{font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--small);
   text-transform:uppercase}
+/* Placeholder data has to say so where the figures are, not in the last line
+   of a footnote under them. The chip rides in the tab row above the tiles and
+   the line sits directly under them, so the first confident number on the tab
+   is already qualified by the time a reader reaches it. */
+.subtabs .chip.mute{text-transform:none;letter-spacing:0}
+.stats-note{display:flex;gap:8px;align-items:baseline;margin:-6px 0 18px;
+  font-size:11.5px;line-height:1.55;color:var(--small)}
+.stats-note b{font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--small);white-space:nowrap;flex:none;padding-top:1px}
 
 .eqrow td{transition:background var(--t)}
 .eqrow:hover td{background:var(--tint2)}
@@ -1299,6 +1308,11 @@ const segYTD  = k => {
   return c ? +(segRows(k).reduce((a, e) => a + e.mcap * e.ytd, 0) / c).toFixed(1) : 0;
 };
 const EQ_YTD = EQ_SEGS.map(g => ({s:g.short, v:segYTD(g.k), n:segRows(g.k).length, k:g.k}));
+/* The basket's own year, equal-weighted — which is how the basket is defined,
+   and not the same thing as the cap-weighted segment returns beside it. Rolled
+   up from the rows like everything else, so it cannot come to disagree with
+   the column it is compared against. */
+const BASKET_YTD = +(EQUITIES.reduce((a, e) => a + e.ytd, 0) / EQUITIES.length).toFixed(1);
 
 /* A name in the basket and a question on the prediction desk are often
    the same view expressed twice. Where that holds, the detail panel
@@ -1520,6 +1534,125 @@ let noteTimer = null;
 function applyTheme(){
   document.documentElement.setAttribute("data-theme", S.theme);
   try{ window.localStorage.setItem(THEME_KEY, S.theme); }catch{}
+}
+
+/* ── The view survives a reload; the book does not ──────────────
+   Which module is open, what is filtered, sorted, searched and selected all
+   come back. Balance, positions, the log and the open ticket deliberately do
+   not: restoring those would promise a portfolio the deck does not keep, and
+   a stale one is worse than an empty one. Same localStorage path the theme
+   already uses, and the same try/catch — a file:// origin refuses storage
+   outright in some browsers, so every read and write has to survive being
+   turned down. */
+const VIEW_KEY = "affinity-ops-view";
+const PERSIST = ["tab", "selId", "mktFilter", "mktCat", "sort", "query",
+                 "convoFilter", "selConvo",
+                 "rtab", "eqSeg", "eqSort", "eqSel", "eqPanel", "eqQuery"];
+
+/* Everything read back is checked against what the deck actually holds. A
+   ticker that has left the basket, a market that has been removed, a hash
+   somebody typed by hand — none of them may render a broken view, so an
+   unknown value falls through to the default rather than into the view. */
+const isStr = x => typeof x === "string";
+function restoreView(){
+  let v = null;
+  try{
+    const raw = window.localStorage.getItem(VIEW_KEY);
+    if(raw) v = JSON.parse(raw);
+  }catch{}
+  if(!v || typeof v !== "object") return;
+  const ok = {
+    tab:        x => isStr(x) && Object.prototype.hasOwnProperty.call(VIEWS, x),
+    selId:      x => S.markets.some(m => m.id === x),
+    mktFilter:  x => ["open", "settled", "all"].includes(x),
+    mktCat:     x => x === "all" || CATS.includes(x),
+    sort:       x => ["closes", "vol", "price"].includes(x),
+    query:      x => isStr(x) && x.length <= 120,
+    convoFilter:x => x === "all" || Object.prototype.hasOwnProperty.call(CHANNELS, x),
+    selConvo:   x => S.convos.some(c => c.id === x),
+    rtab:       x => RTABS.some(([k]) => k === x),
+    eqSeg:      x => x === "all" || EQ_SEGS.some(g => g.k === x),
+    eqSort:     x => isStr(x) && Object.prototype.hasOwnProperty.call(EQ_SORTS, x),
+    eqSel:      x => x === null || EQUITIES.some(e => e.tk === x),
+    eqPanel:    x => typeof x === "boolean",
+    eqQuery:    x => isStr(x) && x.length <= 120
+  };
+  PERSIST.forEach(k => { if(ok[k](v[k])) S[k] = v[k]; });
+}
+
+/* ── Hash routing ──────────────────────────────────────────────
+   #predict/7, #comms/3, #library, #equities/FRO. A constituent can now be
+   linked from a desk note, which was the whole ask; the rest of the deck gets
+   it for free because the same two functions cover every module.
+
+   The URL is written with replaceState, not by assigning location.hash: the
+   deck's state changes are selections and filters, and one history entry per
+   selection turns the back button into an undo stack nobody asked for. The
+   address bar still holds a link that works. */
+function routeOf(){
+  if(S.tab === "reports")
+    return S.rtab === "equities" ? (S.eqSel ? `equities/${S.eqSel}` : "equities") : "library";
+  if(S.tab === "comms") return `comms/${S.selConvo}`;
+  return `predict/${S.selId}`;
+}
+
+/* A route is an instruction from outside, so it is validated exactly as hard
+   as the store is. Anything it does not recognise leaves the state alone. */
+function applyRoute(hash){
+  const [head, arg] = String(hash || "").replace(/^#\/?/, "").split("/");
+  if(!head) return false;
+  if(head === "predict" || head === "comms"){
+    S.tab = head;
+    const id = Number(arg);
+    if(arg && Number.isFinite(id)){
+      if(head === "predict" && S.markets.some(m => m.id === id)) S.selId = id;
+      if(head === "comms"   && S.convos.some(c => c.id === id))  S.selConvo = id;
+    }
+    return true;
+  }
+  /* the module has a name of its own, and somebody will type it. It lands on
+     whichever of the two tabs was already open rather than forcing one. */
+  if(head === "reports"){ S.tab = "reports"; return true; }
+  if(head === "library" || head === "equities"){
+    S.tab = "reports";
+    S.rtab = head === "equities" ? "equities" : "library";
+    if(head === "equities" && arg !== undefined){
+      let tk = arg;
+      try{ tk = decodeURIComponent(arg); }catch{}
+      tk = tk.toUpperCase();
+      /* A link to a name the filter would hide is still a link to that name,
+         so the filter and the search widen rather than land on an empty table.
+         A name that has left the basket lands on the basket with nothing
+         selected — showing the reader a different name than the one they
+         followed would be the worse answer. */
+      S.eqSel = EQUITIES.some(e => e.tk === tk) ? tk : null;
+      S.eqSeg = "all";
+      S.eqQuery = "";
+    }
+    return true;
+  }
+  return false;
+}
+
+/* Both the URL and the store follow the view, and both are written from
+   render() because that is the one funnel every state change already goes
+   through. Neither writes unless what it carries actually moved: render()
+   also runs on a toast expiring, and a storage write per toast tick is waste
+   the deck does not need to spend. */
+let lastRoute = null, lastSaved = null;
+function syncRoute(){
+  const r = routeOf();
+  if(r !== lastRoute){
+    lastRoute = r;
+    try{ history.replaceState(null, "", `#${r}`); }catch{}
+  }
+  const out = {};
+  PERSIST.forEach(k => { out[k] = S[k]; });
+  const j = JSON.stringify(out);
+  if(j !== lastSaved){
+    lastSaved = j;
+    try{ window.localStorage.setItem(VIEW_KEY, j); }catch{}
+  }
 }
 /* The deck had no live region at all, so a filled trade and a selected name
    were both silent. One region in the shell serves everything: it is mounted
@@ -1808,6 +1941,49 @@ function barChart(rows, xk, yk, label = "Reports published by desk", nk, act, w)
     </svg>`;
 }
 
+/* A chart opts into the hover readout by carrying data-pts and one of these
+   layers. Both hooks used to be ids — #pricechart and #ph — which is exactly
+   why the coverage basket and the side-panel chart had no readout: two ids
+   cannot coexist in one document, so only the market's price chart could ever
+   have one. They are classes now, and the geometry travels with the chart, so
+   the handler reads the frame it is actually drawn in. */
+function crosshairLayer(T, ih, col, col2){
+  return `<g class="ph" opacity="0" pointer-events="none">
+      <line class="ph-line" y1="${T}" y2="${(T + ih).toFixed(1)}" stroke="${C.axis}" stroke-width="1" stroke-dasharray="3 3"/>
+      ${col2 ? `<circle class="ph-dot2" r="3.4" fill="${col2}" stroke="${C.marker}" stroke-width="1.6"/>` : ""}
+      <circle class="ph-dot" r="4" fill="${col}" stroke="${C.marker}" stroke-width="1.6"/>
+      <rect class="ph-box" y="${T - 4}" height="16" rx="3" fill="${C.label}" opacity=".92"/>
+      <text class="ph-lab" y="${T + 7.5}" text-anchor="middle" font-size="9.5" font-weight="700"
+            font-family="${MONO_SVG}" fill="${C.marker}"></text>
+    </g>`;
+}
+/* the payload rides in a single-quoted attribute, so the quote and the two
+   characters that could end the attribute or open a tag are escaped */
+const attrJSON = o => JSON.stringify(o)
+  .replace(/&/g, "&amp;").replace(/'/g, "&#39;").replace(/</g, "&lt;");
+
+/* Does a line segment cross an axis-aligned box? Used to keep a chart's
+   figures off the lines they describe. Cheap enough to run per candidate
+   position: four corner crossings plus the two containment cases. */
+function segHitsBox(p, q, r){
+  const inside = t => t[0] >= r.x1 && t[0] <= r.x2 && t[1] >= r.y1 && t[1] <= r.y2;
+  if(inside(p) || inside(q)) return true;
+  const ccw = (a, b, c) => (c[1] - a[1]) * (b[0] - a[0]) > (b[1] - a[1]) * (c[0] - a[0]);
+  const cross = (a, b, c, d) => ccw(a, c, d) !== ccw(b, c, d) && ccw(a, b, c) !== ccw(a, b, d);
+  const k = [[r.x1, r.y1], [r.x2, r.y1], [r.x2, r.y2], [r.x1, r.y2]];
+  for(let i = 0; i < 4; i++) if(cross(p, q, k[i], k[(i + 1) % 4])) return true;
+  return false;
+}
+const boxHitsBox = (a, b) => a.x1 < b.x2 && a.x2 > b.x1 && a.y1 < b.y2 && a.y2 > b.y1;
+/* getBBox on a <text> returns the em box, not the ink: measured across this
+   deck's face it runs 0.96x the font size above the baseline and 0.24x below.
+   Placement uses the same box the checks measure, so the two cannot disagree. */
+const textBox = (x, y, w, px, anchor = "middle") => ({
+  x1: anchor === "end" ? x - w : anchor === "start" ? x : x - w / 2,
+  x2: anchor === "end" ? x : anchor === "start" ? x + w : x + w / 2,
+  y1: y - px * 0.96, y2: y + px * 0.24
+});
+
 /* index chart – a rebased series lives in a narrow band around its base,
    so areaChart's zero baseline would spend the whole frame on empty air.
    This one pads the observed range instead and keeps the rebase line as
@@ -1839,18 +2015,49 @@ function indexChart(rows, xk, yk, base, label, box, ov){
      the fill does not flip on a single down week */
   const col = rows.at(-1)[yk] >= (base == null ? rows[0][yk] : base) ? C.pos : C.neg;
   const dp = Math.abs(hi0) >= 1000 ? 0 : 1;
-  const line = rows.map((r, j) => `${j ? "L" : "M"}${xs(j).toFixed(1)} ${ys(r[yk]).toFixed(1)}`).join(" ");
-  const area = `${line} L${xs(rows.length - 1).toFixed(1)} ${(T + ih).toFixed(1)}`
+  const pt = rows.map((r, j) => [xs(j), ys(r[yk])]);
+  const opt = ovr ? ovr.rows.map((r, j) => [xs(j), ys(r[yk])]) : null;
+  const line = pt.map(([x, y], j) => `${j ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
+  const area = `${line} L${xs(lastIdx).toFixed(1)} ${(T + ih).toFixed(1)}`
     + ` L${xs(0).toFixed(1)} ${(T + ih).toFixed(1)} Z`;
-  const marks = rows.map((r, j) => {
-    const x = xs(j).toFixed(1), y = ys(r[yk]);
-    const showV = allVals || j === 0 || j === lastIdx;
-    const showX = j % xEvery === 0 || j === lastIdx;
-    return `<circle cx="${x}" cy="${y.toFixed(1)}" r="4" fill="${C.marker}" stroke="${col}" stroke-width="2"/>
-      ${showV ? `<text x="${x}" y="${(y - 13).toFixed(1)}" text-anchor="middle" font-size="12.5" font-weight="700"
-            fill="${C.label}">${r[yk].toFixed(dp)}</text>` : ""}
-      ${showX ? `<text x="${x}" y="${H - 9}" text-anchor="middle" font-size="11.5" fill="${C.axis}">${esc(r[xk])}</text>` : ""}`;
-  }).join("");
+
+  /* The rebase rule stops short of its own caption rather than running under
+     it. The caption is measured, not assumed: at the widest right margin
+     "REBASE 100" is wider than the margin itself, so a fixed end put the rule
+     through the word. */
+  const capTxt = base == null ? "" : `${R < 62 ? "" : "REBASE "}${base}`;
+  const capW = capTxt ? textWidth(capTxt, 9.5, 400, 1) : 0;
+  const baseY = base == null ? 0 : ys(base);
+  const ruleX2 = Math.max(L + 12, Math.min(W - R + 8, W - 6 - capW - 6));
+
+  /* Everything a figure must not land on, collected before a single figure is
+     placed: both series, the rebase rule, every mark, the x labels, the rebase
+     caption and the overlay's ticker. A fixed 13px above the mark was right
+     for one line and wrong the moment a second shared the frame — with a name
+     overlaid on the basket, 102.9, 102.8, 104.6 and 106.2 all sat on its line,
+     and the first figure hung off the left edge of the frame. */
+  const segs = [], boxes = [];
+  const addSegs = ps => { for(let i = 0; i < ps.length - 1; i++) segs.push([ps[i], ps[i + 1]]); };
+  addSegs(pt);
+  if(opt) addSegs(opt);
+  if(base != null) segs.push([[L, baseY], [ruleX2, baseY]]);
+  pt.forEach(([x, y]) => boxes.push({x1:x - 5.5, x2:x + 5.5, y1:y - 5.5, y2:y + 5.5}));
+  rows.forEach((r, j) => {
+    if(j % xEvery === 0 || j === lastIdx)
+      boxes.push(textBox(xs(j), H - 9, textWidth(String(r[xk]), 11.5, 400), 11.5));
+  });
+  if(capTxt) boxes.push(textBox(W - 6, baseY + 3.5, capW, 9.5, "end"));
+
+  /* Nothing is placed below this: the x labels own the bottom band, and a
+     figure that reached it would be read as one of them. */
+  const floorY = H - 9 - 11.5 * 0.96 - 1;
+  const free = bx => {
+    if(bx.x1 < 2 || bx.x2 > W - 2 || bx.y1 < 3 || bx.y2 > floorY) return false;
+    /* the lines are stroked, so a box that only just clears the centreline
+       still touches the stroke. Two pixels covers the widest of them. */
+    const wide = {x1:bx.x1 - 2, x2:bx.x2 + 2, y1:bx.y1 - 2, y2:bx.y2 + 2};
+    return !segs.some(([p, q]) => segHitsBox(p, q, wide)) && !boxes.some(b => boxHitsBox(bx, b));
+  };
 
   /* The overlay is the quiet one: a thinner line, no fill and no per-point
      figures, so the basket keeps the reading and the name is the comparison
@@ -1858,38 +2065,109 @@ function indexChart(rows, xk, yk, base, label, box, ov){
      that ticker is set in the text token, not in the segment hue: the six
      category colours are validated as marks and four of the six go under AA
      the moment they are used as small text. The end dot is the mark and wears
-     the hue; the label beside it is the name. That label and the REBASE
-     caption share the right margin, so where they would land on each other
-     the ticker steps clear. */
+     the hue; the label beside it is the name.
+
+     Where the ticker goes is measured, not assumed. It used to be parked at
+     the dot's right shoulder, which is wider than the margin it sits in for
+     any ticker longer than about five characters — MAERSK-B measures 61px
+     against a 42px margin at 320, and ran off the frame. So it takes the
+     shoulder where the shoulder fits, and otherwise sits above the dot,
+     right-aligned to the frame, stepping until it is clear of the basket
+     line and the REBASE caption. */
   let ovLayer = "";
   if(ovr){
-    const oy = j => ys(ovr.rows[j][yk]);
-    const oline = ovr.rows.map((r, j) => `${j ? "L" : "M"}${xs(j).toFixed(1)} ${oy(j).toFixed(1)}`).join(" ");
-    const ex = xs(ovr.rows.length - 1), ey = oy(ovr.rows.length - 1);
-    let ly = ey + 3.4;
-    if(base != null && Math.abs(ly - (ys(base) + 3.5)) < 11){
-      ly = ey < ys(base) ? ys(base) - 8.5 : ys(base) + 15.5;
+    const oline = opt.map(([x, y], j) => `${j ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
+    const [ex, ey] = opt[lastIdx];
+    const otw = textWidth(ovr.name, 10.5, 700);
+    boxes.push({x1:ex - 4.5, x2:ex + 4.5, y1:ey - 4.5, y2:ey + 4.5});
+    const cands = ex + 7 + otw <= W - 3
+      ? [{x:ex + 7, a:"start", dy:3.4}, {x:ex + 7, a:"start", dy:-11}, {x:ex + 7, a:"start", dy:16}]
+      : [{x:W - 3, a:"end", dy:-12}, {x:W - 3, a:"end", dy:17}, {x:W - 3, a:"end", dy:-25}, {x:W - 3, a:"end", dy:30}];
+    let put = null;
+    for(const c of cands){
+      const y = clamp(ey + c.dy, T + 8, T + ih + 9);
+      const bx = textBox(c.x, y, otw, 10.5, c.a);
+      if(!free(bx)) continue;
+      put = {...c, y, bx}; break;
     }
-    ly = clamp(ly, T + 8, T + ih + 9);
+    /* the second series has to be named, so the last resort is the first
+       candidate pulled inside the frame rather than no label at all */
+    if(!put){
+      const c = cands[0];
+      const y = clamp(ey + c.dy, T + 12, floorY - 3);
+      const x = c.a === "end" ? clamp(c.x, otw + 3, W - 3) : clamp(c.x, 3, W - 3 - otw);
+      put = {...c, x, y, bx:textBox(x, y, otw, 10.5, c.a)};
+    }
+    boxes.push(put.bx);
     ovLayer = `<path d="${oline}" fill="none" stroke="${ovr.color}" stroke-width="1.8"
         stroke-linejoin="round" stroke-linecap="round"/>
       <circle cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="3.2" fill="${ovr.color}"/>
-      <text x="${(ex + 7).toFixed(1)}" y="${ly.toFixed(1)}" font-size="10.5" font-weight="700"
+      <text x="${put.x.toFixed(1)}" y="${put.y.toFixed(1)}" text-anchor="${put.a}" font-size="10.5" font-weight="700"
             fill="${C.label}">${esc(ovr.name)}</text>`;
   }
-  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label || "")}">
+
+  /* Which side the figures sit on is decided once for the whole series so they
+     read as a set: with a second line running above the basket they go below
+     it, and the other way round. A figure whose place is taken — by a crossing
+     line, the frame, a mark or a figure already down — steps further out on
+     the same side before it changes sides, because two depths on one side
+     still read as a set and one figure alone on the other does not. It is left
+     off only once the frame has genuinely run out of room. Ends first: the two
+     figures a reader compares are the ones the window opened and closed at. */
+  const ovAbove = opt ? opt.filter(([, y], j) => y < pt[j][1]).length > rows.length / 2 : false;
+  const dys = ovAbove ? [18, 31, 44, -13, -26] : [-13, -26, -39, 18, 31];
+  const order = [lastIdx, 0].concat(rows.map((r, j) => j).filter(j => j !== 0 && j !== lastIdx));
+  const placed = new Array(rows.length).fill(null);
+  order.forEach(j => {
+    if(!(allVals || j === 0 || j === lastIdx)) return;
+    const t = rows[j][yk].toFixed(dp);
+    const tw = textWidth(t, 12.5, 700);
+    const cx = clamp(pt[j][0], tw / 2 + 3, W - 3 - tw / 2);
+    for(const dy of dys){
+      const y = pt[j][1] + dy;
+      const bx = textBox(cx, y, tw, 12.5);
+      if(!free(bx)) continue;
+      boxes.push(bx);
+      placed[j] = {t, x:cx, y};
+      break;
+    }
+  });
+
+  const marks = rows.map((r, j) => {
+    const [px, py] = pt[j];
+    const v = placed[j];
+    const showX = j % xEvery === 0 || j === lastIdx;
+    return `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="4" fill="${C.marker}" stroke="${col}" stroke-width="2"/>
+      ${v ? `<text x="${v.x.toFixed(1)}" y="${v.y.toFixed(1)}" text-anchor="middle" font-size="12.5" font-weight="700"
+            fill="${C.label}">${v.t}</text>` : ""}
+      ${showX ? `<text x="${px.toFixed(1)}" y="${H - 9}" text-anchor="middle" font-size="11.5" fill="${C.axis}">${esc(r[xk])}</text>` : ""}`;
+  }).join("");
+
+  /* The readout names the week and the level, and where a second series shares
+     the frame it names both — reading one name against the basket at a given
+     week is the whole point of overlaying them. Below about 380px the frame is
+     narrower than that sentence, so it drops back to the basket alone. */
+  const phPts = rows.map((r, j) => ({
+    x:+pt[j][0].toFixed(1), y:+pt[j][1].toFixed(1),
+    oy:opt ? +opt[j][1].toFixed(1) : null,
+    t:`${r[xk]} · ${r[yk].toFixed(dp)}`
+      + (ovr && W >= 380 ? ` · ${ovr.name} ${ovr.rows[j][yk].toFixed(dp)}` : "")
+  }));
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label || "")}"
+       data-pts='${attrJSON(phPts)}'>
       <defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="${col}" stop-opacity=".22"/>
         <stop offset="100%" stop-color="${col}" stop-opacity=".01"/></linearGradient></defs>
       <path d="${area}" fill="url(#${id})"/>
       ${base == null ? "" : `
-        <line x1="${L}" y1="${ys(base).toFixed(1)}" x2="${W - R + 8}" y2="${ys(base).toFixed(1)}"
+        <line x1="${L}" y1="${baseY.toFixed(1)}" x2="${ruleX2.toFixed(1)}" y2="${baseY.toFixed(1)}"
               stroke="${C.axis}" stroke-width="1" stroke-dasharray="4 4"/>
-        <text x="${W - 6}" y="${(ys(base) + 3.5).toFixed(1)}" text-anchor="end" font-size="9.5"
-              letter-spacing="1" fill="${C.axis}">${R < 62 ? "" : "REBASE "}${base}</text>`}
+        <text x="${W - 6}" y="${(baseY + 3.5).toFixed(1)}" text-anchor="end" font-size="9.5"
+              letter-spacing="1" fill="${C.axis}">${capTxt}</text>`}
       ${ovLayer}
       <path d="${line}" fill="none" stroke="${col}" stroke-width="2.4" stroke-linejoin="round"/>
-      ${marks}</svg>`;
+      ${marks}
+      ${crosshairLayer(T, ih, col, ovr && ovr.color)}</svg>`;
 }
 
 /* The index chart in its two homes. Both take their width from the slot that
@@ -2137,7 +2415,7 @@ const basketLegend = (e, ovColor) => `<div class="eqleg">
 </div>`;
 
 /* price chart – dashed 50c parity line, tinted regions above and
-   below it, and a hover crosshair driven by #pricechart's data-pts */
+   below it, and a hover crosshair driven by its own data-pts */
 const PC = {W:460, H:190, L:32, R:46, T:20, B:32};
 function priceChart(m, w){
   const {H, L, R, T, B} = PC;
@@ -2162,9 +2440,11 @@ function priceChart(m, w){
     : `<circle cx="${xN}" cy="${pts.at(-1).y}" r="3.6" fill="${C.marker}" stroke="${col}" stroke-width="2"/>`;
 
   const last = pts.at(-1);
+  /* the readout is phrased where the chart is, not in the handler — that is
+     what lets three charts of different shapes share one crosshair */
   return `<svg class="chart" id="pricechart" viewBox="0 0 ${W} ${H}" role="img"
        aria-label="YES price history in cents, ${rows[0].t} to ${rows.at(-1).t}"
-       data-pts='${JSON.stringify(pts)}'>
+       data-pts='${attrJSON(pts.map(p => ({x:p.x, y:p.y, t:`${p.t} · ${p.p}c`})))}'>
       <defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="${col}" stop-opacity=".22"/>
         <stop offset="100%" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>
@@ -2187,13 +2467,7 @@ function priceChart(m, w){
               fill="${C.axis}">${esc(rows[0].t)}</text>
         <text x="${xN}" y="${H - 8}" text-anchor="end" font-size="9.5" font-family="${MONO_SVG}"
               fill="${C.axis}">${esc(rows.at(-1).t)}</text>` : ""}
-      <g id="ph" opacity="0" pointer-events="none">
-        <line id="ph-line" y1="${T}" y2="${T + ih}" stroke="${C.axis}" stroke-width="1" stroke-dasharray="3 3"/>
-        <circle id="ph-dot" r="4" fill="${col}" stroke="${C.marker}" stroke-width="1.6"/>
-        <rect id="ph-box" y="${T - 4}" height="16" rx="3" fill="${C.label}" opacity=".92"/>
-        <text id="ph-lab" y="${T + 7.5}" text-anchor="middle" font-size="9.5" font-weight="700"
-              font-family="${MONO_SVG}" fill="${C.marker}"></text>
-      </g>
+      ${crosshairLayer(T, ih, col)}
     </svg>`;
 }
 
@@ -2965,13 +3239,18 @@ function commsView(){
    ═══════════════════════════════════════════════════════════════ */
 const RTABS = [["library", "Library"], ["equities", "Shipping equities"]];
 
-function subTabs(counts, note){
+/* the chip is the same sentence the table's footnote carries, moved to where
+   the figures are — see F4 in the handoff */
+const INDICATIVE_CHIP = `<span class="chip mute" title="Indicative placeholder data shaped like the
+  quote feed that replaces it. Not a live feed.">Indicative data</span>`;
+
+function subTabs(counts, note, extra = ""){
   return `<div class="subtabs">
     <div class="tabrow" role="group" aria-label="Reports view">
       ${RTABS.map(([v, lab]) => `<button class="tab" id="rtab-${v}" data-act="rtab" data-v="${v}"
           aria-pressed="${S.rtab === v}">${lab}<span class="n">${counts[v]}</span></button>`).join("")}
     </div>
-    <span class="note">${esc(note)}</span></div>`;
+    <span class="note">${esc(note)}</span>${extra}</div>`;
 }
 
 /* Below 1180 the detail panel is not beside the table — it is static and, now,
@@ -3190,6 +3469,11 @@ function eqDetail(e){
     <dl class="gov">
       <dt>NAV per share</dt><dd>${esc(e.ccy)} ${pxTxt(e.nav)} · market cap $${e.mcap.toFixed(2)}bn</dd>
       <dt>Desk view</dt><dd>${esc(e.note)}</dd>
+      <dt>Against the basket</dt><dd>${pctTxt(e.ytd)} year to date against the basket's
+        ${pctTxt(BASKET_YTD)} — ${Math.abs(e.ytd - BASKET_YTD).toFixed(1)} points
+        ${e.ytd >= BASKET_YTD ? "ahead" : "behind"}.</dd>
+      <dt>Source</dt><dd>Indicative placeholder, not a live feed. Shaped like the quote feed that
+        replaces it, so nothing here is a quotable print.</dd>
     </dl>
     ${peers.length ? `<div class="peers">
       <h6>${esc(seg.lab)} peers</h6>
@@ -3208,23 +3492,67 @@ function eqDetail(e){
 
 /* The figures in the copy are pulled from the same rows the charts read,
    so a rewritten paragraph cannot quietly disagree with the bar above it. */
+/* The three written notes, each tagged with the segment it is about. They used
+   to be printed unconditionally, so filtering the basket to car carriers left
+   the panel discussing Hormuz, boxes and dry bulk — three paragraphs about
+   nothing on screen. Their figures still come out of the array; only which of
+   them appear is new. */
+const DESK_NOTES = [
+  {segs:["tank"], h:"Hormuz still sets the tape", p: () =>
+    `The March closure remains the single biggest input into the basket. Crude and product owners
+     have carried it since, and the move is priced as a longer voyage rather than a higher rate —
+     which is why tanker NAVs have run ahead of the freight curve rather than with it.`},
+  {segs:["box"], h:"The boxes are the laggard, and that is the trade", p: () =>
+    `Containers are up ${segYTD("box").toFixed(1)}% year to date, but the dispersion inside the
+     segment is wider than the segment itself. Maersk has raised 2026 guidance twice and still
+     trades at ${pnav(EQUITIES.find(e => e.tk === "MAERSK-B")).toFixed(2)}× NAV; Hapag-Lloyd carries
+     a Middle East cost charge and a premium multiple.`},
+  {segs:["dry"], h:"Dry bulk, quietly", p: () =>
+    `Up ${segYTD("dry").toFixed(1)}% with far less noise than the tankers. The Cape-weighted owners
+     are the cleanest listed expression of the Q4 5TC question sitting on the prediction desk, so
+     the two are worth reading against each other.`}
+];
+
+/* A segment the desk has not written about still has a view, and it is in the
+   array: the cap-weighted return, the spread inside it, how much of it trades
+   above NAV, and the crossing to the prediction desk where one exists. Written
+   the same way as everything else on this tab — computed, so it cannot come to
+   disagree with the table under it. */
+function segNote(g){
+  const rows = segRows(g.k);
+  if(!rows.length) return "";
+  const byY = [...rows].sort((a, b) => b.ytd - a.ytd);
+  const top = byY[0], bot = byY.at(-1);
+  const above = rows.filter(e => pnav(e) > 1).length;
+  const med = median(rows.map(pnav));
+  const yld = rows.reduce((a, e) => a + e.yld, 0) / rows.length;
+  const mk = EQ_LINK[g.k] ? market(EQ_LINK[g.k]) : null;
+  const spread = rows.length > 1
+    ? `the spread inside it runs ${pctTxt(bot.ytd)} to ${pctTxt(top.ytd)} —
+       ${(top.ytd - bot.ytd).toFixed(1)} points between ${esc(bot.tk)} and ${esc(top.tk)}`
+    : `${esc(top.tk)} is the whole of it, at ${pctTxt(top.ytd)}`;
+  return `<div><h6>${esc(g.lab)} · ${rows.length} name${rows.length === 1 ? "" : "s"}</h6>
+    <p>Cap-weighted the segment is ${pctTxt(segYTD(g.k))} year to date, and ${spread}.
+      ${above} of ${rows.length} trade${above === 1 ? "s" : ""} above NAV at a median
+      ${med.toFixed(2)}×, on an average
+      yield of ${yld.toFixed(1)}%.${mk ? ` The prediction desk carries the same view as a
+      question — ${esc(mk.q)} — currently ${yesC(mk)}c.` : ""}</p></div>`;
+}
+
+/* What the desk says about what is on screen. With the whole basket showing,
+   that is the three written notes, as before. Filtered down to one or two
+   segments, the segment is worked out from the array first and only the notes
+   whose subject survives the filter follow it. */
 function deskView(){
-  const mk = EQUITIES.find(e => e.tk === "MAERSK-B");
-  return `<div class="desknote">
-  <div><h6>Hormuz still sets the tape</h6>
-    <p>The March closure remains the single biggest input into the basket. Crude and product owners
-      have carried it since, and the move is priced as a longer voyage rather than a higher rate —
-      which is why tanker NAVs have run ahead of the freight curve rather than with it.</p></div>
-  <div><h6>The boxes are the laggard, and that is the trade</h6>
-    <p>Containers are up ${segYTD("box").toFixed(1)}% year to date, but the dispersion inside the
-      segment is wider than the segment itself. Maersk has raised 2026 guidance twice and still
-      trades at ${pnav(mk).toFixed(2)}× NAV; Hapag-Lloyd carries a Middle East cost charge and a
-      premium multiple.</p></div>
-  <div><h6>Dry bulk, quietly</h6>
-    <p>Up ${segYTD("dry").toFixed(1)}% with far less noise than the tankers. The Cape-weighted owners
-      are the cleanest listed expression of the Q4 5TC question sitting on the prediction desk, so
-      the two are worth reading against each other.</p></div>
-</div>`;
+  const rows = eqShown();
+  if(!rows.length) return `<div class="desknote"><div><h6>Nothing on screen</h6>
+    <p>The filter has emptied the basket, so there is nothing for the desk to read against.
+      Widen the segment or clear the search to bring the coverage list back.</p></div></div>`;
+  const on = EQ_SEGS.filter(g => rows.some(e => e.seg === g.k));
+  const written = DESK_NOTES.filter(n => on.some(g => n.segs.includes(g.k)));
+  const computed = (on.length <= 2 || !written.length) ? on.slice(0, 3).map(segNote) : [];
+  return `<div class="desknote">${computed.join("")}${written
+    .map(n => `<div><h6>${n.h}</h6><p>${n.p()}</p></div>`).join("")}</div>`;
 }
 
 /* The rows currently on screen. The view and the export both read it, so an
@@ -3244,12 +3572,14 @@ function eqCSV(rows){
     const t = String(v ?? "");
     return /[",\r\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t;
   };
-  const head = ["Ticker","Company","Exchange","Currency","Segment","Last","1D %","YTD %",
+  const head = ["Ticker","Company","Exchange","Currency","Segment","Last","1D %","YTD %","vs basket %",
     "Market cap US$bn","NAV per share","P/NAV","EV/EBITDA","Yield %","52w low","52w high",
-    "Vessels","Capacity","Desk view", ...WK.map(w => `${w} close`)];
+    "Vessels","Capacity","Desk view", ...WK.map(w => `${w} close`), "Source"];
+  /* the file leaves the building, so the qualification goes with it — a column
+     rather than a trailing line, because a trailing line is not CSV */
   const body = rows.map(e => [e.tk, e.co, e.ex, e.ccy, (EQ_SEG[e.seg] || {}).lab || "",
-    e.px, e.d1, e.ytd, e.mcap, e.nav, pnav(e).toFixed(4), e.ev, e.yld, e.lo, e.hi,
-    e.fleet, e.cap, e.note, ...e.h].map(cell).join(","));
+    e.px, e.d1, e.ytd, +(e.ytd - BASKET_YTD).toFixed(1), e.mcap, e.nav, pnav(e).toFixed(4), e.ev, e.yld, e.lo, e.hi,
+    e.fleet, e.cap, e.note, ...e.h, "Indicative placeholder, not a live feed"].map(cell).join(","));
   return [head.map(cell).join(","), ...body].join("\r\n");
 }
 
@@ -3349,9 +3679,12 @@ function equitiesView(counts){
   return head("03 · Shipping equities", `${EQUITIES.length} names · ${EQ_SEGS.length} segments`,
       "Shipping equities", "– where the cycle is being priced",
       "A coverage basket of listed owners and terminal operators, run over the same eight-week window as the library.")
-    + subTabs(counts, "W34 · listed coverage")
+    + subTabs(counts, "W34 · listed coverage", INDICATIVE_CHIP)
     + toastView()
     + `<div class="stats">${tiles}</div>`
+    + `<p class="stats-note"><b>Indicative</b><span>Every figure on this tab — prices, NAVs,
+        market caps and the returns computed from them — is placeholder data shaped like the quote
+        feed that replaces it. It is not a live feed, and no figure here should be quoted.</span></p>`
     + `<div class="grid half" style="margin-bottom:18px">
         <div class="panel"><div class="panel-h"><h3>Coverage basket</h3>
           <span class="note">Rebased ${REBASE} · ${BASKET[0].w} to ${BASKET.at(-1).w}</span></div>
@@ -3441,6 +3774,9 @@ function render(){
      the document — before the scroll restore, so the heights have settled by
      the time a scrollTop is written back */
   chartSlots = []; chartSeq = 0;
+  /* the crosshair lives inside a chart, and the charts are about to be
+     replaced — drop the handle with them rather than hold a detached node */
+  phOn = null;
   document.getElementById("mainbody").innerHTML = (VIEWS[S.tab] || predictView)();
   paintCharts();
 
@@ -3462,6 +3798,7 @@ function render(){
 
   syncTicker();
   flashChanges();
+  syncRoute();
 }
 
 /* pulse the YES price of any market whose mark moved since last paint */
@@ -3476,36 +3813,58 @@ function flashChanges(){
 }
 
 /* ── price chart crosshair ───────────────────────────────────── */
+/* One crosshair, three charts. A chart opts in by carrying data-pts and a
+   .ph layer; the handler reads the frame it is actually drawn in, so nothing
+   here knows a constant. Only one is ever lit, and the one that was lit is
+   held rather than looked up again — this runs at pointer rate. */
+let phOn = null;
+function hideCrosshair(){
+  if(phOn){ phOn.setAttribute("opacity", "0"); phOn = null; }
+}
 function moveCrosshair(e){
-  const g = document.getElementById("ph");
-  if(!g) return;
-  const svg = e.target.closest ? e.target.closest("#pricechart") : null;
-  if(!svg){ g.setAttribute("opacity", "0"); return; }
+  const svg = e.target.closest ? e.target.closest("svg.chart[data-pts]") : null;
+  if(!svg){ hideCrosshair(); return; }
+  const g = svg.querySelector(".ph");
+  if(!g){ hideCrosshair(); return; }
+  if(phOn && phOn !== g) hideCrosshair();
 
   const pts = svg._pts || (svg._pts = JSON.parse(svg.dataset.pts));
   const box = svg.getBoundingClientRect();
   if(!box.width) return;
   /* the chart is sized from its slot now, so the mapping reads the frame it is
      actually drawn in rather than the constant it used to be drawn at */
-  const VW = svg.viewBox.baseVal.width || PC.W;
+  const VW = svg.viewBox.baseVal.width;
   const ux = (e.clientX - box.left) / box.width * VW;
   const near = pts.reduce((best, p) => Math.abs(p.x - ux) < Math.abs(best.x - ux) ? p : best, pts[0]);
 
-  const text = `${near.t} · ${near.p}c`;
-  const w = Math.max(40, text.length * 5.6 + 14);
-  const cx = clamp(near.x, PC.L + w / 2, VW - w / 2 - 2);
+  /* the plate used to be sized at 5.6px a character, which is the estimate the
+     scatter was already caught out by. It is measured now, and it has to be:
+     the readout carries a ticker and two figures on the basket, not four
+     characters of cents. */
+  const w = Math.max(40, textWidth(near.t, 9.5, 700) + 16);
+  const cx = clamp(near.x, w / 2 + 2, VW - w / 2 - 2);
 
-  g.querySelector("#ph-line").setAttribute("x1", near.x);
-  g.querySelector("#ph-line").setAttribute("x2", near.x);
-  g.querySelector("#ph-dot").setAttribute("cx", near.x);
-  g.querySelector("#ph-dot").setAttribute("cy", near.y);
-  const rect = g.querySelector("#ph-box");
+  const ln = g.querySelector(".ph-line");
+  ln.setAttribute("x1", near.x);
+  ln.setAttribute("x2", near.x);
+  const dot = g.querySelector(".ph-dot");
+  dot.setAttribute("cx", near.x);
+  dot.setAttribute("cy", near.y);
+  /* where the readout names two series, both get a dot — a plate that says
+     FRO 111.3 with nothing marking it is asking to be read off the wrong line */
+  const dot2 = g.querySelector(".ph-dot2");
+  if(dot2 && near.oy != null){
+    dot2.setAttribute("cx", near.x);
+    dot2.setAttribute("cy", near.oy);
+  }
+  const rect = g.querySelector(".ph-box");
   rect.setAttribute("x", cx - w / 2);
   rect.setAttribute("width", w);
-  const lab = g.querySelector("#ph-lab");
+  const lab = g.querySelector(".ph-lab");
   lab.setAttribute("x", cx);
-  lab.textContent = text;
+  lab.textContent = near.t;
   g.setAttribute("opacity", "1");
+  phOn = g;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -3684,13 +4043,25 @@ app.addEventListener("change", e => {
 });
 
 app.addEventListener("pointermove", moveCrosshair);
-document.addEventListener("pointerleave", () => {
-  document.getElementById("ph")?.setAttribute("opacity", "0");
-});
+document.addEventListener("pointerleave", hideCrosshair);
 
+/* Boot order matters. The store is the default and the hash is the
+   instruction, so the store is read first and a route that parses overwrites
+   what it covers — otherwise a link shared into a browser that already has a
+   stored view would land somewhere else. */
 applyTheme();
+restoreView();
+applyRoute(location.hash);
 mountShell();
 render();
+
+/* replaceState never fires this, so it only ever carries a hash the reader
+   typed or a link they followed inside the page — both of which mean go
+   there. A hash that parses to nowhere is left alone rather than resetting
+   the view under them. */
+window.addEventListener("hashchange", () => {
+  if(applyRoute(location.hash)){ render(); announceEq(); }
+});
 </script>
 </body>
 </html>
