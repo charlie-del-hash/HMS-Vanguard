@@ -1,0 +1,30 @@
+{
+  "name": "affinity-research",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "check": "node checks/run.js",
+    "typecheck": "astro check"
+  },
+  "dependencies": {
+    "@astrojs/react": "6.0.5",
+    "@astrojs/vercel": "11.0.10",
+    "@chenglou/pretext": "0.0.9",
+    "@supabase/supabase-js": "2.116.0",
+    "astro": "7.3.2",
+    "motion": "13.2.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.1",
+    "playwright": "1.56.1",
+    "typescript": "5.9.3"
+  }
+}
