@@ -22,6 +22,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
     {description && <meta name="description" content={description} />}
     {noindex && <meta name="robots" content="noindex" />}
     <link rel="canonical" href={canonical} />
+    {/* The deck's own shield, decoded out of its inline data URI into one
+        served file rather than re-inlined on every page. */}
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 
     {/* Theme before first paint. The key is the deck's own, so a reader who
         chose dark on the ops deck keeps it here and vice versa. Wrapped

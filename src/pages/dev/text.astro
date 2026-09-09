@@ -1,0 +1,261 @@
+---
+import Base from "../../layouts/Base.astro";
+
+const PROSE =
+  "The Strait of Hormuz carries roughly a fifth of global petroleum liquids " +
+  "consumption, and almost nothing about that share is substitutable at short " +
+  "notice. The pipelines that bypass it — Saudi Arabia's East-West line and the " +
+  "UAE's Fujairah route — together move a fraction of the volume that passes the " +
+  "strait on an ordinary day, and both run at or near capacity already. What " +
+  "moves first when the strait is threatened is therefore not the volume but the " +
+  "price of carrying it: war-risk premia reprice within hours, charterers widen " +
+  "the laycan, and owners with tonnage already inside the Gulf discover that the " +
+  "voyage out is worth more than the voyage in. The tanker market has learned to " +
+  "price this quickly. The physical market has not learned to route around it.";
+---
+
+<Base
+  title="Text engine · Affinity"
+  description="Pretext, canvas and the server estimate, measured against each other."
+  noindex
+>
+  <main class="article">
+    <header>
+      <p class="label">Affinity · design system</p>
+      <h1 class="display">Text engine</h1>
+      <p class="dek">
+        Three backends behind one <code>textWidth()</code>. This page measures them
+        against each other rather than asserting they agree.
+      </p>
+      <p class="engine">Engine in this browser: <b id="engine">…</b></p>
+    </header>
+
+    <section class="cq">
+      <h2 class="label gh">Variable-width line routing</h2>
+      <p class="note">
+        Each line asks how much room it has at its own vertical position, so the
+        column narrows around the inset and reopens underneath it. There is no
+        hand-rolled version of this — without real line breaking you cannot ask
+        what fits on the line at <i>y</i>.
+      </p>
+      <div class="flowbox" id="flowbox">
+        <div class="inset" id="inset">
+          <span class="ilab">Q3 war-risk</span>
+          <span class="ival display">+340<i>bp</i></span>
+          <span class="ifoot">vs. Q2 average</span>
+        </div>
+        <div class="flow" id="flow" aria-hidden="true"></div>
+        <p class="sr-only">{PROSE}</p>
+        <p class="fallback" id="fallback" hidden>{PROSE}</p>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="label gh">Estimate against the real face</h2>
+      <p class="note">
+        The server has no canvas, so it uses a measured per-character table. It only
+        has to be <b>safe</b> — never under the real width, because an under-estimate
+        puts two labels on top of each other while an over-estimate just places fewer
+        of them. Headroom is how much room the estimate leaves.
+      </p>
+      <div class="tablewrap">
+        <table id="probes">
+          <thead>
+            <tr>
+              <th>String</th><th>px</th>
+              <th class="n">Canvas</th><th class="n">Pretext</th>
+              <th class="n">Estimate</th><th class="n">Headroom</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="verdict" id="verdict">…</p>
+    </section>
+  </main>
+
+  <script>
+    import {
+      textWidth, safeEstimateWidth, loadPretext, currentEngine, flowText,
+    } from "../../lib/text";
+
+    const PROSE = document.getElementById("fallback")!.textContent!.trim();
+
+    /* Lines are laid out against the inset's real box, measured from the DOM —
+       the same discipline as the charts: draw at the size you are displayed,
+       never at the size you assumed. */
+    function draw() {
+      const box = document.getElementById("flowbox") as HTMLElement;
+      const inset = document.getElementById("inset") as HTMLElement;
+      const flow = document.getElementById("flow") as HTMLElement;
+      const fallback = document.getElementById("fallback") as HTMLElement;
+
+      const W = flow.clientWidth || box.clientWidth;
+      const px = W < 560 ? 15 : 17;
+      const lineHeight = Math.round(px * 1.62);
+      const gap = 18;
+
+      /* Measure the inset against the FLOW element, not the card. y comes back
+         from the router in flow-local coordinates, and the card carries 26px of
+         padding — comparing the two put the first five lines underneath the
+         inset instead of beside it. */
+      const f = flow.getBoundingClientRect();
+      const i = inset.getBoundingClientRect();
+      const insetTop = i.top - f.top;
+      const insetBottom = insetTop + i.height;
+      const narrowed = i.left - f.left - gap;
+
+      /* Below about 24 characters a narrowed line is worse than no narrowing:
+         it breaks after every second word. The inset goes full-width there
+         (see the stylesheet) and the column stays rectangular. */
+      const canNarrow = narrowed > px * 14;
+
+      const res = flowText(
+        PROSE,
+        { px, weight: 400, lineHeight },
+        (_n, y) => {
+          // The line occupies y .. y+lineHeight. Narrow only where it actually
+          // overlaps the inset, and give the full measure everywhere else.
+          const overlaps = y + lineHeight > insetTop && y < insetBottom;
+          return overlaps && canNarrow ? narrowed : W;
+        },
+      );
+
+      if (!res) {
+        flow.hidden = true;
+        fallback.hidden = false;
+        return;
+      }
+      fallback.hidden = true;
+      flow.hidden = false;
+      flow.style.height = `${res.height}px`;
+      flow.style.fontSize = `${px}px`;
+      flow.innerHTML = res.lines
+        .map((l) => `<span style="top:${l.y}px;line-height:${lineHeight}px">${
+          l.text.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]!)
+        }</span>`)
+        .join("");
+    }
+
+    /* Same probes the table was calibrated against, plus the two the deck was
+       actually caught out by. */
+    const PROBES: [string, number][] = [
+      ["MAERSK-B", 9.5], ["W34", 9.5], ["102.9", 9.5],
+      ["Ports & terminals", 8.5], ["REBASE", 8.5], ["n=4", 8.5],
+      ["Hormuz strikes", 13], ["Star Bulk Carriers", 11],
+    ];
+
+    function probe() {
+      const pt = (window as any).__pretext as typeof import("@chenglou/pretext") | null;
+      const body = document.querySelector("#probes tbody")!;
+      let worst = Infinity;
+      body.innerHTML = PROBES.map(([s, px]) => {
+        const canvas = textWidth(s, px);
+        const est = safeEstimateWidth(s, px);
+        let pretextW = "—";
+        if (pt) {
+          try {
+            pretextW = pt.measureNaturalWidth(
+              pt.prepareWithSegments(s, `600 ${px}px ${getComputedStyle(document.body).fontFamily}`),
+            ).toFixed(2);
+          } catch { /* leave the dash */ }
+        }
+        const head = (est / canvas - 1) * 100;
+        worst = Math.min(worst, head);
+        return `<tr class="${head < 0 ? "bad" : ""}">
+          <td><code>${s.replace(/&/g, "&amp;")}</code></td>
+          <td class="n mono">${px}</td>
+          <td class="n mono">${canvas.toFixed(2)}</td>
+          <td class="n mono">${pretextW}</td>
+          <td class="n mono">${est.toFixed(2)}</td>
+          <td class="n mono">${head >= 0 ? "+" : ""}${head.toFixed(1)}%</td>
+        </tr>`;
+      }).join("");
+
+      const v = document.getElementById("verdict")!;
+      const ok = worst >= 0;
+      v.textContent = ok
+        ? `Safe. The estimate never came in under the real face; tightest margin was +${worst.toFixed(1)}%.`
+        : `UNSAFE — the estimate came in ${Math.abs(worst).toFixed(1)}% under the real face. Recalibrate the table.`;
+      v.className = ok ? "verdict ok" : "verdict bad";
+    }
+
+    (async () => {
+      const pt = await loadPretext();
+      (window as any).__pretext = pt;
+      document.getElementById("engine")!.textContent = currentEngine();
+      draw();
+      probe();
+
+      let t: number | undefined;
+      addEventListener("resize", () => {
+        clearTimeout(t);
+        t = setTimeout(draw, 120) as unknown as number;
+      });
+      // A face landing late changes every measurement taken before it.
+      (document as any).fonts?.ready.then(() => { draw(); probe(); });
+    })();
+  </script>
+</Base>
+
+<style>
+  main { padding-block: 44px 96px; row-gap: 40px; }
+  h1 { font-size: clamp(30px, 6vw, 44px); color: var(--ink); }
+  :global([data-theme="dark"]) h1 { color: var(--light-tl); }
+  header { display: grid; gap: 10px; }
+  .dek, .note { color: var(--small); max-width: 62ch; }
+  .note { font-size: 14px; margin-bottom: 16px; }
+  .engine { font-size: 13px; color: var(--small); }
+  .engine b { font-family: var(--mono); color: var(--teal); }
+  code { font-family: var(--mono); font-size: .9em; }
+  section { display: grid; gap: 4px; }
+  .gh { padding-bottom: 8px; border-bottom: 1px solid var(--rule); margin-bottom: 14px; }
+
+  /* ── the flow demo ── */
+  .flowbox {
+    position: relative; background: var(--surface); border: 1px solid var(--hair);
+    border-radius: var(--r); padding: 26px; color: var(--body);
+  }
+  .inset {
+    float: right; width: min(220px, 44%); margin: 4px 0 0 0;
+    display: grid; gap: 2px; padding: 16px 18px;
+    background: var(--insight-bg); color: var(--insight-fg);
+    border-radius: var(--r); box-shadow: var(--shadow-card);
+  }
+  .ilab { font-family: var(--mono); font-size: 9px; letter-spacing: .2em; text-transform: uppercase; opacity: .8; }
+  .ival { font-size: 34px; font-weight: 700; color: var(--insight-h); }
+  .ival i { font-size: 15px; font-style: normal; font-weight: 600; opacity: .75; margin-left: 2px; }
+  .ifoot { font-size: 11px; opacity: .75; }
+
+  /* Lines are absolutely placed at the y the router gave them. */
+  .flow { position: relative; }
+  /* clip, NOT hidden. overflow:hidden establishes a block formatting context,
+     and a BFC box shrinks to avoid floats — so the flow element came back 418px
+     wide instead of the full measure, and every line narrowed as though it were
+     beside the inset. overflow:clip does the same clipping without the BFC. */
+  .flow { overflow: clip; }
+  .flow :global(span) { position: absolute; left: 0; white-space: pre; }
+  .fallback { clear: right; }
+
+  /* Narrow: the inset takes the full measure and the column stays rectangular.
+     A 44%-wide float at 390px leaves about 150px of text, which breaks after
+     every second word — worse than not narrowing at all. */
+  @media (max-width: 560px) {
+    .flowbox { padding: 18px; }
+    .inset { float: none; width: auto; margin: 0 0 16px; }
+  }
+
+  /* ── the probe table ── */
+  .tablewrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { padding: 7px 12px; text-align: left; border-bottom: 1px solid var(--row-line); }
+  th { font-family: var(--mono); font-size: 8.5px; letter-spacing: .14em; text-transform: uppercase;
+       color: var(--small); border-bottom-color: var(--rule); }
+  .n { text-align: right; }
+  td.mono { font-variant-numeric: tabular-nums; }
+  tr.bad td { background: var(--neg-soft); }
+
+  .verdict { margin-top: 14px; font-size: 13px; }
+  .verdict.ok { color: var(--pos); }
+  .verdict.bad { color: var(--neg); font-weight: 600; }
+</style>

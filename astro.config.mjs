@@ -23,6 +23,7 @@ function deckAtRoot() {
   return {
     name: "affinity:deck-at-root",
     hooks: {
+      /** @type {(ctx: { dir: URL, logger: { info(m: string): void, warn(m: string): void } }) => void} */
       "astro:build:done": ({ dir, logger }) => {
         const out = fileURLToPath(dir);
         const index = join(out, "index.html");
