@@ -1,0 +1,47 @@
+---
+import "../styles/tokens.css";
+import "../styles/base.css";
+
+interface Props {
+  title: string;
+  description?: string;
+  /** Blocks indexing on dev-only surfaces. */
+  noindex?: boolean;
+}
+const { title, description = "", noindex = false } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+---
+
+<!doctype html>
+<html lang="en-GB" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+    {noindex && <meta name="robots" content="noindex" />}
+    <link rel="canonical" href={canonical} />
+
+    {/* Theme before first paint. The key is the deck's own, so a reader who
+        chose dark on the ops deck keeps it here and vice versa. Wrapped
+        because a file:// origin refuses storage outright in some browsers. */}
+    <script is:inline>
+      (() => {
+        try {
+          const t = localStorage.getItem("affinity-ops-theme");
+          if (t === "dark" || t === "light") {
+            document.documentElement.dataset.theme = t;
+            return;
+          }
+        } catch {}
+        if (window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
+          document.documentElement.dataset.theme = "dark";
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

@@ -1,0 +1,200 @@
+/* ══════════════════════════════════════════════════════════════
+   AFFINITY · DESIGN TOKENS
+   Extracted verbatim from the ops deck (public/ops-deck.html,
+   lines 21–189). Do not re-pick these values by hand.
+
+   Every one of them was arrived at by measurement, and each looks
+   like a free choice until you re-measure. HANDOFF.md "Colour and
+   type — the rules that are easiest to undo" records why:
+
+     · Avatar fills carry white 11px bold text, so they are contrast
+       constraints, not brand swatches. WhatsApp green sat at 3.36:1
+       and had failed AA since the day it was written.
+     · The six category hues are validated in light and dark
+       SEPARATELY, on ADJACENT PAIRS — so their order is part of the
+       result. Ports is orange specifically so it never sits next to
+       Tankers' blue. Dark's lightness band is 0.48–0.67, much
+       narrower than light's 0.43–0.77; dark will not pass by
+       lightening the light steps.
+     · Two warnings are accepted deliberately (green/orange CVD in
+       the 6–8 band, amber a hair under 3:1). Both are legal ONLY
+       because every category mark carries its name in text beside
+       it. If a category is ever shown as colour alone, they stop
+       being legal.
+
+   The validator is scripts/validate_palette.js in the dataviz skill.
+   Swap a hue and re-run it for BOTH modes rather than eyeballing.
+
+   The dark block stays scoped to @media screen so print is always
+   light. That is load-bearing, not stylistic.
+   ══════════════════════════════════════════════════════════════ */
+
+:root{
+  color-scheme: light;
+
+  /* structure */
+  --page:#EBF2F5;
+  --main-grad:linear-gradient(163deg,#FCFDFE 0%,#F5FAFB 42%,#E9F1F4 100%);
+  --surface:#FFFFFF;
+  --field:#FFFFFF;
+  --spine-bg:#0E4152;
+  --spine-fg:#C6DCE4;
+  --insight-bg:#0E4152;
+  --insight-fg:#BFD8E1;
+  --insight-h:#FFFFFF;
+  --insight-line:transparent;
+  --row-line:#F0F5F7;
+  --row-dim:#FCFDFE;
+  --draft-chip:#EFF3F5;
+
+  /* brand */
+  --ink:#0E4152;          /* headings and strong text */
+  --teal:#196579;         /* accent, primary action */
+  --accent-hover:#0E4152;
+  --on-accent:#FFFFFF;    /* text sitting on the accent */
+  --sel-bg:#0E4152;       /* pressed tab */
+  --sel-fg:#FFFFFF;
+  --teal-mid:#2A7189;     /* kickers */
+  --teal-lt:#7FB0BF;
+  --light-tl:#7FD0E5;     /* accents on dark */
+  --rail-off:#8FB3BF;
+  --rail-up:#63D6A0;      /* movers on the spine, which is dark in both themes */
+  --rail-dn:#FF9184;
+  --tint:#E7F0F3;
+  --tint2:#F4F9FA;
+  --bar-soft:#C3DAE3;
+  --rule:#C6D9E0;
+  --hair:#DCEAEE;
+  --orange:#FF9500;
+  --orange-dk:#A8600A;
+  --amber:#FFF6E5;
+  --amber-dk:#925C00;
+  --body:#3D4E54;
+  --small:#5F6E74;
+
+  /* YES / NO */
+  --pos:#1F7A4C;  --pos-soft:#E8F3ED;  --pos-line:#BFDECC;
+  --neg:#C0392B;  --neg-soft:#FBECEA;  --neg-line:#EFC9C3;
+
+  /* desk categories */
+  /* Six categorical hues, run through the palette validator rather than
+     picked by eye. The old set failed it three ways: teal and grey fell
+     under the chroma floor (they read as grey), purple against blue was
+     dE 2.5 for deuteranopes, and grey against green was dE 10.6 even with
+     normal vision. Ports moved off purple so it never sits next to blue.
+     Two warnings remain by choice — green/orange CVD sits in the 6-8 band
+     and amber is a hair under 3:1 — both covered because every category
+     mark in this deck carries its name in text beside it. */
+  --c-ffa:#0E83A4;   /* teal    */
+  --c-dry:#C98500;   /* amber   */
+  --c-tank:#2F6FD0;  /* blue    */
+  --c-port:#D4571F;  /* orange  */
+  --c-new:#12894F;   /* green   */
+  --c-int:#B0509A;   /* magenta */
+
+  --shadow-sm:0 1px 2px rgba(14,65,82,.04);
+  --shadow-card:0 1px 1.5px rgba(14,65,82,.05), 0 6px 16px -10px rgba(14,65,82,.20);
+  --shadow:0 1px 2px rgba(14,65,82,.04), 0 10px 28px -12px rgba(14,65,82,.16);
+  --shadow-lift:0 2px 4px rgba(14,65,82,.05), 0 14px 30px -16px rgba(14,65,82,.28);
+
+  /* chart tokens – read into JS by readPalette() */
+  --chart-label:#0E4152;
+  --chart-line:#196579;
+  --chart-axis:#5F6E74;
+  --chart-rule:#C6D9E0;
+  --chart-marker:#FFFFFF;
+  --chart-bar:#196579;
+  --chart-bar-top:#0E4152;
+  --chart-pos:#1F7A4C;
+  --chart-neg:#C0392B;
+
+  --font:'Segoe UI','Segoe UI Variable Text',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif;
+  --num:'Segoe UI','Segoe UI Variable Text',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif;
+  --mono:'Cascadia Mono',Consolas,'SF Mono',ui-monospace,'Liberation Mono',monospace;
+  /* radii, layered rather than one value. Deliberately the older macOS
+     range – softer than a hard 9px, well short of the 26 look. */
+  --r:12px;               /* cards: panels, tiles, insight */
+  --r-ctl:7px;            /* buttons, inputs, selects */
+  --r-chip:5px;           /* chips, tags, small marks */
+
+  /* motion: a gentle curve for state, a springier one for movement */
+  --ease-soft:cubic-bezier(.4,0,.2,1);
+  --ease:cubic-bezier(.32,.72,0,1);
+  --t:.18s var(--ease-soft);
+  --t-slow:.34s var(--ease);
+}
+
+@media screen{
+  [data-theme="dark"]{
+    color-scheme: dark;
+
+    --page:#061419;
+    --main-grad:linear-gradient(163deg,#0A1F28 0%,#08191F 46%,#06131A 100%);
+    --surface:#0C222C;
+    --field:#102A35;
+    --spine-bg:#041015;
+    --spine-fg:#A8C3CE;
+    --insight-bg:#0F2C38;
+    --insight-fg:#A9C6D1;
+    --insight-h:#EAF6FA;
+    --insight-line:#1E4655;
+    --row-line:#152F3A;
+    --row-dim:#09202A;
+    --draft-chip:#183440;
+
+    --ink:#E8F3F7;
+    --teal:#5FC2DC;
+    --accent-hover:#8FDCF0;
+    --on-accent:#062430;
+    --sel-bg:#5FC2DC;
+    --sel-fg:#062430;
+    --teal-mid:#7FD0E5;
+    --teal-lt:#4E7F8E;
+    --rail-off:#7A99A5;
+    --rail-up:#63D6A0;
+    --rail-dn:#FF9184;
+    --tint:#16323F;
+    --tint2:#102A35;
+    --bar-soft:#2A5A6C;
+    --rule:#22414E;
+    --hair:#1B3743;
+    --orange:#FFA733;
+    --orange-dk:#F0B857;
+    --amber:rgba(255,167,51,.10);
+    --amber-dk:#F2BE6B;
+    --body:#A9C0C9;
+    --small:#84A0AA;   /* 4.86:1 on the panel – #7E98A2 sat at 4.42 */
+
+    --pos:#4FC287;  --pos-soft:rgba(79,194,135,.13);  --pos-line:#2E6B4C;
+    --neg:#F0857A;  --neg-soft:rgba(240,133,122,.13); --neg-line:#7A3B36;
+
+    /* same six hues stepped for the dark surface, validated separately –
+       dark's lightness band is 0.48-0.67, much narrower than light's */
+    --c-ffa:#33A0BC;
+    --c-dry:#B78B3C;
+    --c-tank:#5B8ED6;
+    --c-port:#CF6A3E;
+    --c-new:#31996A;
+    --c-int:#A863B8;
+
+    --shadow-sm:0 1px 2px rgba(0,0,0,.30);
+    --shadow-card:0 1px 1.5px rgba(0,0,0,.34), 0 8px 20px -12px rgba(0,0,0,.60);
+    --shadow:0 1px 2px rgba(0,0,0,.30), 0 14px 34px -14px rgba(0,0,0,.55);
+    --shadow-lift:0 2px 4px rgba(0,0,0,.34), 0 16px 34px -16px rgba(0,0,0,.65);
+
+    --chart-label:#E8F3F7;
+    --chart-line:#5FC2DC;
+    --chart-axis:#7E98A2;
+    --chart-rule:#2A4A58;
+    --chart-marker:#0C222C;
+    --chart-bar:#2F7E97;
+    --chart-bar-top:#7FD0E5;
+    --chart-pos:#4FC287;
+    --chart-neg:#F0857A;
+  }
+}
+
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:var(--page);color:var(--body);font-family:var(--font);font-size:14px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
