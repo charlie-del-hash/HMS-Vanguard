@@ -11,7 +11,9 @@
     "preview": "astro preview",
     "astro": "astro",
     "check": "node checks/run.js",
-    "typecheck": "astro check"
+    "typecheck": "astro check",
+    "check:site": "npm run build && node checks/run-site.js",
+    "check:all": "npm run check && npm run check:site"
   },
   "dependencies": {
     "@astrojs/react": "6.0.5",
