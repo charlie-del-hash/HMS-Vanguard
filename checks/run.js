@@ -12,8 +12,7 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 
-const ROOT = path.resolve(__dirname, "..");
-const FILE = path.join(ROOT, "affinity-ops-deck.html");
+const { DECK: FILE, DECK_ROUTE } = require("../scripts/paths");
 const ORDER = ["overflow", "charts", "index-labels", "index-anchors",
                "routing", "crosshair", "sourced", "splice", "ciks", "interact", "rest"];
 
@@ -27,7 +26,7 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(0, "127.0.0.1", async () => {
-  const url = `http://127.0.0.1:${server.address().port}/affinity-ops-deck.html`;
+  const url = `http://127.0.0.1:${server.address().port}${DECK_ROUTE}`;
   let failed = 0;
   for(const name of checks){
     const file = path.join(__dirname, `${name}.js`);

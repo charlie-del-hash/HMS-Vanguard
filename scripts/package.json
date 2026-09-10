@@ -1,0 +1,4 @@
+{
+  "$comment": "Same reason as checks/package.json — these scripts are CommonJS and run on the Actions runner unchanged. See that file.",
+  "type": "commonjs"
+}

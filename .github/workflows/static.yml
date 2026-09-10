@@ -39,8 +39,8 @@ jobs:
         # there is no second committed file to drift.
         run: |
           mkdir -p _site
-          cp affinity-ops-deck.html _site/index.html
-          cp affinity-ops-deck.html _site/ops-deck.html
+          cp public/ops-deck.html _site/index.html
+          cp public/ops-deck.html _site/ops-deck.html
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:

@@ -1,0 +1,4 @@
+{
+  "$comment": "The checks predate the Astro app and are CommonJS. The repo root is now type:module, and Node resolves module type from the nearest package.json — so this one file keeps all of checks/ working unchanged rather than renaming 13 files to .cjs.",
+  "type": "commonjs"
+}

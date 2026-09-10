@@ -1,0 +1,140 @@
+---
+import Base from "../../layouts/Base.astro";
+import { readTokens, isSwatchable } from "../../lib/tokens";
+
+const { groups, lightCount, darkCount } = readTokens();
+---
+
+<Base
+  title="Design tokens · Affinity"
+  description="The validated palette, read straight out of tokens.css."
+  noindex
+>
+  <main class="article">
+    <header class="head">
+      <p class="label">Affinity · design system</p>
+      <h1 class="display">Design tokens</h1>
+      <p class="dek">
+        {lightCount} tokens, {darkCount} of them redefined for dark. Parsed out of{" "}
+        <code>src/styles/tokens.css</code> at build time, so this page cannot show a
+        colour the site has stopped using.
+      </p>
+      <button id="theme" class="btn" type="button" aria-pressed="false">Dark</button>
+    </header>
+
+    {groups.map((g) => (
+      <section class="group">
+        <h2 class="label gh">{g.title}</h2>
+        <ul class="swatches">
+          {g.tokens.map((t) => (
+            <li class="sw">
+              <span
+                class:list={["chip", { flat: isSwatchable(t.value) }]}
+                style={`background:var(${t.name})`}
+                aria-hidden="true"
+              ></span>
+              <span class="meta">
+                <code class="tname">{t.name}</code>
+                <span class="tval mono" data-token={t.name}>{t.value}</span>
+              </span>
+              {t.dark && <span class="tag" title="Redefined in the dark block">D</span>}
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+  </main>
+
+  <script is:inline>
+    // Same key the deck writes, so the choice carries between them.
+    const btn = document.getElementById("theme");
+
+    /* The value printed under a swatch has to be the value the theme actually
+       resolves to, not the one the stylesheet happened to declare first. The
+       server can only render the light block, so in dark every label read one
+       palette while its swatch showed the other — a page whose whole claim is
+       that it cannot show a colour the site stopped using. This is the same
+       bridge readPalette() gives the charts: ask the document, not the source. */
+    const vals = document.querySelectorAll("[data-token]");
+    const paint = () => {
+      const cs = getComputedStyle(document.documentElement);
+      for (const el of vals) {
+        const v = cs.getPropertyValue(el.dataset.token).trim();
+        if (v) el.textContent = v;
+      }
+    };
+
+    const sync = () => {
+      const dark = document.documentElement.dataset.theme === "dark";
+      btn.textContent = dark ? "Light" : "Dark";
+      btn.setAttribute("aria-pressed", String(dark));
+      paint();
+    };
+    btn.addEventListener("click", () => {
+      const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+      document.documentElement.dataset.theme = next;
+      try { localStorage.setItem("affinity-ops-theme", next); } catch {}
+      sync();
+    });
+    /* Follow the attribute, not just the button. Anything can set
+       data-theme — the boot script, a devtools poke, a screenshot harness —
+       and a page that only repaints on its own click will happily show one
+       palette's values over the other palette's swatches. */
+    new MutationObserver(sync).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+
+    sync();
+  </script>
+</Base>
+
+<style>
+  main { padding-block: 44px 96px; row-gap: 34px; }
+  .head { display: grid; gap: 10px; }
+  h1 { font-size: clamp(30px, 6vw, 44px); color: var(--ink); }
+  :global([data-theme="dark"]) h1 { color: var(--light-tl); }
+  .dek { color: var(--small); max-width: 60ch; }
+  code { font-family: var(--mono); font-size: .88em; }
+
+  .btn {
+    justify-self: start; margin-top: 6px; padding: 8px 16px;
+    border: 1px solid var(--hair); border-radius: var(--r-ctl);
+    background: var(--surface); color: var(--body); cursor: pointer;
+    transition: border-color var(--t), background var(--t);
+  }
+  .btn:hover { border-color: var(--teal); }
+
+  .group { display: grid; gap: 12px; }
+  .gh { padding-bottom: 8px; border-bottom: 1px solid var(--rule); }
+
+  .swatches {
+    list-style: none; padding: 0; display: grid; gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  }
+  .sw {
+    display: flex; align-items: center; gap: 11px; padding: 9px 11px;
+    background: var(--surface); border: 1px solid var(--hair);
+    border-radius: var(--r-ctl); min-width: 0;
+  }
+  .chip {
+    inline-size: 30px; block-size: 30px; border-radius: var(--r-chip);
+    border: 1px solid var(--hair); flex: 0 0 auto;
+  }
+  /* A non-colour token (a gradient, a curve, a duration) gets a hatched chip
+     rather than a misleading flat one. */
+  .chip:not(.flat) {
+    background-image: repeating-linear-gradient(45deg, var(--rule) 0 4px, transparent 4px 8px) !important;
+  }
+  .meta { display: grid; gap: 1px; min-width: 0; }
+  .tname { color: var(--body); font-size: 11.5px; }
+  .tval {
+    color: var(--small); font-size: 10.5px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .tag {
+    margin-left: auto; flex: 0 0 auto; font-family: var(--mono); font-size: 8.5px;
+    letter-spacing: .1em; color: var(--small);
+    border: 1px solid var(--rule); border-radius: var(--r-chip); padding: 2px 5px;
+  }
+</style>

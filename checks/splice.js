@@ -9,7 +9,7 @@ const assert = require("assert");
 const { browser, newPage, goto } = require("./lib");
 const { spliceFin, readExisting, BEGIN, END } = require("../scripts/refresh-financials");
 
-const DECK = path.resolve(__dirname, "..", "affinity-ops-deck.html");
+const { DECK } = require("../scripts/paths");
 
 const FIX = {
   GNK:  { period: "Q2 2026", asOf: "2026-08-05", ccy: "USD",

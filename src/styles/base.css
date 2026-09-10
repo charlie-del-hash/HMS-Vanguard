@@ -1,0 +1,84 @@
+/* ══════════════════════════════════════════════════════════════
+   AFFINITY · BASE
+   Reset, type rules and the layout primitives a report is built
+   from. Tokens live in tokens.css and are never redefined here.
+   ══════════════════════════════════════════════════════════════ */
+
+*{box-sizing:border-box;margin:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--page);color:var(--body);font-family:var(--font);font-size:16px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+
+/* Figures are the sans, not the mono. --num carries every numeric rule and the
+   chart labels; --mono is left on the small-caps labels, where it gives the
+   deck its character instead of fighting it. `.mono` the class means "a
+   figure", not "a monospace face" — see HANDOFF.md. */
+.mono{font-family:var(--num);font-variant-numeric:tabular-nums;letter-spacing:0}
+
+/* Display values use PROPORTIONAL figures: tabular-nums gives every digit the
+   width of a zero, so 1,000 reads loose at 29px. Columns that must align
+   vertically keep tabular. */
+.display{font-family:var(--num);font-variant-numeric:proportional-nums;letter-spacing:-.01em;line-height:1.05}
+
+.label{font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--small)}
+
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+:where(a){color:var(--teal);text-underline-offset:.18em;text-decoration-thickness:from-font}
+:where(img,svg,video){max-width:100%;height:auto}
+:where(button,input,select,textarea){font:inherit;color:inherit}
+
+/* One visible focus treatment everywhere, and it must clear the surface it
+   lands on in both themes. */
+:where(a,button,input,select,textarea,summary,[tabindex]):focus-visible{
+  outline:2px solid var(--teal);outline-offset:2px;border-radius:var(--r-chip)}
+
+/* ── the article grid ─────────────────────────────────────────
+   One grid, three widths. A block opts into a lane by class rather
+   than by nesting, so a chart can go wide and the prose either side
+   of it stays on the same measure without a wrapper per section.
+
+   `content` is capped at 68ch because that is a reading measure;
+   `wide` is where charts and tables live; `full` is edge to edge
+   for a hero or a map. The side gutter never drops below 20px. */
+.article{
+  display:grid;
+  grid-template-columns:
+    [full-start] minmax(20px,1fr)
+    [wide-start] minmax(0,min(1040px,100% - 40px))
+    [content-start] min(68ch,100% - 40px) [content-end]
+    minmax(0,min(1040px,100% - 40px)) [wide-end]
+    minmax(20px,1fr) [full-end];
+}
+.article > *{grid-column:content}
+.article > .wide{grid-column:wide}
+.article > .full{grid-column:full}
+
+/* ── surfaces ─────────────────────────────────────────────────── */
+.panel{background:var(--surface);border:1px solid var(--hair);border-radius:var(--r);
+  box-shadow:var(--shadow-card)}
+
+/* Container queries, not media queries. The deck learned this the hard way:
+   a sticky side panel or a fixed spine means viewport width is NOT monotonic
+   with the width a table actually gets, so a width query sheds columns in the
+   wrong order on the way down. A block measures its own panel. */
+.cqpanel{container-type:inline-size}
+
+/* ── motion ───────────────────────────────────────────────────
+   Nothing uses a bare duration; everything runs through --t/--t-slow.
+   checks/rest.js asserts 0 elements animating under reduce, so this
+   block is a check, not a courtesy. */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;scroll-behavior:auto !important}
+  ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none !important}
+}
+
+/* ── print ────────────────────────────────────────────────────
+   The dark block is scoped to @media screen, so print is already
+   light. This only has to drop the furniture. */
+@media print{
+  .no-print{display:none !important}
+  .article > *{grid-column:content}
+  .panel{box-shadow:none;border-color:#CBD5D9}
+}

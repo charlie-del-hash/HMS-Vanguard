@@ -6,10 +6,11 @@ network calls. Open it directly or serve it; both work.
 The checks live beside it in `checks/` and are not part of the deployed page. `node checks/run.js`
 runs all of them; see the Verification section below for what they hold.
 
-**Live:** https://affinity-wine.vercel.app/ — **this is the link to circulate.** It is the
-Vercel production domain, and it is the one chosen for sharing over the Pages URL. GitHub Pages
-serves the same page at https://charlie-del-hash.github.io/HMS-Vanguard/ and stays as a mirror.
-On both, `/ops-deck.html` serves the same page.
+**Live:** the **`hms-vanguard`** Vercel project is production, and its domain is the link to
+circulate. (This used to say `affinity`; it was wrong, and a hard-coded copy of that URL was
+deciding every canonical link on the site until it was found.) GitHub Pages serves the same deck
+at https://charlie-del-hash.github.io/HMS-Vanguard/ and stays as a mirror. On both,
+`/ops-deck.html` serves the deck.
 
 ## Publishing
 
@@ -50,28 +51,32 @@ after any merge that changes `affinity-ops-deck.html`**, and dispatch if the pus
 Vercel is unaffected — it builds from its own integration, not from Actions, and has deployed every
 merge within a minute or two.
 
-Two Vercel projects (`affinity` and `hms-vanguard`) also build this repo, both rooted at the
-repo root rather than a subfolder — which is why the reader's old `macro-topics-site/vercel.json`
-never took effect. The root `vercel.json` rewrites `/` and `/ops-deck.html` to
-`/affinity-ops-deck.html`, so Vercel and Pages serve the same page at the same two paths.
-Vercel builds every branch, so its previews show a branch before `main` does — which is how a
-branch gets tested before it is merged.
+Two Vercel projects (`affinity` and `hms-vanguard`) build this repo, both rooted at the repo root
+rather than a subfolder — which is why the reader's old `macro-topics-site/vercel.json` never took
+effect. **`hms-vanguard` is production.** Vercel builds every branch, so its previews show a branch
+before `main` does, which is how a branch gets tested before it is merged.
 
-**`affinity`'s production domain is the shared link.** Both hosts publish the same file from
-`main`, so this is a choice about which URL circulates rather than about what is deployed: the
-Vercel domain reads as a product, the Pages one reads as somebody's repository. Two things follow.
-Pages is a mirror rather than a fallback, so it must not be allowed to drift or go stale. And
-Vercel serves the **repo root** rather than a staged artifact, so anything committed to the repo
-is reachable on the shared domain — the Pages workflow copies only the deck, but Vercel does not,
-so `checks/`, `HANDOFF.md` and everything else answer on the shared URL.
+**A second project building the same repo is not free, now that the repo has a build.** Each one
+canonicalises to its own production domain, so two domains serve the same site each claiming to be
+the original. Either pin `PUBLIC_SITE_URL` to the `hms-vanguard` domain in both projects, or stop
+`affinity` building. Left alone, the site competes with itself.
 
-**That is not currently worth acting on, and here is why, so it does not get re-raised.** The
-repository is public, so a `.vercelignore` would hide a file from one public URL while leaving it
-on another; it buys no confidentiality, and it invites the worse mistake of trusting it as though
-it did. The control that matters is the repository's visibility, not this file. It becomes worth
-adding in exactly one case: the repo goes private and the Vercel deployment stays public, at which
-point the shared domain is the only public surface and `.vercelignore` is what stands in front of
-it.
+**Vercel no longer serves the repo root, and that changes an old conclusion.** It used to, which is
+why `checks/`, `HANDOFF.md` and everything else answered on the shared domain. The Astro adapter
+builds through the Build Output API: only `.vercel/output` is deployed, so the surface is the build
+and nothing else. Verified, and `checks/vercel-output.js` asserts it stays that way.
+
+**That closes the `.vercelignore` question rather than answering it.** The old note argued the file
+was not worth adding while the repo was public, and would become worth it if the repo went private
+with a public deployment. Neither case applies now: there is nothing to ignore, because nothing
+outside the build is uploaded.
+
+**`vercel.json` is not what it looks like.** The adapter reads it for exactly one thing — a warning
+if `trailingSlash` conflicts with the Astro config — and merges nothing else. Routing comes from
+the generated `.vercel/output/config.json`. Headers declared in `vercel.json` did nothing at all
+until `scripts/vercel-config.mjs` began splicing them in, as a step chained into `npm run build`
+rather than an `astro:build:done` hook, because that hook runs *before* the adapter writes the file.
+Anything else added to `vercel.json` needs the same treatment or it will silently do nothing.
 
 ## Layout model — read this before changing the frame
 
