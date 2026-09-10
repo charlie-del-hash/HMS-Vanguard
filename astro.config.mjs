@@ -40,11 +40,26 @@ function deckAtRoot() {
 }
 
 export default defineConfig({
-  /* Canonical URLs and the sitemap are built from this, so it has to be the
-     domain that actually serves production rather than whichever preview URL
-     was handy. Set PUBLIC_SITE_URL in the Vercel project; the default is only
-     a default. */
-  site: process.env.PUBLIC_SITE_URL || "https://affinity-wine.vercel.app",
+  /* Canonical URLs and the sitemap are built from this, so a wrong value here
+     points every canonical at the wrong host — quietly, and for as long as
+     nobody checks. It used to be a hard-coded constant naming a project that
+     turned out not to be production.
+
+     VERCEL_PROJECT_PRODUCTION_URL is the project's own production domain, set
+     by the platform on preview builds as well as production ones, so a preview
+     canonicalises to the real site rather than to itself. That makes the common
+     case self-configuring: nothing to set, and nothing to get wrong when the
+     domain changes.
+
+     PUBLIC_SITE_URL overrides it, and that override is what you want if a
+     SECOND Vercel project is still building this repo — otherwise each project
+     canonicalises to itself and Google sees two copies of the same site. Pin
+     both to the production domain, or stop the second project building. */
+  site:
+    process.env.PUBLIC_SITE_URL ||
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : "http://localhost:4321"),
   output: "static",
   adapter: vercel({
     webAnalytics: { enabled: true },

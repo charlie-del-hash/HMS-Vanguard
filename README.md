@@ -11,12 +11,16 @@ Static HTML, no build step, no dependencies.
 
 Open the deck straight in a browser, or serve the folder with `npx serve .`.
 
-**Live:** https://affinity-wine.vercel.app/ — the link to share.
+**Live:** the `hms-vanguard` Vercel project is production, and its domain is the link to share.
 
 GitHub Pages mirrors it at https://charlie-del-hash.github.io/HMS-Vanguard/. Both publish from
 `main` and serve the same file; on both, `/ops-deck.html` serves the same page. Pages builds via
 `.github/workflows/static.yml`, Vercel from the repo root.
 
-The repo is also connected to two Vercel projects (`affinity`, `hms-vanguard`), both rooted
-at the repo root. `vercel.json` rewrites `/` and `/ops-deck.html` to the deck there, so every
-deployment serves the same page at the same paths.
+Two Vercel projects (`affinity`, `hms-vanguard`) are connected to this repo, both rooted at the
+repo root. **`hms-vanguard` is production.** A second project building the same repo means two
+domains each canonicalising to themselves — see HANDOFF.md before leaving it that way.
+
+`vercel.json` holds headers only, and they are merged into the build output by
+`scripts/vercel-config.mjs`; the Astro adapter does not read them. Anything added to `vercel.json`
+needs the same treatment or it silently does nothing.
