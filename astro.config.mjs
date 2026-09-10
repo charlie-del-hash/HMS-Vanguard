@@ -1,7 +1,6 @@
 // @ts-check
-import { defineConfig } from "astro/config";
+import { defineConfig, envField } from "astro/config";
 import vercel from "@astrojs/vercel";
-import react from "@astrojs/react";
 import { existsSync, copyFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
@@ -41,13 +40,58 @@ function deckAtRoot() {
 }
 
 export default defineConfig({
-  site: "https://affinity-wine.vercel.app",
+  /* Canonical URLs and the sitemap are built from this, so it has to be the
+     domain that actually serves production rather than whichever preview URL
+     was handy. Set PUBLIC_SITE_URL in the Vercel project; the default is only
+     a default. */
+  site: process.env.PUBLIC_SITE_URL || "https://affinity-wine.vercel.app",
   output: "static",
   adapter: vercel({
     webAnalytics: { enabled: true },
-    imageService: true,
+    /* imageService is deliberately off. It routes images through Vercel's
+       optimizer, which is a metered resource on Hobby — and there is not one
+       image in this build yet. Turn it on with the first hero image, not
+       before. */
   }),
-  integrations: [react(), deckAtRoot()],
+
+  /* Typed environment, and the reason it is worth the ceremony:
+     `astro:env/server` with access "secret" is a BUILD-TIME error if a client
+     bundle imports it. The previous arrangement read import.meta.env and threw
+     at call time if `window` existed. That never leaked the key — Vite compiles
+     a non-PUBLIC var to `void 0` in client code, which was verified with a
+     canary — but it failed quietly in the other direction: a client script
+     importing the server module pulled 215KB of Supabase SDK into the page, and
+     a guard that only fires when the function is called said nothing. */
+  env: {
+    schema: {
+      PUBLIC_SUPABASE_URL: envField.string({
+        context: "client",
+        access: "public",
+        optional: true,
+      }),
+      PUBLIC_SUPABASE_PUBLISHABLE_KEY: envField.string({
+        context: "client",
+        access: "public",
+        optional: true,
+      }),
+      /* Optional so a build without it still succeeds — nothing reads it until
+         the admin and the analytics endpoint exist. It becomes required the
+         moment something server-side depends on it. */
+      SUPABASE_SERVICE_ROLE_KEY: envField.string({
+        context: "server",
+        access: "secret",
+        optional: true,
+      }),
+    },
+  },
+
+  /* React is not registered. It is still a dependency, because the Phase 3
+     admin editor wants it — but with no island using it the integration emitted
+     a 188KB client runtime that nothing on the site referenced, shipped in
+     every deployment. checks/vercel-output.js fails if that comes back. One
+     line brings it in when there is something to hydrate. */
+  integrations: [deckAtRoot()],
+
   build: { inlineStylesheets: "auto" },
   vite: { build: { cssMinify: "lightningcss" } },
 });

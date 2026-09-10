@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro build && node scripts/vercel-config.mjs",
     "preview": "astro preview",
     "astro": "astro",
     "check": "node checks/run.js",
@@ -30,6 +30,7 @@
     "@types/node": "24.10.1",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.1",
+    "@vercel/routing-utils": "6.5.0",
     "playwright": "1.56.1",
     "typescript": "5.9.3"
   }

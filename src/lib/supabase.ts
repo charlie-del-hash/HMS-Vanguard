@@ -13,18 +13,24 @@
  *
  * Astro will happily bundle whatever a component imports, and a `.astro` file's
  * frontmatter and its client script live in the same file — so an import added
- * in the wrong half is a plausible mistake rather than an exotic one. The guard
- * below makes that mistake loud: importing this module into client code throws
- * at call time with the reason, instead of shipping the key and failing
- * silently in the reader's favour.
+ * in the wrong half is a plausible mistake rather than an exotic one.
+ *
+ * The secret therefore comes from `astro:env/server`, which makes that mistake
+ * a BUILD failure. The previous arrangement read import.meta.env and threw at
+ * call time if `window` existed; that never leaked the key (Vite compiles a
+ * non-PUBLIC var to `void 0` in client code — verified with a canary) but it
+ * failed quietly the other way: a client script importing this module pulled
+ * 215KB of Supabase SDK into the page, and a guard that only fires when the
+ * function is called had nothing to say about it.
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY } from "astro:env/client";
 import type { Database } from "./database.types";
 
 export type Client = SupabaseClient<Database>;
 
-const url = import.meta.env.PUBLIC_SUPABASE_URL as string | undefined;
-const publishable = import.meta.env.PUBLIC_SUPABASE_PUBLISHABLE_KEY as string | undefined;
+const url = PUBLIC_SUPABASE_URL;
+const publishable = PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
 function required(name: string, value: string | undefined): string {
   if (!value) {
@@ -55,15 +61,11 @@ export function publicClient(): Client {
  * Full-access client. Bypasses RLS. Server only — endpoints, and the admin's
  * server routes. Never import this from a component's client script.
  */
-export function serviceClient(): Client {
-  if (typeof window !== "undefined") {
-    throw new Error(
-      "serviceClient() was reached from the browser. The service role bypasses RLS, " +
-        "so this import has to move to server code — an API route under src/pages/api, " +
-        "or the frontmatter of a page that is not prerendered.",
-    );
-  }
-  const secret = import.meta.env.SUPABASE_SERVICE_ROLE_KEY as string | undefined;
+export async function serviceClient(): Promise<Client> {
+  /* Imported lazily and by name so the module graph only reaches
+     `astro:env/server` on a path that actually wants the service role — and so
+     a client bundle that reaches it fails the build rather than shipping. */
+  const { SUPABASE_SERVICE_ROLE_KEY: secret } = await import("astro:env/server");
   return createClient<Database>(
     required("PUBLIC_SUPABASE_URL", url),
     required("SUPABASE_SERVICE_ROLE_KEY", secret),
