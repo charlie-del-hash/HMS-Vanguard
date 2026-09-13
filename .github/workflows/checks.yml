@@ -1,0 +1,45 @@
+# Runs the deck's checks. They drive headless Chromium against a served copy
+# of `affinity-ops-deck.html` and read the live DOM, so they need a browser —
+# which is why this is a separate workflow from the Pages deploy rather than a
+# job in front of it.
+#
+# The deploy in static.yml is deliberately not gated on this: the deck is one
+# committed file with no build step, so a red check never stops a hand-edit
+# from reaching the site. What it does do is say so, on the commit and on the
+# pull request.
+name: Checks
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Headless-Chromium checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install
+        run: npm install --no-audit --no-fund
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run the checks
+        run: npm test

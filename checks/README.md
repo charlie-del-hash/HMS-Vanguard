@@ -11,9 +11,14 @@ the site artifact, so nothing here is published there.
 ## Running them
 
 ```
-node checks/run.js                 # all of them
+npm install                        # once — pulls Playwright
+npx playwright install chromium    # once — pulls the browser
+
+npm test                           # all of them
 node checks/run.js charts routing  # a subset
 ```
+
+CI runs `npm test` on every push and pull request (`.github/workflows/checks.yml`).
 
 `run.js` serves the deck on a loopback port and hands each check the URL in
 `DECK_URL`. Playwright resolves through `require("playwright")`; set

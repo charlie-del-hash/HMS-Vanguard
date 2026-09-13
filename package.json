@@ -1,0 +1,16 @@
+{
+  "name": "affinity-ops-deck",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Affinity Ops Deck — a self-contained ops deck for the shipping desk, and the headless-Chromium checks that hold it",
+  "scripts": {
+    "test": "node checks/run.js",
+    "check": "npm test"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
