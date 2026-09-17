@@ -18,6 +18,7 @@ const PAGES = [
   "/",
   "/reports/",
   "/reports/hormuz-strikes-tanker-economics/",
+  "/privacy/",
   "/dev/blocks/",
   "/dev/charts/",
   "/dev/text/",

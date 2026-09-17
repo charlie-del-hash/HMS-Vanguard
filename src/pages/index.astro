@@ -10,6 +10,7 @@ import Base from "../layouts/Base.astro";
 import ReportCard from "../components/ReportCard.astro";
 import { listReports, allIndicative } from "../lib/content";
 import { PORTAL_URL, portalHref, SITE_NAME, SITE_TAGLINE } from "../lib/config";
+import EmailCapture from "../components/EmailCapture.astro";
 
 const { reports, source } = await listReports();
 const [feature, ...rest] = reports;
@@ -75,6 +76,9 @@ const portal = portalHref("landing");
         </>
       )
     }
+    <div class="capture">
+      <EmailCapture compact />
+    </div>
   </main>
 
   <footer class="foot">
@@ -82,6 +86,7 @@ const portal = portalHref("landing");
       <p>
         <a href="/reports">Reports</a>
         <a href="/ops-deck.html">Ops deck</a>
+        <a href="/privacy">Privacy</a>
         {PORTAL_URL && <a href={portal!} rel="noopener">Research portal</a>}
       </p>
       <p class="src">Indicative data · not for quotation</p>
@@ -204,6 +209,9 @@ const portal = portalHref("landing");
     color: var(--small);
   }
 
+  .capture {
+    margin-top: 34px;
+  }
   .foot {
     border-top: 1px solid var(--hair);
   }

@@ -54,5 +54,22 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
   </head>
   <body>
     <slot />
+
+    {
+      /* The beacon, on reader-facing pages only. `noindex` marks the dev
+         sheets and the sign-in page, and measuring our own tooling would put
+         noise straight into the funnel it is meant to measure.
+
+         It respects Do Not Track before it generates an id or touches storage,
+         so a reader who has opted out is not merely un-reported — they are
+         un-recorded. See src/lib/analytics.ts. */
+      !noindex && (
+        <script>
+          import { start } from "../lib/analytics";
+          start();
+          document.addEventListener("astro:page-load", start);
+        </script>
+      )
+    }
   </body>
 </html>

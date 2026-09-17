@@ -122,19 +122,26 @@ async function reachable(timeoutMs) {
     process.exit(1);
   }
 
-  const code = await new Promise((resolve) => {
+  let code = 0;
+  for (const name of ["site-admin", "site-funnel"]) {
+    code = (await runCheck(name)) || code;
+  }
+
+  async function runCheck(name) {
+   return await new Promise((resolve) => {
     const child = spawn(process.execPath, [
       /* site-admin.js imports src/lib/csv.ts directly to test the parser as a
          pure function — no server, no database, just the rules. */
       "--experimental-strip-types",
       "--no-warnings",
-      path.join(__dirname, "site-admin.js"),
+      path.join(__dirname, `${name}.js`),
     ], {
       stdio: "inherit",
       env: { ...process.env, ADMIN_URL: BASE },
     });
     child.on("exit", resolve);
-  });
+   });
+  }
 
   stop();
   /* Confirm it is actually gone rather than assuming the signal landed — a

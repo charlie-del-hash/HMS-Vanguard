@@ -305,6 +305,76 @@ half, run in the condition that produces the interesting failure.
 `imageService` is off for the same reason, and a storage bucket with an upload path is real surface
 to secure for a feature nothing currently needs.
 
+## The funnel: what is measured, and what measures it
+
+Content is free, email is optional, and **analytics is the growth instrument** rather than a signup
+wall. That decision is what makes these three tables load-bearing and their privacy posture part of
+the product rather than a footer.
+
+### One writer, and it is not the browser
+
+`visitors`, `interactions` and `subscribers` have RLS with **no write policy for any role**. The only
+writer is `/api/track` (and `/api/subscribe`), holding the service role. That is not belt-and-braces:
+the country on a visitor row is derived from the request IP, the IP is never stored, and a browser
+cannot know its own country — so a server has to be in the path regardless, and once it is, a public
+INSERT grant would be pure extra surface.
+
+`anon` has **no grant at all** on any of the three. 0009 gave `authenticated` SELECT behind
+`private.is_staff()`, so `/admin/analytics` reads as the signed-in user and the database decides —
+rather than the service role plus a guard in route code, where one forgotten check exposes the
+subscriber list. That also cleared the last three security advisories, by granting the access that
+was always intended instead of by adding a hole.
+
+### First-touch attribution, and why it needed an RPC
+
+A visitor's referrer and UTM tags are pinned on their **first** hit and must survive every visit
+after. PostgREST's upsert writes every column it is given, so through REST the choice is overwrite
+the attribution or do two round trips with a race between them. `record_events` (0009) is
+`on conflict (anon_id) do update set last_seen = now()` and nothing else.
+
+Without it, a reader who arrives from a newsletter and comes back directly a week later is recorded
+as having arrived directly — and the newsletter loses credit for a signup it earned.
+
+### The privacy page is a set of assertions
+
+`/privacy` makes four claims, and `checks/site-beacon.js` checks each against a real browser loading
+the real build:
+
+| claim | assertion |
+| --- | --- |
+| no third parties | zero requests to any host but ours from a report page |
+| Do Not Track | **no beacon AND no identifier** — un-recorded, not merely un-reported |
+| no fingerprint | the payload contains no user-agent, no IP, no screen or canvas data |
+| never a wall | the form is a real POST that works with JS off, consent is not pre-ticked, and nothing fixed covers more than 60% of the viewport |
+
+DNT is honoured *first*, before an id is generated or storage is touched. Respecting it afterwards
+would be a gesture rather than a choice, and the check fails if the id appears anyway.
+
+The identifier lives in **localStorage, not a cookie** — 0003's comment says cookie, which was the
+plan. The pages it runs on are prerendered static files, so a cookie would ride along on every asset
+request and no server would read it; the beacon posts the id in its body regardless.
+
+### /api/track answers 204 to everything, which is why the validation is a function
+
+A beacon has nobody to report an error to, and an endpoint whose status varies with the input is an
+oracle for whoever is probing it. The consequence is that **none of its validation is observable over
+HTTP** — a check that POSTs rubbish and gets 204 proves only that the server is running.
+
+So it lives in `src/lib/track-validate.ts` as a pure function, and `checks/site-funnel.js` tests it
+directly: the uuid, the event allowlist, the batch and body caps, the meta flattening, and that the
+country comes from the edge header rather than from anything the client said.
+
+One of those is worth knowing about: **the beacon's `EventKind` and the endpoint's `KINDS` are in
+different files and drift silently.** A new event added to one and not the other is dropped forever,
+and nothing says so because the endpoint answers 204 either way. There is an assertion that reads
+both lists and compares them.
+
+### Still needed before any of it records anything
+
+`SUPABASE_SERVICE_ROLE_KEY` on the deployment. Without it `/api/track` accepts every beacon and
+discards it, saying so once per cold start rather than once per reader, and `/admin/analytics` says
+plainly that nothing is being recorded. Nothing breaks; nothing is measured either.
+
 ## Two checks that were passing while looking at nothing
 
 Both found in Phase 3, both the same shape, and worth knowing about because the shape recurs.

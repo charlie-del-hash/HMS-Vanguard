@@ -1,0 +1,384 @@
+---
+/* The funnel, as a chart.
+ *
+ * ── it reads as the user, not as the service role ─────────────────────
+ * 0004 assumed this page would hold the service role. 0009 gave staff a SELECT
+ * policy instead, so the database decides what this account may see and a
+ * forgotten guard in route code cannot expose the subscriber list. Writes are
+ * still service-role only, through /api/track and /api/subscribe.
+ *
+ * ── it reuses the deck's charts ───────────────────────────────────────
+ * barChart and the stat tiles, drawn through ChartFrame like everything else,
+ * so the funnel gets the same true-size guarantee and the same palette as the
+ * reports it is measuring. A second chart layer for internal pages would be a
+ * second thing to keep correct in both themes.
+ */
+export const prerender = false;
+
+import Admin from "../../layouts/Admin.astro";
+import ChartFrame from "../../components/ChartFrame.astro";
+import { serverClient } from "../../lib/auth";
+import type { ChartSpec } from "../../lib/charts/render";
+
+const staff = Astro.locals.staff!;
+const db = serverClient(Astro);
+
+/** How far back. Short enough to be readable, long enough to show a trend. */
+const DAYS = Math.min(90, Math.max(7, Number(Astro.url.searchParams.get("days") ?? 30)));
+const since = new Date(Date.now() - DAYS * 86_400_000).toISOString();
+
+const [interactions, visitors, subscribers] = await Promise.all([
+  db.from("interactions").select("kind, report_slug, ts, anon_id, meta").gte("ts", since).limit(20000),
+  db.from("visitors").select("anon_id, utm_source, referrer, country, device, first_seen").gte("first_seen", since).limit(20000),
+  db.from("subscribers").select("email, created_at, source_report, utm_source, consent").gte("created_at", since).limit(5000),
+]);
+
+const problem =
+  interactions.error?.message ?? visitors.error?.message ?? subscribers.error?.message ?? null;
+
+const rows = interactions.data ?? [];
+const vis = visitors.data ?? [];
+const subs = subscribers.data ?? [];
+
+/* ── the funnel ──────────────────────────────────────────────────────
+   Counted in DISTINCT VISITORS per step, not in events. Counting events makes
+   a step look bigger the more times one person did it, which turns the most
+   engaged reader into a trend. */
+function reach(kinds: string[]): number {
+  const who = new Set<string>();
+  for (const r of rows) if (kinds.includes(r.kind) && r.anon_id) who.add(r.anon_id);
+  return who.size;
+}
+
+const STEPS: [string, string[]][] = [
+  ["Viewed", ["pageview"]],
+  ["Read half", ["scroll_50"]],
+  ["Reached the end", ["scroll_100"]],
+  ["Saw the CTA", ["cta_impression"]],
+  ["Clicked it", ["cta_click"]],
+  ["Left the site for the portal", ["outbound_portal"]],
+  ["Subscribed", ["subscribe"]],
+];
+const funnel = STEPS.map(([name, kinds]) => ({ name, n: reach(kinds) }));
+const top = funnel[0]?.n || 0;
+
+const funnelSpec: ChartSpec = {
+  kind: "bar",
+  rows: funnel.map((f) => ({ step: f.name, n: f.n })),
+  xk: "step",
+  yk: "n",
+  label: `Distinct visitors by step, last ${DAYS} days`,
+};
+
+/* ── per report ──────────────────────────────────────────────────────── */
+const byReport = new Map<string, { views: Set<string>; finished: Set<string>; cta: Set<string> }>();
+for (const r of rows) {
+  if (!r.report_slug || !r.anon_id) continue;
+  const e = byReport.get(r.report_slug) ?? { views: new Set(), finished: new Set(), cta: new Set() };
+  if (r.kind === "pageview") e.views.add(r.anon_id);
+  if (r.kind === "scroll_100") e.finished.add(r.anon_id);
+  if (r.kind === "cta_click") e.cta.add(r.anon_id);
+  byReport.set(r.report_slug, e);
+}
+const reports = [...byReport.entries()]
+  .map(([slug, e]) => ({
+    slug,
+    views: e.views.size,
+    finished: e.finished.size,
+    cta: e.cta.size,
+    completion: e.views.size ? Math.round((e.finished.size / e.views.size) * 100) : 0,
+  }))
+  .sort((a, b) => b.views - a.views);
+
+/* ── where they came from ───────────────────────────────────────────── */
+function channelOf(v: (typeof vis)[number]): string {
+  if (v.utm_source) return v.utm_source;
+  if (!v.referrer) return "direct";
+  try {
+    return new URL(v.referrer).host.replace(/^www\./, "");
+  } catch {
+    return "other";
+  }
+}
+const channels = new Map<string, number>();
+for (const v of vis) channels.set(channelOf(v), (channels.get(channelOf(v)) ?? 0) + 1);
+const topChannels = [...channels.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
+
+const channelSpec: ChartSpec | null = topChannels.length
+  ? {
+      kind: "bar",
+      rows: topChannels.map(([name, n]) => ({ name, n })),
+      xk: "name",
+      yk: "n",
+      label: "First-touch channel, by visitor",
+    }
+  : null;
+
+/* Read time, from the meta on the read_time events.
+ *
+ * `meta` has to be in the select above or this reads undefined forever and the
+ * tile shows a dash that looks like "nobody read anything" rather than "we did
+ * not ask for the column". It was missing once, and the cast that used to be
+ * here is what stopped the typechecker saying so — hence no cast now. */
+const readSeconds: number[] = [];
+for (const r of rows) {
+  if (r.kind !== "read_time") continue;
+  const meta = r.meta as { seconds?: unknown } | null;
+  const s = meta?.seconds;
+  if (typeof s === "number" && s > 0 && s < 3600) readSeconds.push(s);
+}
+readSeconds.sort((a, b) => a - b);
+const medianRead = readSeconds.length ? readSeconds[Math.floor(readSeconds.length / 2)] : null;
+
+const consented = subs.filter((s) => s.consent).length;
+const fmt = new Intl.NumberFormat("en-GB");
+---
+
+<Admin title="Analytics" email={staff.email} back={{ href: "/admin", label: "Reports" }}>
+  <div class="head">
+    <h1>Funnel</h1>
+    <nav class="range">
+      {[7, 30, 90].map((d) => (
+        <a href={`/admin/analytics?days=${d}`} class:list={{ on: d === DAYS }}>{d}d</a>
+      ))}
+    </nav>
+  </div>
+
+  {problem && <p class="bad">{problem}</p>}
+
+  {
+    rows.length === 0 && !problem && (
+      <p class="empty">
+        Nothing recorded in this window. If the site is live, check that
+        <code>SUPABASE_SERVICE_ROLE_KEY</code> is set on the deployment — /api/track is the only
+        writer, and without it every beacon is accepted and discarded.
+      </p>
+    )
+  }
+
+  <div class="tiles">
+    <div class="tile">
+      <span class="label">Visitors</span>
+      <span class="display v">{fmt.format(vis.length)}</span>
+      <span class="note">first seen in window</span>
+    </div>
+    <div class="tile">
+      <span class="label">Reached the end</span>
+      <span class="display v">{top ? Math.round((reach(["scroll_100"]) / top) * 100) : 0}<span class="unit">%</span></span>
+      <span class="note">of those who viewed</span>
+    </div>
+    <div class="tile">
+      <span class="label">Median read</span>
+      <span class="display v">{medianRead ?? "–"}<span class="unit">{medianRead ? "s" : ""}</span></span>
+      <span class="note">visible time only</span>
+    </div>
+    <div class="tile">
+      <span class="label">Portal clicks</span>
+      <span class="display v">{fmt.format(reach(["outbound_portal"]))}</span>
+      <span class="note">distinct visitors</span>
+    </div>
+    <div class="tile">
+      <span class="label">Subscribers</span>
+      <span class="display v">{fmt.format(subs.length)}</span>
+      <span class="note">{consented} consented to email</span>
+    </div>
+  </div>
+
+  <section>
+    <h2>Every step, by distinct visitor</h2>
+    <ChartFrame spec={funnelSpec} ssrWidth={1100} />
+    <table>
+      <thead><tr><th>Step</th><th class="num">Visitors</th><th class="num">Of previous</th><th class="num">Of all</th></tr></thead>
+      <tbody>
+        {
+          funnel.map((f, i) => {
+            const prev = i === 0 ? f.n : funnel[i - 1].n;
+            return (
+              <tr>
+                <td>{f.name}</td>
+                <td class="num">{fmt.format(f.n)}</td>
+                <td class="num">{prev ? Math.round((f.n / prev) * 100) : 0}%</td>
+                <td class="num">{top ? Math.round((f.n / top) * 100) : 0}%</td>
+              </tr>
+            );
+          })
+        }
+      </tbody>
+    </table>
+    <p class="fine">
+      Counted in distinct visitors, not events — counting events makes a step look bigger the
+      more times one person did it, which turns the most engaged reader into a trend.
+    </p>
+  </section>
+
+  <section>
+    <h2>By report</h2>
+    {
+      reports.length === 0 ? (
+        <p class="empty">No report views yet.</p>
+      ) : (
+        <table>
+          <thead><tr><th>Report</th><th class="num">Views</th><th class="num">Finished</th><th class="num">Completion</th><th class="num">CTA clicks</th></tr></thead>
+          <tbody>
+            {reports.map((r) => (
+              <tr>
+                <td><a href={`/reports/${r.slug}`} target="_blank" rel="noopener">{r.slug}</a></td>
+                <td class="num">{fmt.format(r.views)}</td>
+                <td class="num">{fmt.format(r.finished)}</td>
+                <td class="num">{r.completion}%</td>
+                <td class="num">{fmt.format(r.cta)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )
+    }
+  </section>
+
+  <section>
+    <h2>Where they came from</h2>
+    {
+      channelSpec ? (
+        <ChartFrame spec={channelSpec} ssrWidth={1100} />
+      ) : (
+        <p class="empty">No visitors in this window.</p>
+      )
+    }
+    <p class="fine">
+      First touch, pinned on the visitor's first ever hit and never overwritten — so a reader
+      who arrives from a newsletter and comes back directly a week later still credits the
+      newsletter. That is what <code>record_events</code> exists to guarantee.
+    </p>
+  </section>
+</Admin>
+
+<style>
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 20px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  h1 {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 650;
+    color: var(--ink);
+  }
+  .range {
+    display: flex;
+    gap: 4px;
+  }
+  .range a {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 6px 11px;
+    border: 1px solid var(--hair);
+    border-radius: var(--r-chip);
+    color: var(--small);
+    text-decoration: none;
+  }
+  .range a.on {
+    background: var(--teal);
+    color: var(--on-accent);
+    border-color: transparent;
+  }
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px;
+    background: var(--hair);
+    border: 1px solid var(--hair);
+    border-radius: var(--r);
+    overflow: clip;
+    margin-bottom: 22px;
+  }
+  .tile {
+    display: grid;
+    gap: 2px;
+    padding: 13px 15px;
+    background: var(--surface);
+    min-width: 0;
+  }
+  .v {
+    font-size: clamp(22px, 1.3rem + 0.5vw, 28px);
+    color: var(--ink);
+  }
+  .unit {
+    font-size: 13px;
+    color: var(--small);
+    margin-left: 1px;
+  }
+  .note {
+    font-size: 11px;
+    color: var(--small);
+  }
+  section {
+    margin-bottom: 26px;
+    padding: 15px 17px;
+    border: 1px solid var(--hair);
+    border-radius: var(--r);
+    background: var(--surface);
+  }
+  h2 {
+    margin: 0 0 12px;
+    font-size: 16px;
+    font-weight: 640;
+    color: var(--ink);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    margin-top: 12px;
+  }
+  th,
+  td {
+    text-align: left;
+    padding: 7px 9px;
+    border-top: 1px solid var(--row-line);
+  }
+  thead th {
+    border-top: 0;
+    font-family: var(--mono);
+    font-size: 8.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--small);
+    font-weight: 400;
+  }
+  .num {
+    text-align: right;
+    font-family: var(--num);
+    font-variant-numeric: tabular-nums;
+  }
+  .fine {
+    margin: 10px 0 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--small);
+    max-width: 72ch;
+  }
+  code {
+    font-family: var(--mono);
+    font-size: 11.5px;
+  }
+  .empty {
+    margin: 0;
+    color: var(--small);
+    font-size: 13.5px;
+    line-height: 1.55;
+  }
+  .bad {
+    margin: 0 0 14px;
+    padding: 10px 13px;
+    border-radius: var(--r-ctl);
+    background: var(--neg-soft);
+    border-left: 3px solid var(--neg);
+    font-size: 13.5px;
+  }
+</style>

@@ -1,0 +1,171 @@
+---
+/* What is measured, in plain words.
+ *
+ * Every claim on this page is a claim about code in this repository, and the
+ * code is named so it can be checked rather than believed. A privacy page that
+ * describes an intention rather than an implementation is the same failure as
+ * a config file that validates and does nothing.
+ */
+import Base from "../layouts/Base.astro";
+import { SITE_NAME } from "../lib/config";
+---
+
+<Base
+  title={`Privacy — ${SITE_NAME}`}
+  description="What this site measures, what it does not, and how to stop it."
+>
+  <header class="top no-print">
+    <a class="home" href="/">{SITE_NAME}</a>
+  </header>
+
+  <main class="article">
+    <div class="masthead">
+      <h1>What this site measures</h1>
+      <p class="dek">
+        Short version: a random number in your browser, which pages you looked at, and how
+        far down you got. No third parties, no advertising, and nothing that identifies you.
+      </p>
+    </div>
+
+    <h2>What is recorded</h2>
+    <ul>
+      <li>
+        <strong>A random identifier</strong> this site generates and keeps in your browser's
+        local storage. It is not derived from anything about you — it identifies a browser, not
+        a person, and clearing site data genuinely resets it.
+      </li>
+      <li>
+        <strong>Which pages you opened</strong>, how far you scrolled, roughly how long the tab
+        was actually visible, and whether you clicked through to the research portal.
+      </li>
+      <li>
+        <strong>Where you arrived from</strong> — the referring site and any campaign tags on
+        the link — recorded once, on your first visit.
+      </li>
+      <li>
+        <strong>A two-letter country</strong>, worked out at the network edge, and a coarse
+        device class (phone, tablet or desktop) based on window width.
+      </li>
+    </ul>
+
+    <h2>What is not</h2>
+    <ul>
+      <li>
+        <strong>Your IP address.</strong> The country is resolved before the request reaches our
+        code, and the address itself is never written down. It is not stored anywhere.
+      </li>
+      <li><strong>Your user-agent string</strong>, or any browser or device fingerprint.</li>
+      <li>
+        <strong>Anything a third party set.</strong> There are no third-party cookies, no
+        advertising pixels and no external analytics. Nothing on a report page makes a request
+        to anyone but us.
+      </li>
+      <li><strong>Your name or email</strong>, unless you type one into the form below a report.</li>
+    </ul>
+
+    <h2>How to stop it</h2>
+    <p>
+      Turn on <strong>Do Not Track</strong> or <strong>Global Privacy Control</strong> in your
+      browser. This site checks for both <em>before</em> it generates an identifier or touches
+      storage — so with either set you are not merely un-reported, you are un-recorded. Clearing
+      site data removes the identifier and the next visit starts a new one.
+    </p>
+
+    <h2>Email</h2>
+    <p>
+      Entirely optional, and nothing on this site is behind it. Every report is free to read
+      whether or not you sign up. If you tick the consent box we record that you agreed to be
+      emailed; if you do not, the address is stored with consent recorded as false and nothing
+      is sent. We also record which report you signed up from, so we know which work was worth
+      reading.
+    </p>
+
+    <h2>Why we measure at all</h2>
+    <p>
+      This site is free and is meant to be found. Knowing which reports get read, and how far,
+      is how we decide what to write next — which is a better arrangement for a reader than
+      putting the work behind a signup form and measuring that instead.
+    </p>
+
+    <p class="fine">
+      Anonymous first-party measurement is processed on the basis of legitimate interest; the
+      optional email is consent. If you want the identifier or an address removed, ask and it
+      will be.
+    </p>
+
+    <p class="back"><a href="/">← Back to the site</a></p>
+  </main>
+</Base>
+
+<style>
+  .top {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--hair);
+  }
+  .home {
+    font-weight: 640;
+    color: var(--ink);
+    text-decoration: none;
+    font-size: 14px;
+  }
+  .article {
+    padding: 34px 0 72px;
+  }
+  .masthead {
+    display: grid;
+    gap: 9px;
+    margin-bottom: 26px;
+  }
+  h1 {
+    margin: 0;
+    font-size: clamp(27px, 1.6rem + 1.8vw, 40px);
+    line-height: 1.13;
+    letter-spacing: -0.015em;
+    font-weight: 660;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+  .dek {
+    margin: 0;
+    font-size: clamp(15px, 1rem + 0.3vw, 18px);
+    line-height: 1.45;
+    color: var(--body);
+    text-wrap: pretty;
+  }
+  h2 {
+    margin: 30px 0 8px;
+    font-size: 17px;
+    font-weight: 640;
+    color: var(--ink);
+  }
+  ul {
+    margin: 0;
+    padding-left: 1.1em;
+    display: grid;
+    gap: 7px;
+  }
+  li,
+  p {
+    line-height: 1.6;
+  }
+  .article > p {
+    margin: 0 0 1em;
+  }
+  strong {
+    font-weight: 650;
+    color: var(--ink);
+  }
+  .fine {
+    margin-top: 28px;
+    padding-top: 14px;
+    border-top: 1px solid var(--hair);
+    font-size: 13px;
+    color: var(--small);
+  }
+  .back {
+    margin-top: 22px;
+    font-size: 13.5px;
+  }
+</style>

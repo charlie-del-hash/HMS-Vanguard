@@ -12,6 +12,7 @@ import Blocks from "../../components/blocks/Blocks.astro";
 import { listReports, loadReport } from "../../lib/content";
 import { plain, readMinutes } from "../../lib/inline";
 import { SITE_NAME } from "../../lib/config";
+import EmailCapture from "../../components/EmailCapture.astro";
 
 export async function getStaticPaths() {
   const { reports } = await listReports();
@@ -79,6 +80,10 @@ const jsonLd = {
     </div>
 
     <Blocks blocks={blocks} />
+
+    <div class="capture">
+      <EmailCapture slug={meta.slug} />
+    </div>
 
     <footer class="foot">
       {
@@ -170,6 +175,9 @@ const jsonLd = {
     color: var(--small);
   }
 
+  .capture {
+    margin-top: 44px;
+  }
   .foot {
     margin-top: 40px;
     padding-top: 18px;

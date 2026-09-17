@@ -483,6 +483,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      record_events: {
+        Args: { p_anon_id: string; p_events: Json; p_visitor: Json }
+        Returns: number
+      }
       save_report_blocks: {
         Args: { p_blocks: Json; p_note?: string; p_report_id: string }
         Returns: number
