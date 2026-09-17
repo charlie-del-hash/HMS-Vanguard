@@ -4,8 +4,8 @@
 
    DECK_URL overrides the target, which is how a check is run against an older
    build for a differential (see contrast.js). */
-/* Playwright may be a dev dependency here or installed globally; try both
-   before giving up, so the checks run without a package.json of their own. */
+/* Playwright is a dev dependency (see package.json), but a global install is
+   still tried before giving up, so a checkout that skipped `npm install` runs. */
 function loadPlaywright(){
   const tries = [process.env.PLAYWRIGHT_MODULE, "playwright", "playwright-core"].filter(Boolean);
   for(const t of tries){ try{ return require(t); }catch{} }
