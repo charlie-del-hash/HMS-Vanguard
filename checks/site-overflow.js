@@ -35,7 +35,15 @@ const PAGES = [
     for (const theme of ["light", "dark"]) {
       for (const w of WIDTHS) {
         await p.setViewportSize({ width: w, height: 1000 });
-        await p.goto(BASE + page, { waitUntil: "networkidle" });
+        const nav = await p.goto(BASE + page, { waitUntil: "networkidle" });
+        /* Assert the page actually loaded. A 404 has no horizontal overflow
+           either, so without this the sweep reports every width clean for a
+           site that is not being served at all. */
+        if (!nav || nav.status() !== 200) {
+          bad.push(`${page} ${theme} ${w}: page returned ${nav ? nav.status() : "no response"}`);
+          n++;
+          continue;
+        }
         await p.evaluate((th) => {
           document.documentElement.dataset.theme = th;
         }, theme);

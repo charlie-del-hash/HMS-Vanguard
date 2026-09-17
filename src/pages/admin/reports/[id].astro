@@ -1,0 +1,517 @@
+---
+/* One report: its metadata, its blocks, and the way to publish it.
+ *
+ * Metadata is a plain HTML form posting to this page. It needs no JavaScript,
+ * it cannot get out of step with the island, and it keeps the only hydrated
+ * component on the page down to the thing that genuinely needs state.
+ *
+ * Status changes come through the same form. The database has the real rule —
+ * `reports_published_needs_a_date` is a CHECK — and `statusProblem` exists so
+ * the refusal reads like a sentence instead of a constraint name.
+ */
+export const prerender = false;
+
+import Admin from "../../../layouts/Admin.astro";
+import Editor from "../../../components/admin/Editor";
+import { serverClient } from "../../../lib/auth";
+import { slugify, statusProblem, type Status } from "../../../lib/admin";
+import type { BlockKind } from "../../../lib/blocks";
+import { rebuildMessage, triggerRebuild } from "../../../lib/publish";
+
+const staff = Astro.locals.staff!;
+const id = Astro.params.id!;
+const db = serverClient(Astro);
+
+let problem: string | null = null;
+let note: string | null = null;
+
+if (Astro.request.method === "POST") {
+  const f = await Astro.request.formData();
+
+  /* datetime-local has no timezone, and a report published "at 06:00" that
+     turns out to mean 06:00 in whatever timezone the server happened to be in
+     is a dated document with the wrong date on it. The form sends UTC. */
+  const when = String(f.get("published_at") ?? "").trim();
+  const publishedAt = when ? new Date(`${when}Z`).toISOString() : null;
+  const status = String(f.get("status") ?? "draft") as Status;
+
+  const bad = statusProblem(status, publishedAt);
+  if (bad) {
+    problem = bad;
+  } else {
+    const slug = slugify(String(f.get("slug") ?? ""));
+    const tags = String(f.get("tags") ?? "")
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
+
+    const { error } = await db
+      .from("reports")
+      .update({
+        title: String(f.get("title") ?? "").trim(),
+        slug,
+        kicker: String(f.get("kicker") ?? "").trim() || null,
+        dek: String(f.get("dek") ?? "").trim() || null,
+        summary: String(f.get("summary") ?? "").trim() || null,
+        author: String(f.get("author") ?? "").trim() || null,
+        region: String(f.get("region") ?? "").trim() || null,
+        tags,
+        status,
+        published_at: publishedAt,
+      })
+      .eq("id", id);
+
+    if (error) {
+      problem = /duplicate key/i.test(error.message)
+        ? `The slug "${slug}" is already taken by another report.`
+        : error.message;
+    } else if (status === "published") {
+      /* A publish is only real once the site is rebuilt, because report pages
+         are prerendered. The editor says which of those two happened rather
+         than reporting "Published!" and leaving the site unchanged. */
+      note = rebuildMessage(await triggerRebuild());
+    } else {
+      note = "Saved.";
+    }
+  }
+}
+
+const { data: report, error } = await db
+  .from("reports")
+  .select("*")
+  .eq("id", id)
+  .maybeSingle();
+
+if (error) problem ??= error.message;
+if (!report) return Astro.rewrite("/404");
+
+const { data: blockRows } = await db
+  .from("report_blocks")
+  .select("kind, payload")
+  .eq("report_id", id)
+  .order("ord", { ascending: true });
+
+const initial = (blockRows ?? []).map((b) => ({
+  kind: b.kind as BlockKind,
+  payload: (b.payload ?? {}) as Record<string, unknown>,
+}));
+
+/** `datetime-local` wants `YYYY-MM-DDTHH:mm` with no zone; this is UTC. */
+const localValue = report.published_at
+  ? new Date(report.published_at).toISOString().slice(0, 16)
+  : "";
+---
+
+<Admin title={report.title} email={staff.email} back={{ href: "/admin", label: "Reports" }}>
+  {problem && <p class="bad">{problem}</p>}
+  {note && <p class="good">{note}</p>}
+
+  <details class="meta" open={report.status === "draft"}>
+    <summary>
+      <span class="label">Report details</span>
+      <span class:list={["chip", report.status]}>{report.status}</span>
+      <code>/reports/{report.slug}</code>
+    </summary>
+
+    <form method="POST">
+      <div class="grid">
+        <label class="wide"><span>Title</span><input name="title" value={report.title} required /></label>
+        <label><span>Slug</span><input name="slug" value={report.slug} required /></label>
+        <label><span>Kicker</span><input name="kicker" value={report.kicker ?? ""} /></label>
+        <label class="wide"><span>Dek — the sentence under the headline</span><textarea name="dek" rows="2">{report.dek ?? ""}</textarea></label>
+        <label class="wide"><span>Summary — used as the meta description</span><textarea name="summary" rows="2">{report.summary ?? ""}</textarea></label>
+        <label><span>Author</span><input name="author" value={report.author ?? ""} /></label>
+        <label><span>Region</span><input name="region" value={report.region ?? ""} /></label>
+        <label class="wide"><span>Tags — comma separated</span><input name="tags" value={report.tags.join(", ")} /></label>
+        <label>
+          <span>Published at (UTC)</span>
+          <input type="datetime-local" name="published_at" value={localValue} />
+        </label>
+        <label>
+          <span>Status</span>
+          <select name="status">
+            {["draft", "scheduled", "published", "archived"].map((s) => (
+              <option value={s} selected={s === report.status}>{s}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <div class="actions">
+        <button type="submit">Save details</button>
+        {
+          report.status === "published" && (
+            <a class="view" href={`/reports/${report.slug}`} target="_blank" rel="noopener">
+              View published
+            </a>
+          )
+        }
+      </div>
+      <p class="fine">
+        A published report needs a date — undated research is worthless, and the database
+        enforces that as well as this form does. Publishing shows it on the site at the next
+        build; see HANDOFF.md on rebuilding.
+      </p>
+    </form>
+  </details>
+
+  <Editor
+    client:load
+    reportId={id}
+    initial={initial}
+    previewSrc={`/admin/preview/${id}`}
+  />
+</Admin>
+
+<style is:global>
+  /* The editor island's styles live here rather than in the component: it is
+     the only island on the site, and a CSS-in-JS dependency for one component
+     is not worth the bytes. */
+  .ed {
+    display: grid;
+    gap: 16px;
+    align-items: start;
+  }
+  @media (min-width: 1000px) {
+    .ed {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+    .ed .preview {
+      position: sticky;
+      top: 62px;
+    }
+  }
+  .ed .col {
+    min-width: 0;
+    display: grid;
+    gap: 10px;
+  }
+  .ed .bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .ed .bar strong {
+    font-size: 14px;
+    color: var(--ink);
+  }
+  .ed .dot {
+    font-family: var(--mono);
+    font-size: 8.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--small);
+  }
+  .ed .dot.on {
+    color: var(--amber-dk);
+  }
+  .ed .bar .note {
+    font-size: 12px;
+    color: var(--small);
+  }
+  .ed button {
+    font: inherit;
+    font-size: 13px;
+    min-height: 32px;
+    padding: 0 10px;
+    border: 1px solid var(--rule);
+    border-radius: var(--r-ctl);
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .ed button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .ed button.primary {
+    margin-left: auto;
+    background: var(--teal);
+    color: var(--on-accent);
+    border-color: transparent;
+    font-weight: 600;
+    min-height: 36px;
+    padding: 0 16px;
+  }
+  .ed .blocks {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+  }
+  .ed .blk {
+    border: 1px solid var(--hair);
+    border-radius: var(--r-ctl);
+    background: var(--surface);
+  }
+  .ed .blk.open {
+    border-color: var(--teal-lt);
+  }
+  .ed .blkbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 7px 5px 5px;
+  }
+  .ed .name {
+    flex: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    text-align: left;
+    border: 0;
+    background: none;
+    min-width: 0;
+    font-weight: 600;
+  }
+  .ed .ord {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--small);
+    min-width: 1.6em;
+  }
+  .ed .sum {
+    font-weight: 400;
+    color: var(--small);
+    font-size: 12.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ed .tools {
+    display: flex;
+    gap: 3px;
+  }
+  .ed .tools button {
+    min-width: 30px;
+    padding: 0 6px;
+  }
+  .ed .tools .del:hover {
+    color: var(--neg);
+    border-color: var(--neg);
+  }
+  .ed .body {
+    padding: 4px 11px 12px;
+    display: grid;
+    gap: 9px;
+    border-top: 1px solid var(--hair);
+  }
+  .ed .hint {
+    margin: 6px 0 0;
+    font-size: 12px;
+    color: var(--small);
+    line-height: 1.45;
+  }
+  .ed .field {
+    display: grid;
+    gap: 3px;
+  }
+  .ed .field.row {
+    grid-auto-flow: column;
+    justify-content: start;
+    align-items: center;
+    gap: 7px;
+  }
+  .ed .field > span {
+    font-family: var(--mono);
+    font-size: 8.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--small);
+  }
+  .ed input,
+  .ed textarea,
+  .ed select {
+    font: inherit;
+    font-size: 13.5px;
+    padding: 7px 9px;
+    border: 1px solid var(--rule);
+    border-radius: var(--r-chip);
+    background: var(--field);
+    color: var(--ink);
+    width: 100%;
+  }
+  .ed textarea {
+    resize: vertical;
+    line-height: 1.5;
+  }
+  .ed textarea.mono {
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .ed .field.row input {
+    width: auto;
+  }
+  .ed .items {
+    display: grid;
+    gap: 8px;
+  }
+  .ed .item {
+    display: grid;
+    gap: 6px;
+    padding: 9px 10px;
+    border: 1px solid var(--hair);
+    border-radius: var(--r-chip);
+    background: var(--tint);
+  }
+  .ed .itembar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .ed .rawtoggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--small);
+    margin-top: 2px;
+  }
+  .ed .rawtoggle input {
+    width: auto;
+  }
+  .ed .add {
+    display: grid;
+    gap: 6px;
+    padding-top: 6px;
+  }
+  .ed .kinds {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .ed iframe {
+    width: 100%;
+    height: min(76dvh, 900px);
+    border: 1px solid var(--hair);
+    border-radius: var(--r);
+    background: var(--page);
+  }
+  .ed .pop {
+    font-size: 12px;
+    margin-left: auto;
+  }
+  .ed .bad {
+    margin: 0;
+    padding: 9px 11px;
+    border-radius: var(--r-chip);
+    background: var(--neg-soft);
+    border-left: 3px solid var(--neg);
+    font-size: 13px;
+  }
+  .ed .bad.small {
+    font-size: 12px;
+  }
+</style>
+
+<style>
+  .meta {
+    border: 1px solid var(--hair);
+    border-radius: var(--r);
+    background: var(--surface);
+    margin-bottom: 16px;
+  }
+  summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    cursor: pointer;
+    flex-wrap: wrap;
+  }
+  summary code {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--small);
+  }
+  form {
+    padding: 4px 14px 16px;
+    display: grid;
+    gap: 12px;
+  }
+  .grid {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  }
+  .wide {
+    grid-column: 1 / -1;
+  }
+  label {
+    display: grid;
+    gap: 3px;
+  }
+  label > span {
+    font-family: var(--mono);
+    font-size: 8.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--small);
+  }
+  input,
+  textarea,
+  select {
+    font: inherit;
+    font-size: 13.5px;
+    padding: 8px 10px;
+    border: 1px solid var(--rule);
+    border-radius: var(--r-chip);
+    background: var(--field);
+    color: var(--ink);
+    width: 100%;
+  }
+  .actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .actions button {
+    min-height: 38px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: var(--r-ctl);
+    background: var(--teal);
+    color: var(--on-accent);
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .view {
+    font-size: 13px;
+  }
+  .fine {
+    margin: 0;
+    font-size: 12px;
+    color: var(--small);
+    line-height: 1.5;
+  }
+  .chip {
+    font-family: var(--mono);
+    font-size: 8.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: var(--r-chip);
+    border: 1px solid var(--hair);
+    color: var(--small);
+  }
+  .chip.published {
+    color: var(--pos);
+    border-color: var(--pos-line);
+  }
+  .bad,
+  .good {
+    margin: 0 0 14px;
+    padding: 10px 13px;
+    border-radius: var(--r-ctl);
+    font-size: 13.5px;
+  }
+  .bad {
+    background: var(--neg-soft);
+    border-left: 3px solid var(--neg);
+  }
+  .good {
+    background: var(--pos-soft);
+    border-left: 3px solid var(--pos);
+  }
+</style>

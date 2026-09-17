@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig, envField } from "astro/config";
 import vercel from "@astrojs/vercel";
+import react from "@astrojs/react";
 import { existsSync, copyFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
@@ -105,15 +106,32 @@ export default defineConfig({
         access: "secret",
         optional: true,
       }),
+      /* A Vercel deploy hook, so publishing a report can rebuild the site.
+         Report pages are prerendered, so a publish is invisible to readers
+         until a build runs; this is what makes "publish" mean it.
+
+         Secret, because anyone holding the URL can trigger builds on this
+         project for as long as it exists. Optional, because without it the
+         admin says plainly that a rebuild is needed rather than pretending
+         the report is live. */
+      VERCEL_DEPLOY_HOOK_URL: envField.string({
+        context: "server",
+        access: "secret",
+        optional: true,
+      }),
     },
   },
 
-  /* React is not registered. It is still a dependency, because the Phase 3
-     admin editor wants it — but with no island using it the integration emitted
-     a 188KB client runtime that nothing on the site referenced, shipped in
-     every deployment. checks/vercel-output.js fails if that comes back. One
-     line brings it in when there is something to hydrate. */
-  integrations: [deckAtRoot()],
+  /* React is registered now, and only now: the admin's block editor is the
+     first island that actually hydrates. It stayed unregistered through Phases
+     0-2 because an integration with nothing using it emitted a 188KB client
+     runtime that no page referenced, shipped in every deployment, and
+     checks/vercel-output.js fails if an unreferenced bundle comes back.
+
+     Public pages are unaffected — they ship no framework runtime, because
+     nothing on them is an island. The editor is behind auth and is the only
+     thing that pays for React. */
+  integrations: [react(), deckAtRoot()],
 
   build: { inlineStylesheets: "auto" },
   vite: { build: { cssMinify: "lightningcss" } },

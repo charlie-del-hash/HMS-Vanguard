@@ -13,7 +13,19 @@ const path = require("path");
 const { spawn } = require("child_process");
 
 const ROOT = path.resolve(__dirname, "..");
-const DIST = path.join(ROOT, "dist");
+
+/* Serve what actually DEPLOYS, not `dist/`.
+ *
+ * This served dist/ until the admin added the first server-rendered page, at
+ * which point Astro restructured the output into dist/client and dist/server —
+ * and every request here started 404ing. site-overflow then reported 196/196
+ * clean, because a 404 page does not scroll sideways either. A check that
+ * passes while looking at nothing is worse than a missing one.
+ *
+ * .vercel/output/static is the artifact the edge serves, it is what
+ * vercel-output.js already treats as authoritative, and it does not move when
+ * the rendering mode changes. */
+const DIST = path.join(ROOT, ".vercel", "output", "static");
 const ORDER = ["vercel-output", "site-report", "site-charts", "site-overflow"];
 
 const MIME = {
@@ -30,7 +42,18 @@ const MIME = {
 };
 
 if (!fs.existsSync(DIST)) {
-  console.error("dist/ is missing — run `npm run build` first");
+  console.error(`${path.relative(ROOT, DIST)} is missing — run \`npm run build\` first`);
+  process.exit(1);
+}
+
+/* A served tree with no index.html is the shape the dist/client move made, and
+   it is indistinguishable from "everything 404s" once the checks are running.
+   Stop here instead, where the message can say what happened. */
+if (!fs.existsSync(path.join(DIST, "index.html"))) {
+  console.error(
+    `${path.relative(ROOT, DIST)} has no index.html. The build output moved — ` +
+      `check where astro is writing static pages before trusting any result below.`,
+  );
   process.exit(1);
 }
 

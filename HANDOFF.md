@@ -218,6 +218,111 @@ in the timeline. Shape as well as colour, which is the palette validator's stand
   pairs. `labelStep` in `geometry.ts` derives the step from the measured label width instead —
   the same lesson as the "5.75px a character" bug, applied one level up.
 
+## The admin, and the one thing you must do by hand first
+
+`/admin` is behind Supabase Auth with a staff allowlist. **There are no users and
+no staff rows yet**, and nobody can create either from the UI — sign-up is deliberately off
+(`shouldCreateUser: false`), because a public form that creates accounts fills `auth.users` with
+whatever a crawler types.
+
+So the bootstrap is two steps, once:
+
+1. **Create the account.** Supabase dashboard → Authentication → Users → Add user, with the work
+   email. (Or invite it.)
+2. **Make it staff**, in the SQL editor:
+
+```sql
+insert into public.staff (user_id, role)
+select id, 'admin' from auth.users where email = 'you@affinity';
+```
+
+Then `/admin/login` emails a magic link. **Supabase's built-in mailer is rate-limited** on the free
+tier — a few messages an hour — which suits a desk signing in occasionally and will not suit a
+launch. Configure SMTP before it matters.
+
+### The admin never holds the service role
+
+Every write goes through the signed-in user's own session, so the policies in 0004/0006 decide what
+they may do. The alternative — service role plus an authorization check in the route — bypasses RLS
+entirely, which makes one mistake in one handler a mistake with unlimited write access and turns
+the database's own rules into decoration. As built, an authorization bug in `src/lib/auth.ts` can at
+worst show somebody a page; it cannot grant a write the database would have refused.
+
+`SUPABASE_SERVICE_ROLE_KEY` is still unset and still unnecessary. It becomes necessary at Phase 4,
+for the analytics endpoint.
+
+### It fails closed, and that is the assertion worth keeping
+
+If Supabase cannot be reached, `access()` returns `unavailable` — and the middleware refuses that
+exactly like anonymous. A guard that fails OPEN when the database has a bad minute leaves the editor
+standing open to anyone with the URL, and a free-tier project pauses after about a week idle, so
+that is a scheduled event rather than a risk.
+
+**`checks/site-admin.js` tests this, and for a while it did not.** With no cookie at all,
+supabase-js answers "Auth session missing" from memory and never touches the network — so an empty
+request exercises the anonymous path and says nothing about the unreachable one. The check now
+sends a syntactically valid session cookie, which forces the client to go and verify it, which
+fails at the network here. Negative-tested: a guard modified to let `unavailable` through fails it.
+
+### Editing
+
+- **Metadata** is a plain form. No JavaScript, nothing to get out of step with the island.
+- **Blocks** are the one React island on the site — and the only reason React is registered at all.
+  Public pages still ship no framework runtime.
+- **Saving** posts to `/admin/reports/[id]/save`, which runs `parsePayload` before writing. The
+  session cookies are httpOnly, so a browser-side Supabase client could not read them anyway; going
+  through the server keeps the token out of reach AND puts every write through the parser.
+- **`save_report_blocks`** (migration 0008) replaces a report's blocks in ONE transaction and
+  snapshots the previous version into `report_revisions`. Over PostgREST the three operations would
+  be three transactions, and a failure between them leaves a published report half rewritten.
+  SECURITY INVOKER, so RLS still decides who may.
+
+### The preview is the real renderer
+
+`/admin/preview/[id]` imports the same `Blocks` component and the same stylesheet as
+`/reports/[slug]`. It is not a preview of the report; it is the report, with a banner on it.
+
+Reimplementing the renderer in React for a live-as-you-type preview would give two renderers that
+agree until the first time one is fixed — and the one the author is looking at would be the wrong
+one. The cost is that it shows the last SAVE rather than the current keystroke, which the banner
+says.
+
+### Publishing rebuilds, or says it did not
+
+Report pages are prerendered, so publishing changes nothing a reader sees until a build runs. Set
+**`VERCEL_DEPLOY_HOOK_URL`** (Vercel → Project → Settings → Git → Deploy Hooks) and publishing
+triggers one. Without it the editor says plainly that the report is published in the database and
+will appear at the next build — it does not say "Published!" and leave the site unchanged.
+
+### What Phase 3 could not verify here
+
+The phase's own gate is *publish a second report entirely through the UI*. **That cannot run in this
+sandbox** — there is no egress to the Supabase host, so nothing can sign in. It needs a human, a
+browser, and the two bootstrap steps above. Everything in `checks/site-admin.js` is the security
+half, run in the condition that produces the interesting failure.
+
+**Deferred, deliberately:** media upload to Supabase Storage. There is not one image in the build,
+`imageService` is off for the same reason, and a storage bucket with an upload path is real surface
+to secure for a feature nothing currently needs.
+
+## Two checks that were passing while looking at nothing
+
+Both found in Phase 3, both the same shape, and worth knowing about because the shape recurs.
+
+**The site checks were serving a directory that no longer existed.** Adding the first server-rendered
+page made Astro restructure `dist/` into `dist/client/` — and `checks/run-site.js` served `dist/`.
+Every request 404'd. `site-overflow` then reported **196/196 clean**, because a 404 page does not
+scroll sideways either. It now serves `.vercel/output/static` (the artifact that actually deploys,
+which does not move when the rendering mode changes), refuses to start if there is no `index.html`,
+and fails any page that does not return 200.
+
+**The admin checks were talking to a stale server.** Astro auto-detects an "AI agent environment"
+and runs `astro dev` as a detached background daemon, which survives killing the child process and
+keeps its port. A leftover daemon answered a later run on code from before the edit under test, and
+a deliberately broken auth guard passed all fifteen assertions. `checks/run-admin.js` now sets
+`ASTRO_DEV_BACKGROUND=0` to force foreground, picks a random port, and refuses to run if anything is
+already listening on it.
+
 ## Layout model — read this before changing the frame
 
 Three things are load-bearing and interact. Changing one without the others has already

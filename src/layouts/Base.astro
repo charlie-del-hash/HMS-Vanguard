@@ -20,7 +20,10 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
     <meta name="color-scheme" content="light dark" />
     <title>{title}</title>
     {description && <meta name="description" content={description} />}
-    {noindex && <meta name="robots" content="noindex" />}
+    {/* nofollow and noarchive as well as noindex. A dev sheet or a sign-in page
+        that is merely un-indexed can still be crawled for links and cached by
+        anything that keeps copies. */}
+    {noindex && <meta name="robots" content="noindex, nofollow, noarchive" />}
     <link rel="canonical" href={canonical} />
     {/* The deck's own shield, decoded out of its inline data URI into one
         served file rather than re-inlined on every page. */}

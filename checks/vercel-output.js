@@ -201,9 +201,32 @@ console.log("nothing ships that nothing uses");
 
 t("no client bundle is unreferenced", () => {
   const bundles = files.filter((f) => f.startsWith("/_astro/") && f.endsWith(".js"));
-  const corpus = files
-    .filter((f) => /\.(html|js|css)$/.test(f))
-    .map((f) => ({ f, body: fs.readFileSync(path.join(STATIC, f.slice(1)), "utf8") }));
+
+  /* The corpus has to include the SERVER bundle, not just the static output.
+     Once any page is server-rendered, the reference to its island's runtime
+     lives inside the function rather than in a file on disk — so scanning
+     static output alone reports a perfectly well-used bundle as dead weight.
+     Which is worse than it sounds: the fix somebody reaches for is deleting
+     the assertion, and it is the assertion that caught React shipping 187KB to
+     every reader for nothing. */
+  const serverFiles = [];
+  const fnDir = path.join(OUT, "functions");
+  if (fs.existsSync(fnDir)) {
+    (function walkFn(dir) {
+      for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+        const p = path.join(dir, e.name);
+        if (e.isDirectory()) walkFn(p);
+        else if (/\.(mjs|js|json)$/.test(e.name)) serverFiles.push(p);
+      }
+    })(fnDir);
+  }
+
+  const corpus = [
+    ...files
+      .filter((f) => /\.(html|js|css)$/.test(f))
+      .map((f) => ({ f, body: fs.readFileSync(path.join(STATIC, f.slice(1)), "utf8") })),
+    ...serverFiles.map((p) => ({ f: `server:${p}`, body: fs.readFileSync(p, "utf8") })),
+  ];
   const orphans = bundles.filter(
     (b) => !corpus.some((c) => c.f !== b && c.body.includes(path.basename(b))),
   );

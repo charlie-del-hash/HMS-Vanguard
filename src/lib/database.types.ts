@@ -483,7 +483,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      save_report_blocks: {
+        Args: { p_blocks: Json; p_note?: string; p_report_id: string }
+        Returns: number
+      }
     }
     Enums: {
       block_kind:

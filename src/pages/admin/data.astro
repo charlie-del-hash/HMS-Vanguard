@@ -1,0 +1,463 @@
+---
+/* Sources, series and events — the things blocks point at.
+ *
+ * Without this page the editor can write prose and nothing else: a chart block
+ * names series keys, a timeline names event tags, and every figure cites a
+ * source. All three would have to be inserted by hand in SQL, which makes
+ * "publish a report touching no code" false.
+ *
+ * Plain forms, no island. Each form posts an `action` and this page dispatches
+ * on it — one round trip per change, no client state to lose, and it works
+ * with JavaScript off. The editor is the only thing on this site that needs
+ * to be interactive, and it already is.
+ *
+ * Writes go through the signed-in user, so the staff policies decide. Nothing
+ * here is authority; it is a form over the database's own rules.
+ */
+export const prerender = false;
+
+import Admin from "../../layouts/Admin.astro";
+import { serverClient } from "../../lib/auth";
+import { parsePoints, parseEvents } from "../../lib/csv";
+
+const staff = Astro.locals.staff!;
+const db = serverClient(Astro);
+
+let problem: string | null = null;
+let note: string | null = null;
+
+const s = (f: FormData, k: string) => String(f.get(k) ?? "").trim();
+const orNull = (v: string) => (v === "" ? null : v);
+
+if (Astro.request.method === "POST") {
+  const f = await Astro.request.formData();
+  const action = s(f, "action");
+
+  try {
+    if (action === "source") {
+      const { error } = await db.from("sources").upsert(
+        {
+          key: s(f, "key"),
+          name: s(f, "name"),
+          publisher: orNull(s(f, "publisher")),
+          url: orNull(s(f, "url")),
+          licence: orNull(s(f, "licence")),
+          notes: orNull(s(f, "notes")),
+          is_indicative: f.get("is_indicative") !== null,
+        },
+        { onConflict: "key" },
+      );
+      if (error) throw error;
+      note = `Source "${s(f, "key")}" saved.`;
+    } else if (action === "series") {
+      const sourceKey = s(f, "source_key");
+      let sourceId: string | null = null;
+      if (sourceKey) {
+        const { data } = await db.from("sources").select("id").eq("key", sourceKey).maybeSingle();
+        if (!data) throw new Error(`No source with key "${sourceKey}".`);
+        sourceId = data.id;
+      }
+      const { error } = await db.from("series").upsert(
+        {
+          key: s(f, "key"),
+          name: s(f, "name"),
+          unit: orNull(s(f, "unit")),
+          frequency: (orNull(s(f, "frequency")) as never) ?? null,
+          notes: orNull(s(f, "notes")),
+          source_id: sourceId,
+        },
+        { onConflict: "key" },
+      );
+      if (error) throw error;
+      note = `Series "${s(f, "key")}" saved.`;
+    } else if (action === "points") {
+      const key = s(f, "series_key");
+      const { data: series } = await db.from("series").select("id").eq("key", key).maybeSingle();
+      if (!series) throw new Error(`No series with key "${key}".`);
+      const rows = parsePoints(s(f, "csv"));
+      if (rows.length === 0) throw new Error("No rows parsed. Expected `date,value` per line.");
+      const { error } = await db
+        .from("series_points")
+        .upsert(
+          rows.map((r) => ({ series_id: series.id, ts: r.ts, value: r.value })),
+          { onConflict: "series_id,ts" },
+        );
+      if (error) throw error;
+      const gaps = rows.filter((r) => r.value === null).length;
+      note =
+        `${rows.length} point(s) written to "${key}"` +
+        (gaps ? `, ${gaps} of them kept as gaps rather than zeros.` : ".");
+    } else if (action === "events") {
+      const sourceKey = s(f, "source_key");
+      let sourceId: string | null = null;
+      if (sourceKey) {
+        const { data } = await db.from("sources").select("id").eq("key", sourceKey).maybeSingle();
+        if (!data) throw new Error(`No source with key "${sourceKey}".`);
+        sourceId = data.id;
+      }
+      const rows = parseEvents(s(f, "csv"));
+      if (rows.length === 0) throw new Error("No rows parsed. See the column list under the box.");
+      const { error } = await db
+        .from("events")
+        .insert(rows.map((r) => ({ ...r, source_id: sourceId })));
+      if (error) throw error;
+      note = `${rows.length} event(s) added.`;
+    }
+  } catch (e) {
+    problem = e instanceof Error ? e.message : String(e);
+  }
+}
+
+const [{ data: sources }, { data: series }, { data: events }] = await Promise.all([
+  db.from("sources").select("key, name, is_indicative, licence").order("key"),
+  db.from("series").select("id, key, name, unit, frequency").order("key"),
+  db.from("events").select("kind, tags, ts").order("ts", { ascending: false }).limit(200),
+]);
+
+/* One count query per series would be N round trips; this is one, and the
+   numbers are small enough that counting in JS is cheaper than the trips. */
+const { data: allPoints } = await db.from("series_points").select("series_id, value");
+const pointCount = new Map<string, { n: number; gaps: number }>();
+for (const p of allPoints ?? []) {
+  const c = pointCount.get(p.series_id) ?? { n: 0, gaps: 0 };
+  c.n++;
+  if (p.value === null) c.gaps++;
+  pointCount.set(p.series_id, c);
+}
+
+const tagCounts = new Map<string, number>();
+for (const e of events ?? []) for (const t of e.tags) tagCounts.set(t, (tagCounts.get(t) ?? 0) + 1);
+const tags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1]);
+---
+
+<Admin title="Data" email={staff.email} back={{ href: "/admin", label: "Reports" }}>
+  <h1>Data</h1>
+  <p class="sub">
+    What blocks point at. A chart names series keys, a timeline names event tags, and every
+    figure cites a source key — so these exist before the report that uses them does.
+  </p>
+
+  {problem && <p class="bad">{problem}</p>}
+  {note && <p class="good">{note}</p>}
+
+  <section>
+    <h2>Sources <span class="count">{sources?.length ?? 0}</span></h2>
+    <ul class="chips">
+      {
+        sources?.map((x) => (
+          <li>
+            <code>{x.key}</code>
+            {x.is_indicative && <span class="ind">indicative</span>}
+            <span class="dim">{x.name}</span>
+          </li>
+        ))
+      }
+    </ul>
+    <details>
+      <summary>Add or update a source</summary>
+      <form method="POST">
+        <input type="hidden" name="action" value="source" />
+        <div class="grid">
+          <label><span>Key — kebab-case</span><input name="key" required pattern="[a-z0-9]+(-[a-z0-9]+)*" /></label>
+          <label><span>Name</span><input name="name" required /></label>
+          <label><span>Publisher</span><input name="publisher" /></label>
+          <label><span>URL — https only</span><input name="url" type="url" pattern="https://.*" /></label>
+          <label><span>Licence</span><input name="licence" /></label>
+          <label class="wide"><span>Notes</span><textarea name="notes" rows="2"></textarea></label>
+          <label class="row">
+            <input type="checkbox" name="is_indicative" />
+            <span>Indicative — shaped like the feed rather than being it</span>
+          </label>
+        </div>
+        <button type="submit">Save source</button>
+      </form>
+    </details>
+  </section>
+
+  <section>
+    <h2>Series <span class="count">{series?.length ?? 0}</span></h2>
+    <table>
+      <thead>
+        <tr><th>Key</th><th>Name</th><th>Unit</th><th class="num">Points</th><th class="num">Gaps</th></tr>
+      </thead>
+      <tbody>
+        {
+          series?.map((x) => (
+            <tr>
+              <td><code>{x.key}</code></td>
+              <td>{x.name}</td>
+              <td class="dim">{x.unit}</td>
+              <td class="num">{pointCount.get(x.id)?.n ?? 0}</td>
+              <td class="num">{pointCount.get(x.id)?.gaps ?? 0}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+
+    <details>
+      <summary>Add or update a series</summary>
+      <form method="POST">
+        <input type="hidden" name="action" value="series" />
+        <div class="grid">
+          <label><span>Key — kebab-case</span><input name="key" required pattern="[a-z0-9]+(-[a-z0-9]+)*" /></label>
+          <label><span>Name</span><input name="name" required /></label>
+          <label><span>Unit</span><input name="unit" placeholder="USD/day" /></label>
+          <label>
+            <span>Frequency</span>
+            <select name="frequency">
+              {["", "daily", "weekly", "monthly", "quarterly", "annual", "irregular"].map((v) => (
+                <option value={v}>{v || "—"}</option>
+              ))}
+            </select>
+          </label>
+          <label><span>Source key</span><input name="source_key" list="sourcekeys" /></label>
+          <label class="wide"><span>Notes</span><textarea name="notes" rows="2"></textarea></label>
+        </div>
+        <button type="submit">Save series</button>
+      </form>
+    </details>
+
+    <details>
+      <summary>Import points</summary>
+      <form method="POST">
+        <input type="hidden" name="action" value="points" />
+        <label><span>Series key</span><input name="series_key" required list="serieskeys" /></label>
+        <label class="wide">
+          <span>CSV — one `date,value` per line</span>
+          <textarea name="csv" rows="8" class="mono" placeholder={"2026-09-01,41200\n2026-09-02,\n2026-09-03,43100"}></textarea>
+        </label>
+        <p class="fine">
+          A header row is skipped if present. An <strong>empty value is kept as a gap</strong>,
+          not a zero — a day with no assessment is a fact about the world, and a chart that
+          draws it as zero is inventing the most alarming number available. Re-importing the
+          same dates updates them rather than duplicating.
+        </p>
+        <button type="submit">Import points</button>
+      </form>
+    </details>
+  </section>
+
+  <section>
+    <h2>Events <span class="count">{events?.length ?? 0}</span></h2>
+    <ul class="chips">
+      {tags.map(([t, n]) => (
+        <li><code>{t}</code><span class="dim">{n}</span></li>
+      ))}
+    </ul>
+    <details>
+      <summary>Import events</summary>
+      <form method="POST">
+        <input type="hidden" name="action" value="events" />
+        <label><span>Source key for all of them</span><input name="source_key" list="sourcekeys" /></label>
+        <label class="wide">
+          <span>CSV</span>
+          <textarea
+            name="csv"
+            rows="8"
+            class="mono"
+            placeholder={"ts,kind,title,summary,lat,lon,actor,severity,confidence,tags\n2026-09-01T03:20:00Z,strike,Tanker struck,Engine room flooded,27.18,56.28,Unattributed,4,confirmed,hormuz|strike"}
+          ></textarea>
+        </label>
+        <p class="fine">
+          Columns: <code>ts, kind, title, summary, lat, lon, actor, severity, confidence, tags</code>.
+          Tags are <code>|</code>-separated. <strong>Confidence defaults to `reported`</strong>,
+          which is the honest answer when nobody has said — `confirmed` means somebody has,
+          on the record.
+        </p>
+        <button type="submit">Import events</button>
+      </form>
+    </details>
+  </section>
+
+  <datalist id="sourcekeys">{sources?.map((x) => <option value={x.key} />)}</datalist>
+  <datalist id="serieskeys">{series?.map((x) => <option value={x.key} />)}</datalist>
+</Admin>
+
+<style>
+  h1 {
+    margin: 0 0 6px;
+    font-size: 26px;
+    font-weight: 650;
+    color: var(--ink);
+  }
+  .sub {
+    margin: 0 0 22px;
+    max-width: 62ch;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--body);
+  }
+  section {
+    margin-bottom: 26px;
+    padding: 15px 17px;
+    border: 1px solid var(--hair);
+    border-radius: var(--r);
+    background: var(--surface);
+  }
+  h2 {
+    margin: 0 0 10px;
+    font-size: 16px;
+    font-weight: 640;
+    color: var(--ink);
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .count {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--small);
+  }
+  .chips {
+    list-style: none;
+    margin: 0 0 10px;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chips li {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 3px 9px;
+    border: 1px solid var(--hair);
+    border-radius: var(--r-chip);
+    background: var(--tint);
+    font-size: 12px;
+  }
+  code {
+    font-family: var(--mono);
+    font-size: 11.5px;
+  }
+  .dim {
+    color: var(--small);
+  }
+  .ind {
+    font-family: var(--mono);
+    font-size: 8px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--amber-dk);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    margin-bottom: 10px;
+  }
+  th,
+  td {
+    text-align: left;
+    padding: 7px 9px;
+    border-top: 1px solid var(--row-line);
+  }
+  thead th {
+    border-top: 0;
+    font-family: var(--mono);
+    font-size: 8.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--small);
+    font-weight: 400;
+  }
+  .num {
+    text-align: right;
+    font-family: var(--num);
+    font-variant-numeric: tabular-nums;
+  }
+  details {
+    border-top: 1px solid var(--hair);
+    padding-top: 9px;
+    margin-top: 4px;
+  }
+  summary {
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--teal);
+  }
+  form {
+    display: grid;
+    gap: 10px;
+    padding: 11px 0 4px;
+  }
+  .grid {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  }
+  .wide {
+    grid-column: 1 / -1;
+  }
+  label {
+    display: grid;
+    gap: 3px;
+  }
+  label.row {
+    grid-column: 1 / -1;
+    grid-auto-flow: column;
+    justify-content: start;
+    align-items: center;
+    gap: 7px;
+  }
+  label > span {
+    font-family: var(--mono);
+    font-size: 8.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--small);
+  }
+  input,
+  textarea,
+  select {
+    font: inherit;
+    font-size: 13.5px;
+    padding: 7px 9px;
+    border: 1px solid var(--rule);
+    border-radius: var(--r-chip);
+    background: var(--field);
+    color: var(--ink);
+    width: 100%;
+  }
+  label.row input {
+    width: auto;
+  }
+  textarea.mono {
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  button {
+    justify-self: start;
+    min-height: 38px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: var(--r-ctl);
+    background: var(--teal);
+    color: var(--on-accent);
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .fine {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--small);
+    max-width: 70ch;
+  }
+  .bad,
+  .good {
+    margin: 0 0 14px;
+    padding: 10px 13px;
+    border-radius: var(--r-ctl);
+    font-size: 13.5px;
+  }
+  .bad {
+    background: var(--neg-soft);
+    border-left: 3px solid var(--neg);
+  }
+  .good {
+    background: var(--pos-soft);
+    border-left: 3px solid var(--pos);
+  }
+</style>

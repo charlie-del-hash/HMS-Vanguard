@@ -18,13 +18,15 @@
     "check": "npm test",
     "typecheck": "astro check",
     "check:site": "npm run build && node checks/run-site.js",
+    "check:admin": "node checks/run-admin.js",
     "check:db": "node checks/db-rls.js",
-    "check:all": "npm test && npm run check:site && npm run check:db"
+    "check:all": "npm test && npm run check:site && npm run check:admin && npm run check:db"
   },
   "dependencies": {
     "@astrojs/react": "6.0.5",
     "@astrojs/vercel": "11.0.10",
     "@chenglou/pretext": "0.0.9",
+    "@supabase/ssr": "0.8.0",
     "@supabase/supabase-js": "2.116.0",
     "@vercel/routing-utils": "6.5.0",
     "astro": "7.3.2",

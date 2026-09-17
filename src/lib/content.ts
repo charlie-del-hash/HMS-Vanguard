@@ -33,7 +33,7 @@ import type {
 } from "./blocks";
 import { parsePayload } from "./blocks";
 import type { ChartSpec } from "./charts/render";
-import { isConfigured, publicClient } from "./supabase";
+import { isConfigured, publicClient, type Client } from "./supabase";
 import { portalHref } from "./config";
 import { EVENTS, SERIES, SOURCES, HORMUZ, type ReportSeed } from "../content/hormuz";
 
@@ -55,13 +55,22 @@ interface StoredBlock {
   payload: unknown;
 }
 
-interface Bundle {
-  source: ContentSource;
-  reports: ReportMeta[];
-  blocks: Map<string, StoredBlock[]>;
+/**
+ * Everything a block can reference. The public loader builds one of these per
+ * build; the admin preview builds one per request from the signed-in user's
+ * client. Exported so there is exactly one resolver — a second one written for
+ * the editor would agree with this until the first time either was fixed.
+ */
+export interface DataContext {
   sources: Map<string, Source>;
   series: Map<string, SeriesData>;
   events: TimelineEvent[];
+}
+
+interface Bundle extends DataContext {
+  source: ContentSource;
+  reports: ReportMeta[];
+  blocks: Map<string, StoredBlock[]>;
 }
 
 // ── the seed ────────────────────────────────────────────────────────────
@@ -126,22 +135,23 @@ function seedBundle(): Bundle {
 
 // ── the database ────────────────────────────────────────────────────────
 
-async function dbBundle(): Promise<Bundle> {
-  const db = publicClient();
-
-  /* Every failure here throws. RLS already restricts anon to published
-     reports, so this is not filtering for safety — it is filtering so the
-     query says what it means. */
-  const [reports, blocks, sources, series, points, events] = await Promise.all([
-    db.from("reports").select("*").eq("status", "published").order("published_at", { ascending: false }),
-    db.from("report_blocks").select("*").order("ord", { ascending: true }),
+/**
+ * The tables a block can reference, read through whatever client is handed in.
+ *
+ * The public build passes the anonymous client; the admin preview passes the
+ * signed-in user's. Same query, same mapping, so a chart resolves identically
+ * in a draft preview and on the published page — which is the only reason the
+ * preview is worth having.
+ */
+export async function dataFrom(db: Client): Promise<DataContext> {
+  const [sources, series, points, events] = await Promise.all([
     db.from("sources").select("*"),
     db.from("series").select("*"),
     db.from("series_points").select("*").order("ts", { ascending: true }),
     db.from("events").select("*").order("ts", { ascending: true }),
   ]);
 
-  for (const [what, res] of Object.entries({ reports, blocks, sources, series, points, events })) {
+  for (const [what, res] of Object.entries({ sources, series, points, events })) {
     if (res.error) {
       throw new Error(
         `content: reading ${what} from Supabase failed — ${res.error.message}. ` +
@@ -151,40 +161,15 @@ async function dbBundle(): Promise<Bundle> {
     }
   }
 
-  const byId = new Map((reports.data ?? []).map((r) => [r.id, r.slug]));
-  const blocksBySlug = new Map<string, StoredBlock[]>();
-  for (const b of blocks.data ?? []) {
-    const slug = byId.get(b.report_id);
-    if (!slug) continue; // a draft's blocks; RLS should already have hidden them
-    const list = blocksBySlug.get(slug) ?? [];
-    list.push({ kind: b.kind, ord: b.ord, payload: b.payload });
-    blocksBySlug.set(slug, list);
-  }
-
   const pointsBySeries = new Map<string, { ts: string; value: number | null }[]>();
   for (const p of points.data ?? []) {
     const list = pointsBySeries.get(p.series_id) ?? [];
     list.push({ ts: p.ts, value: p.value });
     pointsBySeries.set(p.series_id, list);
   }
-
   const sourceKeyById = new Map((sources.data ?? []).map((s) => [s.id, s.key]));
 
   return {
-    source: "database",
-    reports: (reports.data ?? []).map((r) => ({
-      slug: r.slug,
-      kicker: r.kicker,
-      title: r.title,
-      dek: r.dek,
-      summary: r.summary,
-      publishedAt: r.published_at!,
-      author: r.author,
-      region: r.region,
-      tags: r.tags,
-      readMinutes: r.read_minutes,
-    })),
-    blocks: blocksBySlug,
     sources: new Map(
       (sources.data ?? []).map((s) => [
         s.key,
@@ -206,7 +191,7 @@ async function dbBundle(): Promise<Bundle> {
           key: s.key,
           name: s.name,
           unit: s.unit,
-          sourceKey: s.source_id ? sourceKeyById.get(s.source_id) ?? null : null,
+          sourceKey: s.source_id ? (sourceKeyById.get(s.source_id) ?? null) : null,
           points: pointsBySeries.get(s.id) ?? [],
         },
       ]),
@@ -224,6 +209,59 @@ async function dbBundle(): Promise<Bundle> {
       sourceUrl: e.source_url,
       tags: e.tags,
     })),
+  };
+}
+
+
+async function dbBundle(): Promise<Bundle> {
+  const db = publicClient();
+
+  /* Every failure here throws. RLS already restricts anon to published
+     reports, so this is not filtering for safety — it is filtering so the
+     query says what it means. */
+  const [reports, blocks] = await Promise.all([
+    db.from("reports").select("*").eq("status", "published").order("published_at", { ascending: false }),
+    db.from("report_blocks").select("*").order("ord", { ascending: true }),
+  ]);
+
+  for (const [what, res] of Object.entries({ reports, blocks })) {
+    if (res.error) {
+      throw new Error(
+        `content: reading ${what} from Supabase failed — ${res.error.message}. ` +
+          `The build reads content, so this is fatal rather than something to render around. ` +
+          `A paused free-tier project looks exactly like this.`,
+      );
+    }
+  }
+
+  const byId = new Map((reports.data ?? []).map((r) => [r.id, r.slug]));
+  const blocksBySlug = new Map<string, StoredBlock[]>();
+  for (const b of blocks.data ?? []) {
+    const slug = byId.get(b.report_id);
+    if (!slug) continue; // a draft's blocks; RLS should already have hidden them
+    const list = blocksBySlug.get(slug) ?? [];
+    list.push({ kind: b.kind, ord: b.ord, payload: b.payload });
+    blocksBySlug.set(slug, list);
+  }
+
+  const data = await dataFrom(db);
+
+  return {
+    ...data,
+    source: "database",
+    reports: (reports.data ?? []).map((r) => ({
+      slug: r.slug,
+      kicker: r.kicker,
+      title: r.title,
+      dek: r.dek,
+      summary: r.summary,
+      publishedAt: r.published_at!,
+      author: r.author,
+      region: r.region,
+      tags: r.tags,
+      readMinutes: r.read_minutes,
+    })),
+    blocks: blocksBySlug,
   };
 }
 
@@ -394,7 +432,11 @@ function matches(e: TimelineEvent, tags: string[]): boolean {
 
 const DEFAULT_BBOX: [number, number, number, number] = [55.6, 25.4, 57.3, 27.6];
 
-function resolve(stored: StoredBlock[], b: Bundle, slug: string): ResolvedBlock[] {
+export function resolveBlocks(
+  stored: StoredBlock[],
+  b: DataContext,
+  slug: string,
+): ResolvedBlock[] {
   return stored
     .slice()
     .sort((x, y) => x.ord - y.ord)
@@ -507,7 +549,7 @@ export async function loadReport(slug: string): Promise<LoadedReport | null> {
   const meta = b.reports.find((r) => r.slug === slug);
   const stored = b.blocks.get(slug);
   if (!meta || !stored) return null;
-  return { meta, blocks: resolve(stored, b, slug), source: b.source };
+  return { meta, blocks: resolveBlocks(stored, b, slug), source: b.source };
 }
 
 /** True when every source the site cites is indicative — the pre-launch state. */
