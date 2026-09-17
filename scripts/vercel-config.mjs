@@ -56,14 +56,28 @@ if (error) {
 const config = JSON.parse(readFileSync(configPath, "utf8"));
 config.routes ??= [];
 
-/* Idempotent: a second run must not stack another copy of every rule. Each
-   merged route is stamped, and the stamped ones are dropped before merging. */
-const STAMP = "affinity-headers";
-config.routes = config.routes.filter((r) => r?.[STAMP] !== true);
-
 const merged = (headerRoutes ?? [])
   .filter((r) => r.headers) // getTransformedRoutes also emits phase markers
-  .map((r) => ({ ...r, continue: true, [STAMP]: true }));
+  .map((r) => ({ ...r, continue: true }));
+
+/* Idempotent, and deliberately WITHOUT a marker of our own on the route.
+ *
+ * This used to stamp each merged route with `affinity-headers: true` and drop
+ * stamped routes before re-merging. It read cleanly and it broke every
+ * deployment for a week: Vercel validates .vercel/output/config.json against a
+ * schema whose route objects are `additionalProperties: false`, so one foreign
+ * key makes the whole config invalid and the deployment fails AFTER the build
+ * reports success. Nothing local validates that file, so `npm run build` stayed
+ * green the entire time. checks/vercel-output.js now runs Vercel's own schema
+ * over the output, which is the assertion that would have caught it on day one.
+ *
+ * So identity comes from the route itself. We rebuild the same routes from the
+ * same vercel.json every run, so a previous run's copies are deep-equal to this
+ * run's and are dropped by comparison. Serialised rather than compared field by
+ * field because both sides are built by the same code path in the same order. */
+const fingerprint = (r) => JSON.stringify(r);
+const mine = new Set(merged.map(fingerprint));
+config.routes = config.routes.filter((r) => !mine.has(fingerprint(r)));
 
 /* Before `handle: filesystem`. A header route placed after it only runs for
    requests that missed a file, which is every request except the ones these

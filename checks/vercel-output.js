@@ -25,6 +25,7 @@
 const assert = require("assert");
 const fs = require("fs");
 const path = require("path");
+const { createRequire } = require("module");
 
 const ROOT = path.resolve(__dirname, "..");
 const OUT = path.join(ROOT, ".vercel", "output");
@@ -60,10 +61,77 @@ const files = [];
   }
 })(STATIC);
 
+console.log("Vercel will accept the routing config at all");
+
+/* THE assertion in this file.
+ *
+ * .vercel/output/config.json is validated by the platform, not by the build.
+ * Its route objects are `additionalProperties: false`, so a single unrecognised
+ * key makes the whole config invalid and the deployment fails after the build
+ * has already reported success. Nothing local validates it, so `npm run build`
+ * is green either way and the only symptom is a red deployment nobody can read
+ * the log of.
+ *
+ * That happened: vercel-config.mjs stamped `affinity-headers: true` onto each
+ * route it merged, to make the merge idempotent, and every deployment failed
+ * for a week while every check here passed. The schema is shipped inside
+ * @vercel/routing-utils, so this validates the real output against the real
+ * schema with the same validator Vercel uses. */
+const { getTransformedRoutes, routesSchema } = require("@vercel/routing-utils");
+
+t("every route validates against Vercel's own schema", () => {
+  let Ajv;
+  try {
+    Ajv = createRequire(require.resolve("@vercel/routing-utils"))("ajv");
+  } catch {
+    try {
+      Ajv = require("ajv");
+    } catch {
+      assert.fail("ajv is not resolvable, so the routing config cannot be validated");
+    }
+  }
+  const one = new Ajv({ allErrors: true }).compile(routesSchema.items);
+
+  /* A route matches one of two shapes — a real route or a `handle` marker — so
+     the schema is a oneOf and the losing branch reports every key of the
+     winning one as "additional". Naming the genuinely foreign keys means
+     comparing against what either shape allows. */
+  const variants = routesSchema.items.oneOf ?? routesSchema.items.anyOf ?? [routesSchema.items];
+  const allowed = new Set(variants.flatMap((v) => Object.keys(v.properties ?? {})));
+
+  const bad = [];
+  for (const r of config.routes) {
+    if (one(r)) continue;
+    const foreign = Object.keys(r).filter((k) => !allowed.has(k));
+    bad.push(
+      `${JSON.stringify(r).slice(0, 80)} — ` +
+        (foreign.length ? `unexpected key(s): ${foreign.join(", ")}` : "does not match either route shape"),
+    );
+  }
+  assert.strictEqual(
+    bad.length,
+    0,
+    `Vercel would reject this config and fail the deployment AFTER a successful ` +
+      `build:\n          ${bad.join("\n          ")}`,
+  );
+});
+
 console.log("headers reach the routing config");
 
 const fsIndex = config.routes.findIndex((r) => r && r.handle === "filesystem");
-const headerRoutes = config.routes.filter((r) => r && r.headers && r["affinity-headers"]);
+
+/* Which routes did scripts/vercel-config.mjs put there? Recomputed from
+   vercel.json through Vercel's own transformer — same input, same function the
+   script uses — rather than recognised by a marker written into the route. The
+   marker is what broke the deployments, so this check must not reintroduce one
+   in order to do its job. */
+const expectedHeaderRoutes = (
+  getTransformedRoutes({ headers: vercelJson.headers ?? [] }).routes ?? []
+)
+  .filter((r) => r.headers)
+  .map((r) => ({ ...r, continue: true }));
+const want = new Set(expectedHeaderRoutes.map((r) => JSON.stringify(r)));
+const headerRoutes = config.routes.filter((r) => r && want.has(JSON.stringify(r)));
 
 t("every header source in vercel.json produced a route", () => {
   const declared = vercelJson.headers?.length ?? 0;

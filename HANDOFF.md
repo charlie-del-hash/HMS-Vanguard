@@ -48,8 +48,9 @@ Pages on `4e90e04` while `main` was `007ed4c`. That was harmless only because th
 carry an identical deck, and the workflow publishes the deck alone. **Check the published ref
 after any merge that changes `affinity-ops-deck.html`**, and dispatch if the push run never came.
 
-Vercel is unaffected — it builds from its own integration, not from Actions, and has deployed every
-merge within a minute or two.
+Vercel builds from its own integration rather than from Actions, so the Pages fault above does not
+touch it. It is not therefore trouble-free — see **The deploy build is not the build you run**,
+below.
 
 Two Vercel projects (`affinity` and `hms-vanguard`) build this repo, both rooted at the repo root
 rather than a subfolder — which is why the reader's old `macro-topics-site/vercel.json` never took
@@ -71,12 +72,86 @@ was not worth adding while the repo was public, and would become worth it if the
 with a public deployment. Neither case applies now: there is nothing to ignore, because nothing
 outside the build is uploaded.
 
-**`vercel.json` is not what it looks like.** The adapter reads it for exactly one thing — a warning
-if `trailingSlash` conflicts with the Astro config — and merges nothing else. Routing comes from
-the generated `.vercel/output/config.json`. Headers declared in `vercel.json` did nothing at all
-until `scripts/vercel-config.mjs` began splicing them in, as a step chained into `npm run build`
-rather than an `astro:build:done` hook, because that hook runs *before* the adapter writes the file.
-Anything else added to `vercel.json` needs the same treatment or it will silently do nothing.
+**`vercel.json` is two files wearing one name, and the difference decides whether a key works.**
+
+*Routing* keys — `headers`, `redirects`, `rewrites` — are read by the **adapter**, and it reads them
+for exactly one thing: a warning if `trailingSlash` conflicts with the Astro config. It merges
+nothing. Routing comes from the generated `.vercel/output/config.json`, so headers declared here did
+nothing at all until `scripts/vercel-config.mjs` began splicing them in — a step chained into
+`npm run build` rather than an `astro:build:done` hook, because that hook runs *before* the adapter
+writes the file. Anything else routing-shaped needs the same treatment or it silently does nothing.
+
+*Build* keys — `installCommand`, `buildCommand`, `framework` — are read by the **platform**, before
+the build starts and before the adapter exists. They work as documented. `installCommand` is set
+here, and the reason is below.
+
+So the rule is not "vercel.json does nothing". It is: routing needs splicing, build settings do not.
+
+## The deploy build is not the build you run
+
+Every deployment of the Astro branch failed, on both projects, for a week — and every check here
+passed the whole time, because **the thing that was broken is not checked by building.**
+
+**The cause: one foreign key in the routing config.** `.vercel/output/config.json` is validated by
+the platform, and its route objects are `additionalProperties: false`. `scripts/vercel-config.mjs`
+stamped `affinity-headers: true` onto each route it merged, to make the merge idempotent. That one
+key makes the whole config invalid, so Vercel **fails the deployment after the build has already
+reported success**. `npm run build` is green either way. The only symptom is a red deployment.
+
+The script is idempotent by deep-equality now — it rebuilds the same routes from the same
+`vercel.json` every run, so a previous run's copies are recognised by comparison rather than by a
+marker. **Do not reintroduce a marker.** `checks/vercel-output.js` validates the real output against
+`routesSchema` from `@vercel/routing-utils` — the platform's own schema, with the same validator —
+which is the assertion that would have caught this on day one.
+
+### How to find out what Vercel did, without a Vercel login
+
+**Vercel's API answers 403 for these projects** (`list_teams` returns an empty array, so the
+connector is authenticated to an account with no access to `hms-affinity-s-projects` at all). The
+build log cannot be read from a session here. What *can* be read needs no Vercel credential:
+
+```
+curl -s https://api.github.com/repos/charlie-del-hash/HMS-Vanguard/commits/<sha>/status
+```
+
+It carries both projects' deployment result. Run it across a range of commits and it bisects the
+break for you — which is how this was found, after two wrong guesses. The result was unambiguous:
+`7ff4343`, `6556fec` and `ffdf3a1` all deployed green, and `b7da8af` was the first failure. That
+commit introduced the stamp.
+
+**The lesson is the method.** Two plausible causes were fixed first and neither was it, because both
+were reasoned from what *could* fail rather than from when it *started* failing. The history was
+free and decisive. Bisect before theorising.
+
+### Three real faults found on the way, none of them the cause
+
+Worth keeping, and all now asserted — but none of these broke the deployments, since every one of
+them was present in the commits that deployed green:
+
+- **`engines.node` was `">=22"`.** Vercel documents `MAJOR.x` and this field *overrides* the
+  project's Node setting. Now `"22.x"`, matching what `checks.yml` runs.
+- **The deploy build installed Playwright**, whose postinstall downloads three browsers. Locally
+  that is suppressed by `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD`, set in the dev container and nowhere
+  else. `installCommand` is `npm ci --omit=dev` now, which a deploy has no reason not to be.
+- **`@vercel/routing-utils` was a devDependency** and `npm run build` imports it — so the omit above
+  would have broken the build had it not been moved to `dependencies` first. `@astrojs/check` was
+  not declared at all; `npm run typecheck` only worked off a stale npx cache.
+
+**The general rule, which is the one to remember: nothing a build script runs may import a
+devDependency**, and **a config file nothing validates locally is a config file you are guessing
+about.**
+
+### Reproducing the deploy environment
+
+A local build is not a deploy build. `.env` exists here and does not exist on Vercel, so the
+faithful reproduction is:
+
+```
+mv .env /tmp/ && npm ci --omit=dev && NODE_ENV=production CI=1 VERCEL=1 npm run build
+```
+
+That passes, and passing it is necessary rather than sufficient — it does not validate the output,
+which is what `checks/vercel-output.js` is for.
 
 ## Layout model — read this before changing the frame
 
