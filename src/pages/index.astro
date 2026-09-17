@@ -17,6 +17,13 @@ const indicative = await allIndicative();
 const portal = portalHref("landing");
 ---
 
+{/* Which content source this deployment built from. Invisible to a reader and
+    one curl away for anyone wondering whether a deploy is serving the database
+    or the committed seed — the question the no-silent-fallback rule exists to
+    make answerable. It was briefly in the footer, which put "Content source:
+    seed" in front of readers who have no idea what a seed is. */}
+<meta name="affinity-content-source" content={source} slot="head" />
+
 <Base title={`${SITE_NAME} — ${SITE_TAGLINE}`} description={SITE_TAGLINE}>
   <header class="hero">
     <div class="inner">
@@ -77,9 +84,7 @@ const portal = portalHref("landing");
         <a href="/ops-deck.html">Ops deck</a>
         {PORTAL_URL && <a href={portal!} rel="noopener">Research portal</a>}
       </p>
-      <p class="src">
-        Content source: {source}
-      </p>
+      <p class="src">Indicative data · not for quotation</p>
     </div>
   </footer>
 </Base>

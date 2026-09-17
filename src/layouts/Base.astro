@@ -43,6 +43,11 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
         }
       })();
     </script>
+
+    {/* Anything a page needs in the head of its own: an og: tag, structured
+        data, a per-page meta. Named rather than positional so a page cannot
+        accidentally put its body content here. */}
+    <slot name="head" />
   </head>
   <body>
     <slot />

@@ -165,6 +165,29 @@ function t(name, ok, detail) {
     await p.close();
   }
 
+  /* ── 3b. a deployment says which content it built from ─────────────
+     Not on the page — in the head, one curl away. The no-silent-fallback rule
+     in content.ts is only useful if the answer is checkable afterwards. */
+  console.log("a deployment can be asked what it built from");
+  {
+    const p = await b.newPage({ javaScriptEnabled: false });
+    trackRequests(p);
+    await p.goto(BASE + "/", { waitUntil: "domcontentloaded" });
+    const meta = await p.evaluate(() => ({
+      source:
+        document
+          .querySelector('meta[name="affinity-content-source"]')
+          ?.getAttribute("content") || "",
+      inHead: !!document.head.querySelector('meta[name="affinity-content-source"]'),
+      /* The jargon belongs in the head, not in front of readers. */
+      inBody: (document.body.innerText || "").includes("Content source"),
+    }));
+    t("the landing page declares its content source", ["seed", "database"].includes(meta.source),
+      `content="${meta.source}"`);
+    t("it is in the head, not the page", meta.inHead && !meta.inBody);
+    await p.close();
+  }
+
   /* ── 4. a payload cannot become markup ─────────────────────────────── */
   console.log("a stored payload is text, never markup");
   {
