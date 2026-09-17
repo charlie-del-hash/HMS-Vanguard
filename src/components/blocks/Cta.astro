@@ -1,0 +1,115 @@
+---
+/* The way through to the real research portal.
+ *
+ * This is the point of the whole site, so it is also the one component that
+ * must not bluff. The portal URL is configuration (PUBLIC_PORTAL_URL) and
+ * nobody has given it yet; until they do, this renders as a statement rather
+ * than a link.
+ *
+ * A placeholder href would be worse than none. A dead link on a research page
+ * costs more trust than a missing one, and it is invisible in review because
+ * it looks exactly like a working link. So: no href, no button affordance, and
+ * a line saying the link is not configured — which is embarrassing enough to
+ * get fixed, which is the point.
+ */
+import type { CtaPayload } from "../../lib/blocks";
+
+interface Props {
+  payload: CtaPayload;
+  href: string;
+}
+const { payload, href } = Astro.props;
+const { headline, body, label } = payload;
+const live = href !== "";
+---
+
+<aside class:list={["cta", { live }]}>
+  <div class="words">
+    <h2>{headline}</h2>
+    {body && <p>{body}</p>}
+  </div>
+  {
+    live ? (
+      <a class="go" href={href} data-cta="portal" rel="noopener">
+        {label}
+      </a>
+    ) : (
+      <p class="unset">
+        <span class="label">Link not configured</span>
+        <span>
+          Set <code>PUBLIC_PORTAL_URL</code> to turn this into the portal link.
+        </span>
+      </p>
+    )
+  }
+</aside>
+
+<style>
+  .cta {
+    display: grid;
+    gap: 14px;
+    padding: 20px 22px;
+    border-radius: var(--r);
+    background: var(--insight-bg);
+    border: 1px solid var(--insight-line);
+    color: var(--insight-fg);
+  }
+  @media (min-width: 620px) {
+    .cta {
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 24px;
+    }
+  }
+  .words {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+  }
+  h2 {
+    margin: 0;
+    font-size: clamp(17px, 1rem + 0.5vw, 21px);
+    font-weight: 640;
+    line-height: 1.3;
+    color: var(--insight-h);
+    text-wrap: balance;
+  }
+  .words p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .go {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* 44px, because the deck's rest check measures touch targets under
+       pointer:coarse and this is the one control on the page. */
+    min-height: 44px;
+    padding: 0 20px;
+    border-radius: var(--r-ctl);
+    background: var(--teal);
+    color: var(--on-accent);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background var(--t) var(--ease);
+  }
+  .go:hover {
+    background: var(--accent-hover);
+  }
+
+  .unset {
+    margin: 0;
+    display: grid;
+    gap: 3px;
+    font-size: 12.5px;
+    color: var(--small);
+  }
+  .unset code {
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+</style>

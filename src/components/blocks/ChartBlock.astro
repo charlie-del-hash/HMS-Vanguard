@@ -1,0 +1,41 @@
+---
+/* A chart, with its provenance attached.
+ *
+ * ChartFrame does the drawing and the two-pass measurement. This adds the one
+ * thing a report needs that a dev page does not: the figures have to say where
+ * they came from, in the same visual unit as the figures themselves.
+ *
+ * ssrWidth is the lane's width rather than a guess — that is the whole reason
+ * the lane is part of the payload. The client corrects it either way, but a
+ * close first pass means the pre-hydration frame and the print output are both
+ * right, and there is no visible reflow on mount.
+ */
+import ChartFrame from "../ChartFrame.astro";
+import Provenance from "./Provenance.astro";
+import type { ChartSpec } from "../../lib/charts/render";
+import type { Lane, Source } from "../../lib/blocks";
+
+interface Props {
+  spec: ChartSpec;
+  caption?: string;
+  lane: Lane;
+  sources: Source[];
+  indicative: boolean;
+}
+const { spec, caption, lane, sources, indicative } = Astro.props;
+
+/* The lane widths from .article in base.css: `wide` caps at 1040 with 40px of
+   gutter, `content` at 68ch. These are the widths the server draws at. */
+const SSR_WIDTH: Record<Lane, number> = { content: 620, wide: 1000, full: 1180 };
+---
+
+<figure class="chartblock">
+  <ChartFrame spec={spec} ssrWidth={SSR_WIDTH[lane]} caption={caption} />
+  <Provenance sources={sources} indicative={indicative} />
+</figure>
+
+<style>
+  .chartblock {
+    margin: 0;
+  }
+</style>

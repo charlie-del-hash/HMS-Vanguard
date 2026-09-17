@@ -18,10 +18,14 @@
  *        (or let checks/run-site.js serve dist/ and pass it in)
  */
 const { browser, newPage, WIDTHS } = require("./lib");
-const { trackRequests, realErrors, realFailures } = require("./site-lib");
+const { trackRequests, reportNoise } = require("./site-lib");
 
 const BASE = process.env.SITE_URL || "http://127.0.0.1:4321";
-const PAGES = ["/dev/charts/"];
+/* The dev sheet has every chart kind; the report has the ones a reader
+   actually meets, in the lanes they actually sit in. Both are checked, because
+   a chart that holds its guarantee in a gallery and loses it in an article has
+   not held it. */
+const PAGES = ["/dev/charts/", "/reports/hormuz-strikes-tanker-economics/"];
 
 const PROBE = () => {
   const scales = [], sizes = [], pairs = [];
@@ -147,7 +151,7 @@ const PROBE = () => {
     }
   }
 
-  console.log("errs", realErrors(p).slice(0, 5), "| bad requests", realFailures(p).slice(0, 5));
+  fails += reportNoise(p);
   await b.close();
   process.exit(fails ? 1 : 0);
 })();

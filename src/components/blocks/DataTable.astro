@@ -1,0 +1,157 @@
+---
+/* A table that sheds columns instead of scrolling sideways.
+ *
+ * Two things this inherits from the deck rather than reinvents:
+ *
+ *   it measures its own PANEL, not the window. A sticky spine or a side panel
+ *   means viewport width is not monotonic with the width a table actually
+ *   gets, so a media query sheds the wrong columns on the way down. Container
+ *   queries — `.cqpanel` in base.css — ask the box it is actually in.
+ *
+ *   figures are tabular, labels are not. A column of numbers has to align
+ *   digit for digit; a column of words does not, and tabular text reads loose.
+ *
+ * Columns carry a `priority`: higher goes first when the panel narrows. The
+ * dropped column is still in the DOM for a crawler and for print — it is
+ * hidden, not omitted, because a figure that exists should not disappear from
+ * the record just because the reader is on a phone.
+ */
+import type { TablePayload, Source } from "../../lib/blocks";
+import Provenance from "./Provenance.astro";
+
+interface Props {
+  payload: TablePayload;
+  source?: Source;
+}
+const { payload, source } = Astro.props;
+const { columns, rows, caption } = payload;
+
+/** A dash, not a blank: the deck's rule for a figure that does not exist. */
+const DASH = "–";
+---
+
+<figure class="tablewrap cqpanel">
+  {caption && <figcaption class="cap">{caption}</figcaption>}
+  <div class="panel">
+    <table>
+      <thead>
+        <tr>
+          {
+            columns.map((c) => (
+              <th
+                scope="col"
+                class:list={[{ num: c.numeric }, `p${c.priority ?? 0}`]}
+              >
+                {c.label}
+              </th>
+            ))
+          }
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((r) => (
+            <tr>
+              {columns.map((c) => {
+                const v = r[c.key];
+                const shown = v === null || v === undefined || v === "" ? DASH : String(v);
+                return (
+                  <td
+                    class:list={[{ num: c.numeric, dash: shown === DASH }, `p${c.priority ?? 0}`]}
+                  >
+                    {shown}
+                  </td>
+                );
+              })}
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+  <Provenance sources={source ? [source] : []} indicative={payload.indicative} />
+</figure>
+
+<style>
+  .tablewrap {
+    margin: 0;
+    display: grid;
+    gap: 8px;
+  }
+  .cap {
+    font-size: 12px;
+    color: var(--small);
+  }
+  .panel {
+    border: 1px solid var(--hair);
+    border-radius: var(--r);
+    background: var(--surface);
+    overflow: clip;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+  th,
+  td {
+    text-align: left;
+    padding: 9px 12px;
+    border-top: 1px solid var(--row-line);
+    white-space: nowrap;
+  }
+  thead th {
+    border-top: 0;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--small);
+    font-weight: 400;
+  }
+  tbody tr:nth-child(even) {
+    background: var(--row-dim);
+  }
+  .num {
+    text-align: right;
+    font-family: var(--num);
+    font-variant-numeric: tabular-nums;
+  }
+  td.num {
+    color: var(--ink);
+  }
+  .dash {
+    color: var(--small);
+  }
+  /* The first column is the row's name; it may wrap rather than force a
+     scrollbar, because it is the one cell that can be long. */
+  td:first-child,
+  th:first-child {
+    white-space: normal;
+  }
+
+  /* Shed in priority order as the PANEL narrows. Hidden rather than removed:
+     still in the DOM for a crawler, still present in print. */
+  @container (max-width: 560px) {
+    .p3 {
+      display: none;
+    }
+  }
+  @container (max-width: 430px) {
+    .p2 {
+      display: none;
+    }
+  }
+  @container (max-width: 330px) {
+    .p1 {
+      display: none;
+    }
+  }
+  @media print {
+    .p1,
+    .p2,
+    .p3 {
+      display: table-cell !important;
+    }
+  }
+</style>

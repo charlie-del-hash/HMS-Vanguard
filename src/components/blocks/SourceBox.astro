@@ -1,0 +1,121 @@
+---
+/* The provenance ledger, printed.
+ *
+ * Every report ends with one. It is not a courtesy — it is the difference
+ * between a research page and a blog post, and it is the reason `sources` is a
+ * table rather than a string on the block that happens to cite it.
+ *
+ * An indicative source says so here in full, not as a chip a reader might
+ * skim: the whole licence line, the publisher, and the note explaining what
+ * would replace it.
+ */
+import type { Source } from "../../lib/blocks";
+
+interface Props {
+  sources: Source[];
+  note?: string;
+}
+const { sources, note } = Astro.props;
+---
+
+<section class="sources" aria-labelledby="sources-h">
+  <h2 id="sources-h" class="label">Sources</h2>
+  {note && <p class="note">{note}</p>}
+  <ul>
+    {
+      sources.map((s) => (
+        <li class:list={{ ind: s.isIndicative }}>
+          <div class="top">
+            <span class="name">
+              {s.url ? (
+                <a href={s.url} rel="noopener noreferrer" target="_blank">
+                  {s.name}
+                </a>
+              ) : (
+                s.name
+              )}
+            </span>
+            {s.isIndicative && <span class="chip">Indicative</span>}
+          </div>
+          <p class="meta">
+            {s.publisher}
+            {s.publisher && s.licence && <span aria-hidden="true"> · </span>}
+            {s.licence}
+          </p>
+          {s.notes && <p class="body">{s.notes}</p>}
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<style>
+  .sources {
+    display: grid;
+    gap: 10px;
+    padding: 16px 18px;
+    border: 1px solid var(--hair);
+    border-radius: var(--r);
+    background: var(--surface);
+  }
+  h2 {
+    margin: 0;
+    font-size: 9px;
+  }
+  .note {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--body);
+  }
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 12px;
+  }
+  li {
+    padding-top: 12px;
+    border-top: 1px solid var(--hair);
+  }
+  .top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 9px;
+  }
+  .name {
+    font-size: 14px;
+    font-weight: 620;
+    color: var(--ink);
+  }
+  .name a {
+    color: inherit;
+  }
+  .chip {
+    font-family: var(--mono);
+    font-size: 8.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: var(--r-chip);
+    background: var(--tint);
+    color: var(--amber-dk);
+    border: 1px solid var(--hair);
+  }
+  .meta {
+    margin: 2px 0 0;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--small);
+  }
+  .body {
+    margin: 5px 0 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--body);
+  }
+</style>

@@ -89,6 +89,14 @@ export default defineConfig({
         access: "public",
         optional: true,
       }),
+      /* The research portal this whole site funnels towards. Optional because
+         nobody has given it yet, and the CTA says so rather than linking
+         somewhere invented — see src/lib/config.ts. */
+      PUBLIC_PORTAL_URL: envField.string({
+        context: "client",
+        access: "public",
+        optional: true,
+      }),
       /* Optional so a build without it still succeeds — nothing reads it until
          the admin and the analytics endpoint exist. It becomes required the
          moment something server-side depends on it. */

@@ -9,7 +9,9 @@
  * baseline. Inline SVG, no libraries.
  */
 import type { Palette } from "./palette";
-import { boxHitsBox, clamp, esc, gradId, niceMax, SVG_FONT, textBox, type Box } from "./geometry";
+import {
+  boxHitsBox, clamp, esc, gradId, labelStep, niceMax, showsLabel, SVG_FONT, textBox, type Box,
+} from "./geometry";
 import { textWidth } from "../text";
 
 /* A guard against a degenerate measurement (a slot measured before layout),
@@ -77,21 +79,60 @@ export function areaChart<T extends Record<string, any>>(
      not a smaller label, it is an unreadable one. */
   const gap = rows.length > 1 ? iw / (rows.length - 1) : iw;
   const allVals = gap >= 40;
-  const xEvery = gap < 30 ? 2 : 1;
+  const xLabelW = Math.max(
+    ...rows.map((r) => textWidth(String(r[xk]), 11.5, 400)),
+    1,
+  );
+  const xStep = labelStep(gap, xLabelW);
+  const lastIdx = rows.length - 1;
+  const showX = (j: number) => showsLabel(j, lastIdx, xStep);
 
-  const vals = rows.map((r) => Number(r[yk]));
+  /* A gap is a fact, not a zero (0002_data.sql). Number(null) is 0, so reading
+     the values straight would draw a day with no assessment as a collapse to
+     the baseline — inventing a number, and the most alarming one available.
+     Nulls are carried through and the stroke BREAKS at them instead. */
+  const raw: (number | null)[] = rows.map((r) => {
+    const v = r[yk];
+    if (v === null || v === undefined || v === "") return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  });
+  const vals = raw.filter((v): v is number => v !== null);
+  if (vals.length === 0) return "";
   const max = niceMax(Math.max(...vals));
   const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
   const xs = (i: number) => L + (rows.length < 2 ? iw / 2 : (i / (rows.length - 1)) * iw);
   const ys = (v: number) => T + ih - (v / max) * ih;
 
-  const line = rows
-    .map((r, j) => `${j ? "L" : "M"}${xs(j).toFixed(1)} ${ys(Number(r[yk])).toFixed(1)}`)
+  /* Contiguous runs of real points. Each is stroked and filled on its own, so
+     the area under a gap is empty rather than bridged. */
+  const runs: number[][] = [];
+  let run: number[] = [];
+  raw.forEach((v, i) => {
+    if (v === null) {
+      if (run.length) runs.push(run);
+      run = [];
+    } else run.push(i);
+  });
+  if (run.length) runs.push(run);
+
+  const seg = (ix: number[]) =>
+    ix.map((i, k) => `${k ? "L" : "M"}${xs(i).toFixed(1)} ${ys(raw[i]!).toFixed(1)}`).join(" ");
+  const line = runs.map(seg).join(" ");
+  const area = runs
+    .map((ix) => {
+      const a = ix[0];
+      const z = ix[ix.length - 1];
+      return `${seg(ix)} L${xs(z).toFixed(1)} ${ys(0).toFixed(1)} L${xs(a).toFixed(1)} ${ys(0).toFixed(1)} Z`;
+    })
     .join(" ");
-  const area =
-    `${line} L${xs(rows.length - 1).toFixed(1)} ${ys(0).toFixed(1)}` +
-    ` L${xs(0).toFixed(1)} ${ys(0).toFixed(1)} Z`;
+
   const last = rows.length - 1;
+  /* The end labels belong to the first and last points that EXIST. With a gap
+     at the end, labelling index `last` would label nothing. */
+  const firstV = raw.findIndex((v) => v !== null);
+  const lastV = raw.length - 1 - [...raw].reverse().findIndex((v) => v !== null);
+  const showValue = (j: number) => raw[j] !== null && (allVals || j === firstV || j === lastV);
 
   /* The mean caption sits in the right margin, at a fixed spot, while the
      value labels are parked above their points — so nothing was stopping the
@@ -109,11 +150,11 @@ export function areaChart<T extends Record<string, any>>(
   const capBox = textBox(W - 6, capY, textWidth(capTxt, 9.5, 400, 1), 9.5, "end");
   const labelBoxes: Box[] = [];
   rows.forEach((r, j) => {
-    if (allVals || j === 0 || j === rows.length - 1) {
-      const t = String(r[yk]);
-      labelBoxes.push(textBox(xs(j), ys(Number(r[yk])) - 13, textWidth(t, 13, 700), 13));
+    if (showValue(j)) {
+      const t = String(raw[j]);
+      labelBoxes.push(textBox(xs(j), ys(raw[j]!) - 13, textWidth(t, 13, 700), 13));
     }
-    if (j % xEvery === 0 || j === rows.length - 1) {
+    if (showX(j)) {
       labelBoxes.push(textBox(xs(j), H - 9, textWidth(String(r[xk]), 11.5, 400), 11.5));
     }
   });
@@ -122,13 +163,17 @@ export function areaChart<T extends Record<string, any>>(
   const marks = rows
     .map((r, j) => {
       const x = xs(j).toFixed(1);
-      const y = ys(Number(r[yk]));
-      const showV = allVals || j === 0 || j === last;
-      const showX = j % xEvery === 0 || j === last;
+      const xLabel = showX(j)
+        ? `<text x="${x}" y="${H - 9}" text-anchor="middle" font-size="11.5" fill="${C.axis}">${esc(r[xk])}</text>`
+        : "";
+      /* No marker and no figure on a day with no assessment. The x label
+         stays: the day happened, the reading did not. */
+      if (raw[j] === null) return xLabel;
+      const y = ys(raw[j]!);
       return `<circle cx="${x}" cy="${y.toFixed(1)}" r="4" fill="${C.marker}" stroke="${C.line}" stroke-width="2"/>
-      ${showV ? `<text x="${x}" y="${(y - 13).toFixed(1)}" text-anchor="middle" font-size="13" font-weight="700"
-            fill="${C.label}">${esc(r[yk])}</text>` : ""}
-      ${showX ? `<text x="${x}" y="${H - 9}" text-anchor="middle" font-size="11.5" fill="${C.axis}">${esc(r[xk])}</text>` : ""}`;
+      ${showValue(j) ? `<text x="${x}" y="${(y - 13).toFixed(1)}" text-anchor="middle" font-size="13" font-weight="700"
+            fill="${C.label}">${esc(String(raw[j]))}</text>` : ""}
+      ${xLabel}`;
     })
     .join("");
 

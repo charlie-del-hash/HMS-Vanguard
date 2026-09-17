@@ -9,10 +9,20 @@
  * Usage: SITE_URL=http://127.0.0.1:4321 node checks/site-overflow.js
  */
 const { browser, newPage, WIDTHS } = require("./lib");
-const { trackRequests, realErrors, realFailures } = require("./site-lib");
+const { trackRequests, reportNoise } = require("./site-lib");
 
 const BASE = process.env.SITE_URL || "http://127.0.0.1:4321";
-const PAGES = ["/dev/charts/", "/dev/text/", "/dev/tokens/"];
+/* The real pages first — they are the ones a reader sees. The dev sheets stay
+   because they exercise every chart kind and every token in one place. */
+const PAGES = [
+  "/",
+  "/reports/",
+  "/reports/hormuz-strikes-tanker-economics/",
+  "/dev/blocks/",
+  "/dev/charts/",
+  "/dev/text/",
+  "/dev/tokens/",
+];
 
 (async () => {
   const b = await browser();
@@ -55,7 +65,7 @@ const PAGES = ["/dev/charts/", "/dev/text/", "/dev/tokens/"];
 
   console.log(`overflow: ${n - bad.length}/${n} clean (${PAGES.length} pages x 2 themes x ${WIDTHS.length} widths)`);
   bad.slice(0, 20).forEach((x) => console.log("  ", x));
-  console.log("errs", realErrors(p).slice(0, 5), "| bad requests", realFailures(p).slice(0, 5));
+  const noise = reportNoise(p);
   await b.close();
-  process.exit(bad.length ? 1 : 0);
+  process.exit(bad.length || noise ? 1 : 0);
 })();

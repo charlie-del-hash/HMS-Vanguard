@@ -39,3 +39,6 @@ export { scatterChart } from "./scatter";
 
 export type { PricePoint, PriceOptions } from "./price";
 export { priceChart } from "./price";
+
+export type { MapMarker, MapPlace, MapOptions } from "./map";
+export { mapChart, MAP_HEIGHT } from "./map";

@@ -16,6 +16,7 @@ import type { Palette } from "./palette";
 import {
   attrJSON, boxHitsBox, clamp, esc, gradId, segHitsBox, textBox,
   type Box, type Point,
+  labelStep, showsLabel,
 } from "./geometry";
 import { crosshairLayer } from "./basic";
 import { textWidth } from "../text";
@@ -78,11 +79,15 @@ export function indexChart<T extends Record<string, any>>(
   const id = gradId();
 
   /* The same thinning rule the area chart uses: at true size the labels crowd
-     for real, so they drop out rather than shrink. */
+     for real, so they drop out rather than shrink. The step comes from the
+     width the labels measure — see labelStep in geometry.ts for why a constant
+     was not enough once a daily series arrived. */
   const gap = rows.length > 1 ? iw / (rows.length - 1) : iw;
   const allVals = gap >= 40;
-  const xEvery = gap < 30 ? 2 : 1;
   const lastIdx = rows.length - 1;
+  const xLabelW = Math.max(...rows.map((r) => textWidth(String(r[xk]), 11.5, 400)), 1);
+  const xStep = labelStep(gap, xLabelW);
+  const showsX = (j: number) => showsLabel(j, lastIdx, xStep);
 
   /* An optional second series on the same rebase — the selected name against
      the basket it belongs to. It has to share the scale, so its values go into
@@ -140,7 +145,7 @@ export function indexChart<T extends Record<string, any>>(
   if (base != null) segs.push([[L, baseY], [ruleX2, baseY]]);
   pt.forEach(([x, y]) => boxes.push({ x1: x - 5.5, x2: x + 5.5, y1: y - 5.5, y2: y + 5.5 }));
   rows.forEach((r, j) => {
-    if (j % xEvery === 0 || j === lastIdx) {
+    if (showsX(j)) {
       boxes.push(textBox(xs(j), H - 9, textWidth(String(r[xk]), 11.5, 400), 11.5));
     }
   });
@@ -247,7 +252,7 @@ export function indexChart<T extends Record<string, any>>(
     .map((r, j) => {
       const [px, py] = pt[j]!;
       const v = placed[j];
-      const showX = j % xEvery === 0 || j === lastIdx;
+      const showX = showsX(j);
       return `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="4" fill="${C.marker}" stroke="${col}" stroke-width="2"/>
       ${v ? `<text x="${v.x.toFixed(1)}" y="${v.y.toFixed(1)}" text-anchor="middle" font-size="12.5" font-weight="700"
             fill="${C.label}">${v.t}</text>` : ""}

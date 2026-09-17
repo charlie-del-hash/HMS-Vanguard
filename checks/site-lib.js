@@ -9,12 +9,23 @@ function trackRequests(page) {
   page.on("response", (r) => {
     if (r.status() >= 400) failed.push(`${r.status()} ${r.url()}`);
   });
-  page.on("requestfailed", (r) => failed.push(`failed ${r.url()}`));
+  page.on("requestfailed", (r) => {
+    /* An in-flight request is aborted when the page navigates away, and the
+       overflow sweep navigates 168 times. A lazily-loaded iframe is mid-fetch
+       almost every time, so ERR_ABORTED here says "we moved on", not "this is
+       broken". Recorded with its reason so the filter can tell them apart
+       rather than dropping every failed request. */
+    const why = r.failure()?.errorText || "unknown";
+    failed.push(`failed ${r.url()} (${why})`);
+  });
   page.__failed = failed;
   return failed;
 }
 
-const EXPECTED = [/\/_vercel\/insights\//];
+const EXPECTED = [
+  /\/_vercel\/insights\//,
+  /\(net::ERR_ABORTED\)/,
+];
 
 /** Console/page errors worth reporting, with the known-local noise removed. */
 function realErrors(page) {
@@ -26,9 +37,27 @@ function realErrors(page) {
   });
 }
 
-/** Any 4xx/5xx that is not the analytics beacon. */
+/** Any 4xx/5xx that is not the analytics beacon or a navigation abort. */
 function realFailures(page) {
   return (page.__failed || []).filter((f) => !EXPECTED.some((re) => re.test(f)));
 }
 
-module.exports = { trackRequests, realErrors, realFailures };
+/**
+ * Report errors and failures, and say whether they should fail the check.
+ *
+ * These used to be printed and nothing more, so a page could 404 its own
+ * stylesheet and the check still exited 0 — a check that reports health it is
+ * not asserting, which is the same fault as db-rls reading a network refusal
+ * as twelve passes. Callers add the returned count to their own.
+ */
+function reportNoise(page) {
+  const errs = realErrors(page);
+  const bad = realFailures(page);
+  console.log("errs", errs.slice(0, 5), "| bad requests", bad.slice(0, 5));
+  if (errs.length || bad.length) {
+    console.log(`  FAIL  ${errs.length} console error(s), ${bad.length} failed request(s)`);
+  }
+  return errs.length + bad.length;
+}
+
+module.exports = { trackRequests, realErrors, realFailures, reportNoise };

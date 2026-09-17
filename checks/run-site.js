@@ -14,7 +14,7 @@ const { spawn } = require("child_process");
 
 const ROOT = path.resolve(__dirname, "..");
 const DIST = path.join(ROOT, "dist");
-const ORDER = ["vercel-output", "site-charts", "site-overflow"];
+const ORDER = ["vercel-output", "site-report", "site-charts", "site-overflow"];
 
 const MIME = {
   ".html": "text/html; charset=utf-8",

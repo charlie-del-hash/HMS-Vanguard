@@ -153,6 +153,71 @@ mv .env /tmp/ && npm ci --omit=dev && NODE_ENV=production CI=1 VERCEL=1 npm run 
 That passes, and passing it is necessary rather than sufficient — it does not validate the output,
 which is what `checks/vercel-output.js` is for.
 
+## The report system
+
+A report is a row plus an ordered list of blocks, and there are eleven block kinds. The contract
+lives in `src/lib/blocks.ts`, which `0001_content.sql` already points readers at.
+
+**A payload references data; it does not carry it.** A chart block names series keys, a timeline
+names tags, a KPI cites a source key. That is why `series`, `events` and `sources` are tables
+rather than more jsonb — a figure lives in one place and a report that prints it points at it.
+`src/lib/content.ts` resolves references into `ResolvedBlock`s, so no component talks to the
+database and every component can be rendered from a literal. `/dev/blocks/` does exactly that.
+
+**A bad payload fails the build.** `parsePayload` throws rather than skipping a block it cannot
+read. A published report silently missing its methodology box is worse than a build that stopped.
+The same rule refuses a KPI or a table that has neither a `sourceKey` nor `indicative: true`.
+
+**Prose is a tiny markup grammar, never HTML.** `src/lib/inline.ts` escapes first, then applies
+bold/italic/code/figure and https-only links to the ESCAPED text, so there is no second pass in
+which a payload could become a tag. `set:html` does not escape, and this content comes out of a
+database an admin UI will write to. The last block of `/dev/blocks/` is a hostile payload —
+script tags, an `onerror` image, `javascript:` and `data:` links — and `checks/site-report.js`
+asserts none of it executes or becomes markup. Negative-tested: removing the escape produces five
+failures, one of which is the payload actually running.
+
+### Where the content comes from, and why it never guesses
+
+| | |
+| --- | --- |
+| credentials set | the database. A failure to reach it **fails the build**. |
+| credentials absent | the committed seed, announced in the build log. |
+| `CONTENT_SOURCE=seed` | the seed even with credentials — for a sandbox with no egress. |
+
+**There is no silent fallback, deliberately.** A free-tier project pauses after about a week idle,
+and a paused database is unreachable; under a fallback that would mean a deploy quietly replacing
+live content with placeholder copy. A red build is the correct and survivable failure. The project
+had in fact paused by 17 Sep and was restored — expect that again, and see item 0 in the plan.
+
+This sandbox has **no egress to the Supabase host** (`Host not in allowlist`), so local builds
+need `CONTENT_SOURCE=seed`. `npm run check:db` exits **2** rather than 1 for that case, because a
+check that reads a network refusal as a pass is worse than no check.
+
+### The map is a chart, not a map
+
+`src/lib/charts/map.ts` draws the incident plot through the same pipeline as everything else, and
+that is not an aesthetic choice. A tile layer means a third-party request on every report view —
+a tracking surface the funnel explicitly does not want — and an SVG stretched to fit its box
+scales its text, which is the one failure the whole two-pass arrangement exists to prevent.
+Coastlines are carried as lon/lat polylines in the payload.
+
+### Confidence is drawn, not just written
+
+`confirmed` is a filled disc, `reported` an open ring, `unconfirmed` a dashed one — on the map and
+in the timeline. Shape as well as colour, which is the palette validator's standing rule and also
+0002_data.sql's: a plot that draws all three identically asserts something the desk does not know.
+
+### Two chart-layer faults the first real report exposed
+
+- **Gaps were drawn as zeros.** `Number(null)` is 0, so a day with no assessment collapsed to the
+  baseline — inventing a figure, and the most alarming one available. `areaChart` now breaks the
+  stroke at gaps. The other generators do not, so `content.ts` **refuses** to hand them a gapped
+  series rather than letting one plot a missing day as zero.
+- **Label thinning was a constant.** `gap < 30 ? 2 : 1` caps thinning at every-other-point, which
+  holds for the deck's two dozen points and fails completely at 58 daily ones: 2,778 overlapping
+  pairs. `labelStep` in `geometry.ts` derives the step from the measured label width instead —
+  the same lesson as the "5.75px a character" bug, applied one level up.
+
 ## Layout model — read this before changing the frame
 
 Three things are load-bearing and interact. Changing one without the others has already

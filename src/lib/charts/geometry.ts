@@ -103,5 +103,39 @@ export const attrJSON = (o: unknown): string =>
 export const SVG_FONT =
   "Segoe UI,Segoe UI Variable Text,system-ui,-apple-system,Helvetica Neue,Arial,sans-serif";
 
+
+/* ── x-axis label thinning ────────────────────────────────────────────
+ *
+ * Both time-series charts used `gap < 30 ? 2 : 1`, which caps thinning at
+ * every-other-point. That holds for the deck's own series — a dozen to a
+ * couple of dozen points — and falls apart the moment a chart is handed a
+ * daily series: 58 points in a 320px column is a 5px gap, and every other
+ * label still overlaps the next four.
+ *
+ * The step is therefore derived from the width the labels actually measure,
+ * which is the same lesson as the "5.75px a character" bug in HANDOFF.md:
+ * a constant that happens to suit the data in front of you is not a rule.
+ */
+
+/** How many points to skip between x labels so they cannot touch. */
+export function labelStep(gap: number, maxLabelW: number, pad = 9): number {
+  if (!Number.isFinite(gap) || gap <= 0) return 1;
+  return Math.max(1, Math.ceil((maxLabelW + pad) / gap));
+}
+
+/**
+ * Whether index `j` carries a label.
+ *
+ * The last point always does — it is the one a reader looks for. Which means
+ * the one before it must be far enough away: labelling on `j % step` alone
+ * puts a label right beside the final one whenever the count is not a multiple
+ * of the step, and that pair is exactly the collision nobody notices in a
+ * gallery and everybody sees in an article.
+ */
+export function showsLabel(j: number, lastIdx: number, step: number): boolean {
+  if (j === lastIdx) return true;
+  return j % step === 0 && lastIdx - j >= step;
+}
+
 /** Last n items, or all of them. */
 export const win = <T,>(a: T[], n: number): T[] => (a.length > n ? a.slice(-n) : a);

@@ -1,0 +1,53 @@
+---
+/* The incident map block.
+ *
+ * Builds a map ChartSpec and hands it to ChartFrame, so it gets the same
+ * two-pass measurement, theme repaint and font-ready repaint as every other
+ * chart — and the same guarantee that a 9.5px label is 9.5 real pixels at
+ * every viewport. See src/lib/charts/map.ts for why this is not a tile layer.
+ */
+import ChartFrame from "../ChartFrame.astro";
+import type { ChartSpec } from "../../lib/charts/render";
+import type { TimelineEvent } from "../../lib/blocks";
+
+interface Props {
+  events: TimelineEvent[];
+  caption?: string;
+  bbox: [number, number, number, number];
+  outline?: string;
+  labels: { lat: number; lon: number; text: string; anchor?: "start" | "middle" | "end" }[];
+}
+const { events, caption, bbox, outline, labels } = Astro.props;
+
+const short = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+
+const spec: ChartSpec = {
+  kind: "map",
+  bbox,
+  outline,
+  places: labels.map((l) => ({ lon: l.lon, lat: l.lat, text: l.text, anchor: l.anchor })),
+  label: caption ?? "Incident map",
+  markers: events
+    .filter((e) => e.lat != null && e.lon != null)
+    .map((e) => ({
+      lon: e.lon!,
+      lat: e.lat!,
+      title: `${short.format(new Date(e.ts))} — ${e.title}`,
+      confidence: e.confidence,
+      label: short.format(new Date(e.ts)),
+    })),
+};
+---
+
+<ChartFrame spec={spec} caption={caption} class="mapblock" />
+
+<style>
+  /* The map wants a surface behind it: a coastline on the page background
+     reads as a stray line, and on a panel it reads as a map. */
+  .mapblock :global(.cslot) {
+    background: var(--tint);
+    border: 1px solid var(--hair);
+    border-radius: var(--r);
+    overflow: clip;
+  }
+</style>

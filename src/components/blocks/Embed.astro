@@ -1,0 +1,69 @@
+---
+/* An embedded document or interactive.
+ *
+ * Sandboxed, and deliberately narrowly. `allow-scripts` without
+ * `allow-same-origin` means the frame runs its own code but cannot reach this
+ * document, its storage or its cookies — which is what you want for anything
+ * embedded, including our own ops deck. Granting both together is equivalent
+ * to not sandboxing at all, and it is the mistake that makes sandbox
+ * attributes look like security while providing none.
+ *
+ * `loading="lazy"` because an embed below the fold should not cost a reader
+ * anything until they reach it, and the funnel's whole argument is that these
+ * pages are fast.
+ */
+import type { EmbedPayload } from "../../lib/blocks";
+
+interface Props {
+  payload: EmbedPayload;
+}
+const { payload } = Astro.props;
+const { url, title, height = 560 } = payload;
+---
+
+<figure class="embed">
+  <div class="frame" style={`--h:${height}px`}>
+    <iframe
+      src={url}
+      title={title}
+      loading="lazy"
+      referrerpolicy="no-referrer"
+      sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"></iframe>
+  </div>
+  <figcaption>
+    <span>{title}</span>
+    <a href={url} rel="noopener noreferrer" target="_blank">Open in a new tab</a>
+  </figcaption>
+</figure>
+
+<style>
+  .embed {
+    margin: 0;
+    display: grid;
+    gap: 8px;
+  }
+  .frame {
+    height: var(--h);
+    /* Never taller than the viewport: an embed that fills the screen traps a
+       reader scrolling past it on a phone. */
+    max-height: 78dvh;
+    border: 1px solid var(--hair);
+    border-radius: var(--r);
+    overflow: clip;
+    background: var(--surface);
+  }
+  iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+  figcaption {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--small);
+  }
+</style>

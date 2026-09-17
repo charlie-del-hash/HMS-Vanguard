@@ -11,6 +11,7 @@ import { areaChart, barChart, spark } from "./basic";
 import { indexChart, idxGeom, type Overlay } from "./index-chart";
 import { scatterChart, type ScatterPoint } from "./scatter";
 import { priceChart, type PricePoint } from "./price";
+import { mapChart, MAP_HEIGHT, type MapMarker, type MapPlace } from "./map";
 
 export type ChartSpec =
   | {
@@ -58,6 +59,14 @@ export type ChartSpec =
       state?: "open" | "resolved";
       outcome?: "yes" | "no" | null;
       keep?: number;
+    }
+  | {
+      kind: "map";
+      markers: MapMarker[];
+      bbox: [number, number, number, number];
+      outline?: string;
+      places?: MapPlace[];
+      label?: string;
     }
   | {
       kind: "spark";
@@ -108,6 +117,15 @@ export function renderChart(spec: ChartSpec, width: number, palette: Palette): s
         outcome: spec.outcome,
         keep: spec.keep,
       });
+    case "map":
+      return mapChart(spec.markers, {
+        width,
+        palette,
+        bbox: spec.bbox,
+        outline: spec.outline,
+        places: spec.places,
+        label: spec.label,
+      });
     case "spark":
       return spark(spec.values, spec.color, spec.tip, { w: spec.w, h: spec.h });
   }
@@ -127,6 +145,8 @@ export function chartHeight(spec: ChartSpec): number {
       return spec.side ? 200 : 210;
     case "scatter":
       return 310;
+    case "map":
+      return MAP_HEIGHT;
     case "price":
       return 190;
     case "spark":

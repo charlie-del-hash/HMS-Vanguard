@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Affinity research funnel — the Astro site, the ops deck it grew out of, and the checks that hold both",
+  "description": "Affinity research funnel \u2014 the Astro site, the ops deck it grew out of, and the checks that hold both",
   "engines": {
     "node": "22.x"
   },
@@ -12,6 +12,8 @@
     "build": "astro build && node scripts/vercel-config.mjs",
     "preview": "astro preview",
     "astro": "astro",
+    "seed": "node --experimental-strip-types scripts/seed-db.mjs",
+    "seed:sql": "node --experimental-strip-types scripts/seed-db.mjs --sql",
     "test": "node checks/run.js",
     "check": "npm test",
     "typecheck": "astro check",

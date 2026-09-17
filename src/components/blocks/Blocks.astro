@@ -1,0 +1,95 @@
+---
+/* Resolved blocks in, article out.
+ *
+ * The switch is exhaustive over ResolvedBlock, so adding a twelfth kind is a
+ * type error here rather than a block that silently renders as nothing. That
+ * is the same rule parsePayload follows: a report missing a section is worse
+ * than a build that stopped.
+ *
+ * Lane assignment lives here rather than in each component, because a lane is
+ * a fact about the page grid and not about the block — the same chart belongs
+ * in the wide lane on a report and in the content lane on an index card.
+ */
+import type { ResolvedBlock } from "../../lib/blocks";
+import Prose from "./Prose.astro";
+import KpiRow from "./KpiRow.astro";
+import ChartBlock from "./ChartBlock.astro";
+import Timeline from "./Timeline.astro";
+import MapPlot from "./MapPlot.astro";
+import DataTable from "./DataTable.astro";
+import Callout from "./Callout.astro";
+import Quote from "./Quote.astro";
+import SourceBox from "./SourceBox.astro";
+import Cta from "./Cta.astro";
+import Embed from "./Embed.astro";
+
+interface Props {
+  blocks: ResolvedBlock[];
+}
+const { blocks } = Astro.props;
+
+/** Which grid lane each kind sits in. Charts carry their own. */
+function laneOf(b: ResolvedBlock): string {
+  switch (b.kind) {
+    case "chart":
+      return b.lane;
+    case "map":
+    case "table":
+    case "kpi_row":
+    case "embed":
+      return "wide";
+    default:
+      return "content";
+  }
+}
+---
+
+{
+  blocks.map((b) => (
+    <div class:list={[laneOf(b), "block", `b-${b.kind}`]}>
+      {b.kind === "prose" && <Prose payload={b.payload} />}
+      {b.kind === "kpi_row" && <KpiRow items={b.items} />}
+      {b.kind === "chart" && (
+        <ChartBlock
+          spec={b.spec}
+          caption={b.caption}
+          lane={b.lane}
+          sources={b.sources}
+          indicative={b.indicative}
+        />
+      )}
+      {b.kind === "timeline" && <Timeline events={b.events} caption={b.caption} />}
+      {b.kind === "map" && (
+        <MapPlot
+          events={b.events}
+          caption={b.caption}
+          bbox={b.bbox}
+          outline={b.outline}
+          labels={b.labels}
+        />
+      )}
+      {b.kind === "table" && <DataTable payload={b.payload} source={b.source} />}
+      {b.kind === "callout" && <Callout payload={b.payload} />}
+      {b.kind === "quote" && <Quote payload={b.payload} />}
+      {b.kind === "sourcebox" && <SourceBox sources={b.sources} note={b.note} />}
+      {b.kind === "cta" && <Cta payload={b.payload} href={b.href} />}
+      {b.kind === "embed" && <Embed payload={b.payload} />}
+    </div>
+  ))
+}
+
+<style>
+  /* One rhythm for the whole article, set here rather than as a margin on each
+     component — so a block never has to know what precedes it. */
+  .block + .block {
+    margin-top: 30px;
+  }
+  /* The figures that belong to the prose above them sit closer to it. */
+  .block.b-kpi_row + .block,
+  .block + .block.b-sourcebox {
+    margin-top: 34px;
+  }
+  .block.b-cta {
+    margin-top: 40px;
+  }
+</style>
