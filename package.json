@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Affinity research funnel — the Astro site, the ops deck it grew out of, and the checks that hold both",
   "engines": {
-    "node": ">=22"
+    "node": "22.x"
   },
   "scripts": {
     "dev": "astro dev",

@@ -167,5 +167,79 @@ t("no environment file is in the output", () => {
   assert.ok(!hit, `${hit} is in the deployed output`);
 });
 
+console.log("the deploy build installs only what it needs");
+
+/* Vercel runs a build on this repo now, and main does not — main has a
+   manifest but no `build` script, so the platform skips the build entirely
+   there. That asymmetry is why main deployed green all week while every
+   deployment of this branch failed, and why none of the checks noticed: they
+   all run after a build that already worked, on a machine that is not Vercel.
+   These four assertions are about the build Vercel runs, not the one we run. */
+
+const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8"));
+const deps = pkg.dependencies ?? {};
+const devDeps = pkg.devDependencies ?? {};
+
+t("engines.node is in the form Vercel documents", () => {
+  const node = pkg.engines?.node;
+  assert.ok(node, "no engines.node — the Node version is then whatever Vercel defaults to");
+  assert.match(
+    node,
+    /^\d+\.x$/,
+    `engines.node is "${node}". Vercel documents MAJOR.x (e.g. "22.x") and this field ` +
+      `OVERRIDES the project setting, so a form it will not parse fails the build before ` +
+      `anything is installed.`,
+  );
+});
+
+/* The bug: @vercel/routing-utils was a devDependency, and the build imports it.
+   That works on any machine that installs devDependencies and nowhere else. */
+t("nothing the build script runs imports a devDependency", () => {
+  const scripts = [...(pkg.scripts?.build ?? "").matchAll(/node\s+(\S+\.m?js)/g)].map((m) => m[1]);
+  assert.ok(scripts.length > 0, "the build script runs no node scripts — did it change?");
+  for (const rel of scripts) {
+    const file = path.join(ROOT, rel);
+    assert.ok(fs.existsSync(file), `the build runs ${rel}, which does not exist`);
+    const body = fs.readFileSync(file, "utf8");
+    const specifiers = [
+      ...body.matchAll(/(?:from|import|require)\s*\(?\s*["']([^"']+)["']/g),
+    ].map((m) => m[1]);
+    for (const spec of specifiers) {
+      if (spec.startsWith(".") || spec.startsWith("/") || spec.startsWith("node:")) continue;
+      const name = spec.startsWith("@") ? spec.split("/").slice(0, 2).join("/") : spec.split("/")[0];
+      assert.ok(
+        !devDeps[name],
+        `${rel} imports ${name}, which is a devDependency. The build cannot complete ` +
+          `without it, so it is a dependency — it only looked fine because every ` +
+          `environment so far happened to install devDependencies too.`,
+      );
+      assert.ok(deps[name], `${rel} imports ${name}, which is not declared as a dependency`);
+    }
+  }
+});
+
+/* Playwright's postinstall downloads three browsers. Locally that is suppressed
+   by PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD; on Vercel nothing suppresses it, and a
+   deploy build has no reason to install a browser automation framework. */
+t("the deploy build does not install Playwright", () => {
+  assert.ok(
+    !deps.playwright && !deps["playwright-core"],
+    "Playwright is a dependency, so the deploy build installs it and downloads browsers",
+  );
+  const install = vercelJson.installCommand ?? "";
+  assert.ok(
+    /--omit[= ]dev|--production/.test(install),
+    `vercel.json installCommand is ${JSON.stringify(install) || "unset"}. Without an ` +
+      `explicit omit, Vercel installs devDependencies and Playwright fetches browsers ` +
+      `on every deployment.`,
+  );
+});
+
+t("the build's own dependencies survive a devDependency-free install", () => {
+  for (const need of ["astro", "@astrojs/vercel"]) {
+    assert.ok(deps[need], `${need} must be a dependency — the deploy build omits devDependencies`);
+  }
+});
+
 console.log(`\nvercel-output: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
