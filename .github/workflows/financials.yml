@@ -68,7 +68,7 @@ jobs:
       - name: Check the rewritten deck
         if: ${{ !inputs.dry_run }}
         run: |
-          npm i --no-save playwright@1.56.1 >/dev/null 2>&1
+          npm ci >/dev/null 2>&1
           npx playwright install --with-deps chromium >/dev/null 2>&1
           node checks/run.js splice sourced ciks overflow
 
