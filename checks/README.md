@@ -1,6 +1,17 @@
 # Checks
 
-Headless-Chromium checks for `affinity-ops-deck.html`. They drive a served copy
+Three suites live here now.
+
+| Suite | Runner | What it covers |
+| --- | --- | --- |
+| **deck** | `node checks/run.js` | The published ops deck at `public/ops-deck.html`. Unchanged, and the proof that work on the site has not disturbed what is already live. |
+| **site** | `npm run build && node checks/run-site.js` | The Astro build in `dist/`. Chart guarantee and overflow across the new pages. |
+| **database** | `node checks/db-rls.js` (+ `checks/db-rls.sql`) | What a reader's key can and cannot reach in Supabase. |
+
+The rest of this file documents the deck suite; the other two are described at
+the bottom.
+
+Headless-Chromium checks for the deck. They drive a served copy
 of the deck and read the **live DOM**, never the source — which is the only way
 to test a deck whose layout is decided by container queries and whose charts are
 measured at paint time.
@@ -51,3 +62,57 @@ rather than off `window`.
 `color-mix()` computes to `color(srgb 0.94 …)` with 0–1 floats, not `rgb()` with
 0–255. A parser that assumes `rgb()` reads those as near-black and reports
 confident nonsense — it once claimed 1.89:1 on a tile that measures 4.78:1.
+
+
+## The site suite
+
+`checks/run-site.js` serves `dist/` on a loopback port — the real build output,
+never the source — and hands each check the URL in `SITE_URL`.
+
+```
+npm run build && node checks/run-site.js
+node checks/run-site.js site-charts        # a subset
+```
+
+| Check | What it drives, and what it must beat |
+| --- | --- |
+| `vercel-output` | Offline, against the build output. Every finding of the hosting audit as an assertion, and they share a shape: the thing looked configured and was not. **vercel.json's `headers` are not merged by the Astro adapter** — it reads that file only to warn about `trailingSlash` — so they are spliced into `.vercel/output/config.json` by `scripts/vercel-config.mjs`, and this asserts they arrived, landed *before* `handle: filesystem`, and carry `continue`. Plus: every `dest` the config routes to exists (the config routed misses to a `/404.html` that did not), the deck is byte-identical in the output, no client bundle is unreferenced (a registered-but-unused React integration shipped 188KB nothing loaded), and nothing from the repository is on the domain. **10/10.** |
+| `site-charts` | The same guarantee `charts` holds for the deck, plus the two things server rendering adds. That the server's frame is really in the HTML — asserted with **JavaScript disabled**, so it is the crawler's view rather than a hydrated one. That scale is 1.000 and rendered type lands in 8.5–13px with 0 overlapping pairs, over 14 widths × 2 themes. And that the client's second pass **corrects** the frame rather than replacing it: the same charts, in the same order, with the same labels, before and after hydration. **168 instances, scale 1.000, 8.5–13px, 0 pairs.** |
+| `site-overflow` | Nothing scrolls sideways: 3 pages × 2 themes × 14 widths, page and every element, ignoring only elements that opt into their own scroller. **84/84.** |
+
+## The database suite
+
+Two files, and they are companions rather than alternatives.
+
+`checks/db-rls.js` is the honest one: it uses the real publishable key over the
+real API, which is exactly what a reader holds. Reads `.env`.
+
+```
+node checks/db-rls.js
+```
+
+**It proves the host is reachable before it asserts anything**, and exits `2`
+without running the suite if it is not. That is not politeness — every
+assertion in the file reads "refused" as a pass, and a request that never left
+the machine is also refused. The first time it ran, from a sandbox whose egress
+allowlist did not include the project, it reported twelve passes for a database
+it could not see. Exit `2` means *could not test*; exit `1` means *failed*.
+
+`checks/db-rls.sql` runs the same assertions inside the database, using
+`set local role` so the policies are evaluated for real as `anon` and as a
+signed-in non-staff account. It needs no egress, so it covers the gap when the
+JS check cannot connect — but it cannot see anything PostgREST layers on top,
+which is why it is the companion and not the replacement. It builds its own
+fixtures and rolls them back.
+
+```
+psql "$DATABASE_URL" -f checks/db-rls.sql     # or the Supabase SQL editor
+```
+
+**32/32.** Between them they hold: a published report is visible and a draft is
+not; a draft's blocks do not leak without the draft; the data tables behind the
+reports are readable; the analytics tables are *unreachable* rather than merely
+empty; and a signed-in account that is not staff — which holds every table
+grant, so RLS is the only thing in its way — cannot insert, update or **delete**
+a report. That last one matters: an earlier draft of these policies would have
+let the delete through, because `DELETE` has no `WITH CHECK` to catch it.

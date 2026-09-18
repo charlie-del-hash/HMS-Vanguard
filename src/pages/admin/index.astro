@@ -1,0 +1,205 @@
+---
+/* The report list, and the only place a new one starts.
+ *
+ * Reads as the signed-in user, so the staff SELECT policy is what makes drafts
+ * visible here and invisible on the public site. Nothing in this page decides
+ * that — the database does, and 0007 records the morning it did not.
+ */
+export const prerender = false;
+
+import Admin from "../../layouts/Admin.astro";
+import { serverClient } from "../../lib/auth";
+import { newReportSlug } from "../../lib/admin";
+
+const staff = Astro.locals.staff!; // the middleware guarantees this
+const db = serverClient(Astro);
+
+let problem: string | null = null;
+
+/* Creating a report is a POST to this page rather than its own route: it is
+   one insert and a redirect, and a route per verb is more moving parts than
+   this earns. */
+if (Astro.request.method === "POST") {
+  const form = await Astro.request.formData();
+  const title = String(form.get("title") ?? "").trim();
+
+  if (title.length < 3) {
+    problem = "A report needs a title to be found by.";
+  } else {
+    const { data, error } = await db
+      .from("reports")
+      .insert({ title, slug: await newReportSlug(db, title), status: "draft" })
+      .select("id")
+      .single();
+    if (error) problem = error.message;
+    else return Astro.redirect(`/admin/reports/${data.id}`, 303);
+  }
+}
+
+const { data: reports, error } = await db
+  .from("reports")
+  .select("id, slug, title, status, published_at, updated_at, author")
+  .order("updated_at", { ascending: false });
+
+if (error) problem ??= error.message;
+
+const fmt = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: "UTC",
+});
+---
+
+<Admin title="Reports" email={staff.email}>
+  <div class="head">
+    <h1>Reports</h1>
+    <form method="POST" class="new">
+      <input name="title" placeholder="New report title" aria-label="New report title" required />
+      <button type="submit">Create draft</button>
+    </form>
+  </div>
+
+  {problem && <p class="bad">{problem}</p>}
+
+  {
+    !reports?.length ? (
+      <p class="empty">Nothing here yet. The box above starts one.</p>
+    ) : (
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Title</th>
+            <th scope="col">Status</th>
+            <th scope="col">Published</th>
+            <th scope="col">Last edited</th>
+          </tr>
+        </thead>
+        <tbody>
+          {reports.map((r) => (
+            <tr>
+              <td>
+                <a href={`/admin/reports/${r.id}`}>{r.title}</a>
+                <span class="slug">/{r.slug}</span>
+              </td>
+              <td>
+                <span class:list={["chip", r.status]}>{r.status}</span>
+              </td>
+              <td class="num">{r.published_at ? fmt.format(new Date(r.published_at)) : "–"}</td>
+              <td class="num">{fmt.format(new Date(r.updated_at))}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )
+  }
+</Admin>
+
+<style>
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  h1 {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 650;
+    color: var(--ink);
+  }
+  .new {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .new input {
+    min-height: 40px;
+    min-width: 230px;
+    padding: 0 11px;
+    border: 1px solid var(--rule);
+    border-radius: var(--r-ctl);
+    background: var(--field);
+    color: var(--ink);
+  }
+  .new button {
+    min-height: 40px;
+    padding: 0 15px;
+    border: 0;
+    border-radius: var(--r-ctl);
+    background: var(--teal);
+    color: var(--on-accent);
+    font-weight: 600;
+    cursor: pointer;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    border: 1px solid var(--hair);
+    border-radius: var(--r);
+    overflow: clip;
+    background: var(--surface);
+  }
+  th,
+  td {
+    text-align: left;
+    padding: 10px 13px;
+    border-top: 1px solid var(--row-line);
+    vertical-align: baseline;
+  }
+  thead th {
+    border-top: 0;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--small);
+    font-weight: 400;
+  }
+  .num {
+    font-family: var(--num);
+    font-variant-numeric: tabular-nums;
+    color: var(--small);
+    white-space: nowrap;
+  }
+  .slug {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--small);
+    margin-top: 2px;
+  }
+  .chip {
+    font-family: var(--mono);
+    font-size: 8.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: var(--r-chip);
+    border: 1px solid var(--hair);
+    color: var(--small);
+    white-space: nowrap;
+  }
+  .chip.published {
+    color: var(--pos);
+    border-color: var(--pos-line);
+  }
+  .chip.scheduled {
+    color: var(--amber-dk);
+    border-color: var(--amber);
+  }
+  .bad {
+    margin: 0 0 14px;
+    padding: 10px 13px;
+    border-radius: var(--r-ctl);
+    background: var(--neg-soft);
+    border-left: 3px solid var(--neg);
+    font-size: 13.5px;
+  }
+  .empty {
+    color: var(--small);
+  }
+</style>

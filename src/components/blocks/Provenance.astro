@@ -1,0 +1,75 @@
+---
+/* Where the figures came from, said where the figures are.
+ *
+ * checks/sourced.js holds this rule against the deck in fourteen assertions,
+ * and 0002_data.sql promoted it to a column. This is the render half: a chip
+ * that names the source, and — when the source is indicative — says so in the
+ * same breath rather than in a footnote under a table of confident numbers.
+ *
+ * The indicative state is deliberately not subtle. A reader who skims past it
+ * and quotes the number has been misled by this component.
+ */
+import type { Source } from "../../lib/blocks";
+
+interface Props {
+  sources: Source[];
+  /** Set when the block itself is marked indicative without citing a source. */
+  indicative?: boolean;
+  class?: string;
+}
+const { sources, indicative = false, class: cls = "" } = Astro.props;
+const anyIndicative = indicative || sources.some((s) => s.isIndicative);
+const named = sources.filter((s) => !!s.name);
+---
+
+{
+  (named.length > 0 || anyIndicative) && (
+    <p class:list={["prov", cls]}>
+      {anyIndicative && <span class="chip">Indicative</span>}
+      {named.length > 0 && (
+        <span class="who">
+          {named.map((s, i) => (
+            <>
+              {i > 0 && <span aria-hidden="true"> · </span>}
+              {s.url ? (
+                <a href={s.url} rel="noopener noreferrer" target="_blank">
+                  {s.name}
+                </a>
+              ) : (
+                s.name
+              )}
+            </>
+          ))}
+        </span>
+      )}
+    </p>
+  )
+}
+
+<style>
+  .prov {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 10px;
+    margin-top: 8px;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--small);
+  }
+  /* --amber is the deck's "provisional" hue and already carries that meaning
+     for anyone who has used the desk. Contrast is validated in both themes. */
+  .chip {
+    padding: 2px 7px;
+    border-radius: var(--r-chip);
+    background: var(--tint);
+    color: var(--amber-dk);
+    border: 1px solid var(--hair);
+    letter-spacing: 0.14em;
+  }
+  .who a {
+    color: inherit;
+  }
+</style>

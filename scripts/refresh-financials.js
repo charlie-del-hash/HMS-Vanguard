@@ -27,8 +27,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const ROOT = path.resolve(__dirname, "..");
-const DECK = path.join(ROOT, "affinity-ops-deck.html");
+const { ROOT, DECK } = require("./paths");
 const SOURCES = path.join(ROOT, "scripts", "sources.json");
 const BEGIN = "/* EQ_FIN:BEGIN";
 const END = "/* EQ_FIN:END */";

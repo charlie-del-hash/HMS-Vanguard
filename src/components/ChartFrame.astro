@@ -1,0 +1,167 @@
+---
+/* A chart that survives server rendering without giving up true-size drawing.
+ *
+ * The deck's guarantee — viewBox width equals CSS width, scale is 1.000, and
+ * 9.5 means 9.5 real pixels — comes from measuring a DOM node before drawing.
+ * There is no node on the server, and rendering charts client-only would throw
+ * away the SEO that justifies server rendering at all.
+ *
+ * So: two passes. The server draws at `ssrWidth`, a declared width taken from
+ * the lane this chart sits in rather than guessed, and the SVG ships in the
+ * HTML. On mount the island measures its own box and redraws if the real width
+ * differs by more than a pixel. Identical arithmetic, corrected input.
+ *
+ * The height is fixed per chart kind, so the box is reserved at the right size
+ * and the second pass shifts nothing on the page.
+ */
+import { paletteFor } from "../lib/charts/palette";
+import { renderChart, chartHeight, type ChartSpec } from "../lib/charts/render";
+
+interface Props {
+  spec: ChartSpec;
+  /**
+   * Width to draw at on the server. Use the lane's width: 680 for the wide
+   * lane, ~620 for the content lane. It is corrected on mount either way, but
+   * a close guess means the pre-hydration frame reads correctly too.
+   */
+  ssrWidth?: number;
+  /** Extra classes on the host. */
+  class?: string;
+  caption?: string;
+  /** Where the figures come from. Reports must always be able to say. */
+  source?: string;
+  sourceHref?: string;
+}
+
+const { spec, ssrWidth = 680, class: cls = "", caption, source, sourceHref } = Astro.props;
+
+/* The server can only know the light palette — the theme lives on the
+   document. The island re-reads the real one on mount, exactly as the deck's
+   readPalette() does, so a dark reader gets one corrected frame rather than a
+   chart drawn in the wrong palette. */
+const svg = renderChart(spec, ssrWidth, paletteFor("light"));
+const h = chartHeight(spec);
+---
+
+<figure class:list={["chartframe", cls]}>
+  <div class="cslot" data-chart style={`min-height:${h}px`}>
+    <Fragment set:html={svg} />
+    <script type="application/json" set:html={JSON.stringify(spec)}></script>
+  </div>
+  {
+    (caption || source) && (
+      <figcaption>
+        {caption && <span class="cap">{caption}</span>}
+        {source && (
+          <span class="src">
+            {sourceHref ? (
+              <a href={sourceHref} rel="noopener noreferrer" target="_blank">
+                {source}
+              </a>
+            ) : (
+              source
+            )}
+          </span>
+        )}
+      </figcaption>
+    )
+  }
+</figure>
+
+<script>
+  import { renderChart, type ChartSpec } from "../lib/charts/render";
+  import { readPalette } from "../lib/charts/palette";
+
+  /* One handler for every chart on the page. Charts are cheap to draw and
+     there are never many, so a single observer beats an island each. */
+  const slots = new Map<Element, { spec: ChartSpec; width: number }>();
+
+  function paint(host: Element, force = false) {
+    const entry = slots.get(host);
+    if (!entry) return;
+    /* The EXACT width, not a rounded one. viewBox width has to equal CSS width
+       for the scale to be 1.000, and rounding 256.5 up to 257 makes the frame
+       0.998 — a chart very slightly scaled, which is the failure this whole
+       arrangement exists to avoid. A fractional viewBox is perfectly legal. */
+    const w = Math.round(host.getBoundingClientRect().width * 100) / 100;
+    if (w < 1) return;
+    if (!force && Math.abs(w - entry.width) < 0.5) return; // nothing has moved
+    entry.width = w;
+    const svg = renderChart(entry.spec, w, readPalette());
+    const json = host.querySelector('script[type="application/json"]');
+    host.innerHTML = svg;
+    if (json) host.appendChild(json);
+  }
+
+  function register(host: Element) {
+    const json = host.querySelector('script[type="application/json"]');
+    if (!json?.textContent) return;
+    try {
+      slots.set(host, { spec: JSON.parse(json.textContent) as ChartSpec, width: -1 });
+    } catch {
+      return; // leave the server's frame standing rather than blanking it
+    }
+    paint(host);
+  }
+
+  const ro = new ResizeObserver((entries) => {
+    for (const e of entries) paint(e.target);
+  });
+
+  function init() {
+    for (const host of document.querySelectorAll("[data-chart]")) {
+      if (slots.has(host)) continue;
+      register(host);
+      ro.observe(host);
+    }
+  }
+
+  /* A theme change repaints every chart: SVG cannot inherit a custom property
+     through a fill attribute, so the colours are baked in at draw time and a
+     CSS theme swap alone would leave them behind. */
+  new MutationObserver(() => {
+    for (const host of slots.keys()) paint(host, true);
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+  init();
+  /* A face landing late changes every measured label width. */
+  document.fonts?.ready.then(() => {
+    for (const host of slots.keys()) paint(host, true);
+  });
+  /* No `astro:page-load` listener here either — see the note in Base.astro.
+     Nothing imports ClientRouter, so the event never fires. */
+</script>
+
+<style>
+  .chartframe {
+    margin: 0;
+    display: grid;
+    gap: 8px;
+  }
+  .cslot {
+    width: 100%;
+    min-width: 0;
+  }
+  .cslot :global(svg.chart) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  figcaption {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--small);
+  }
+  .src {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .src a {
+    color: inherit;
+  }
+</style>

@@ -1,0 +1,145 @@
+---
+/* The frame every admin page sits in.
+ *
+ * Deliberately plain. This is a tool for two or three people who use it
+ * weekly, not a surface to be impressed by — and every minute spent styling it
+ * is a minute not spent on the reports, which are the product.
+ *
+ * It uses the same tokens as the public site, so a colour that fails contrast
+ * fails here too and gets caught once rather than twice.
+ */
+import "../styles/tokens.css";
+import "../styles/base.css";
+import { SITE_NAME } from "../lib/config";
+
+interface Props {
+  title: string;
+  /** Shown top right. Absent on the login page. */
+  email?: string | null;
+  /** Breadcrumb back-link, when this is not the top of the admin. */
+  back?: { href: string; label: string };
+}
+const { title, email, back } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en-GB" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>{title} — {SITE_NAME} desk</title>
+    {/* Never. Not by a crawler, not by a preview bot, not by anything. */}
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script is:inline>
+      (() => {
+        try {
+          const t = localStorage.getItem("affinity-ops-theme");
+          if (t === "dark" || t === "light") {
+            document.documentElement.dataset.theme = t;
+            return;
+          }
+        } catch {}
+        if (window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
+          document.documentElement.dataset.theme = "dark";
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <header class="bar">
+      <div class="left">
+        <a class="home" href="/admin">Desk</a>
+        {
+          back && (
+            <>
+              <span class="sep" aria-hidden="true">/</span>
+              <a href={back.href}>{back.label}</a>
+            </>
+          )
+        }
+      </div>
+      <div class="right">
+        <a href="/admin/analytics" class="quiet">Funnel</a>
+        <a href="/admin/data" class="quiet">Data</a>
+        <a href="/" class="quiet">View site</a>
+        {
+          email && (
+            <>
+              <span class="who">{email}</span>
+              {/* POST, so nothing can sign you out by rendering a URL. */}
+              <form method="POST" action="/admin/signout">
+                <button type="submit" class="quiet">Sign out</button>
+              </form>
+            </>
+          )
+        }
+      </div>
+    </header>
+    <main>
+      <slot />
+    </main>
+  </body>
+</html>
+
+<style>
+  .bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--hair);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+  .left,
+  .right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+  .home {
+    font-weight: 640;
+    color: var(--ink);
+    text-decoration: none;
+    font-size: 14px;
+  }
+  .sep {
+    color: var(--small);
+  }
+  .left a {
+    font-size: 13.5px;
+  }
+  .who {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--small);
+    max-width: 22ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .quiet {
+    background: none;
+    border: 0;
+    padding: 0;
+    font-size: 13px;
+    color: var(--teal);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+  }
+  main {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 24px 18px 80px;
+  }
+</style>

@@ -1,0 +1,281 @@
+---
+/* The funnel's front door.
+ *
+ * Adding this file retires the deck-at-root build hook in astro.config.mjs —
+ * it copies the ops deck to index.html only when nothing else claims `/`, and
+ * stands down the moment this page exists. The deck stays reachable at
+ * /ops-deck.html, which is the URL that was circulated, so nothing breaks.
+ */
+import Base from "../layouts/Base.astro";
+import ReportCard from "../components/ReportCard.astro";
+import { listReports, allIndicative } from "../lib/content";
+import { PORTAL_URL, portalHref, SITE_NAME, SITE_TAGLINE } from "../lib/config";
+import EmailCapture from "../components/EmailCapture.astro";
+
+const { reports, source } = await listReports();
+const [feature, ...rest] = reports;
+const indicative = await allIndicative();
+const portal = portalHref("landing");
+
+/* Structured data for the site itself, matching what a report page already
+   emits for an article. Without it a search engine has the publication's name
+   only from the <title> of whichever page it happened to crawl first.
+
+   `sameAs` names the research portal when one is configured, which is how the
+   two properties get recognised as the same organisation rather than as two
+   unrelated sites that happen to link to each other. Omitted entirely when the
+   portal URL is not set, on the same rule as everything else here: no field we
+   cannot fill truthfully. */
+const site = Astro.site!;
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": new URL("/#organization", site).href,
+      name: SITE_NAME,
+      url: site.href,
+      description: SITE_TAGLINE,
+      ...(PORTAL_URL ? { sameAs: [PORTAL_URL] } : {}),
+    },
+    {
+      "@type": "WebSite",
+      "@id": new URL("/#website", site).href,
+      name: SITE_NAME,
+      url: site.href,
+      description: SITE_TAGLINE,
+      inLanguage: "en-GB",
+      publisher: { "@id": new URL("/#organization", site).href },
+    },
+  ],
+};
+---
+
+<Base title={`${SITE_NAME} — ${SITE_TAGLINE}`} description={SITE_TAGLINE}>
+  {/* Which content source this deployment built from. Invisible to a reader and
+      one curl away for anyone wondering whether a deploy is serving the database
+      or the committed seed — the question the no-silent-fallback rule exists to
+      make answerable.
+
+      It has to be INSIDE <Base> for the slot to bind: a `slot` attribute only
+      means anything on a component's own children, so sitting outside it this
+      rendered before <html> with a literal slot="head" attribute. Browsers
+      reparent it, which is why it still worked and still looked fine. */}
+  <meta name="affinity-content-source" content={source} slot="head" />
+  <script
+    type="application/ld+json"
+    slot="head"
+    set:html={JSON.stringify(jsonLd)}
+    is:inline
+  />
+  <header class="hero">
+    <div class="inner">
+      <p class="label brand">{SITE_NAME}</p>
+      <h1>{SITE_TAGLINE}</h1>
+      <p class="sub">
+        Each report carries the data behind it — the series, the incident log and the
+        provenance for every figure — so you can check the argument rather than take it.
+      </p>
+      <div class="actions">
+        <a class="btn" href="/reports">Read the reports</a>
+        {
+          portal ? (
+            <a class="btn ghost" href={portal} data-cta="portal" rel="noopener">
+              The full research portal
+            </a>
+          ) : (
+            <a class="btn ghost" href="/ops-deck.html">
+              Open the ops deck
+            </a>
+          )
+        }
+      </div>
+      {
+        indicative && (
+          <p class="warn">
+            <span class="chip">Indicative</span>
+            Every figure on this site is currently placeholder data, shaped like the live
+            assessment rather than being it. Nothing here should be quoted.
+          </p>
+        )
+      }
+    </div>
+  </header>
+
+  <main class="wrap">
+    {
+      reports.length === 0 ? (
+        <p class="empty">No published reports yet.</p>
+      ) : (
+        <>
+          <h2 class="label sec">Latest</h2>
+          <div class="grid">
+            {feature && <ReportCard report={feature} feature />}
+            {rest.map((r) => (
+              <ReportCard report={r} />
+            ))}
+          </div>
+        </>
+      )
+    }
+    <div class="capture">
+      <EmailCapture compact />
+    </div>
+  </main>
+
+  <footer class="foot">
+    <div class="inner">
+      <p>
+        <a href="/reports">Reports</a>
+        <a href="/ops-deck.html">Ops deck</a>
+        <a href="/privacy">Privacy</a>
+        {PORTAL_URL && <a href={portal!} rel="noopener">Research portal</a>}
+      </p>
+      <p class="src">Indicative data · not for quotation</p>
+    </div>
+  </footer>
+</Base>
+
+<style>
+  .hero {
+    background: var(--main-grad);
+    border-bottom: 1px solid var(--hair);
+  }
+  .inner,
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding-inline: 20px;
+  }
+  .hero .inner {
+    display: grid;
+    gap: 13px;
+    padding-block: clamp(46px, 8vw, 88px);
+  }
+  .brand {
+    color: var(--teal);
+  }
+  h1 {
+    margin: 0;
+    max-width: 19ch;
+    font-size: clamp(31px, 2rem + 3vw, 56px);
+    line-height: 1.08;
+    letter-spacing: -0.018em;
+    font-weight: 660;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+  .sub {
+    margin: 0;
+    max-width: 58ch;
+    font-size: clamp(15px, 0.95rem + 0.35vw, 18px);
+    line-height: 1.55;
+    color: var(--body);
+    text-wrap: pretty;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 6px;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    /* 44px minimum — the deck's rest check measures this under coarse
+       pointers, and these are the landing page's only controls. */
+    min-height: 44px;
+    padding: 0 20px;
+    border-radius: var(--r-ctl);
+    background: var(--teal);
+    color: var(--on-accent);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background var(--t) var(--ease);
+  }
+  .btn:hover {
+    background: var(--accent-hover);
+  }
+  .btn.ghost {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--rule);
+  }
+  .btn.ghost:hover {
+    background: var(--tint);
+  }
+
+  .warn {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 9px;
+    margin: 8px 0 0;
+    max-width: 62ch;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--body);
+  }
+  .chip {
+    font-family: var(--mono);
+    font-size: 8.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: var(--r-chip);
+    background: var(--surface);
+    color: var(--amber-dk);
+    border: 1px solid var(--hair);
+  }
+
+  .wrap {
+    padding-block: 40px 60px;
+  }
+  .sec {
+    margin: 0 0 14px;
+  }
+  .grid {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr));
+  }
+  /* The lead report spans the row it starts, where there is room for it. */
+  @media (min-width: 720px) {
+    .grid > :global(.card.feature) {
+      grid-column: 1 / -1;
+    }
+  }
+  .empty {
+    color: var(--small);
+  }
+
+  .capture {
+    margin-top: 34px;
+  }
+  .foot {
+    border-top: 1px solid var(--hair);
+  }
+  .foot .inner {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px 20px;
+    padding-block: 22px 34px;
+  }
+  .foot p {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin: 0;
+    font-size: 13px;
+  }
+  .src {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--small);
+  }
+</style>

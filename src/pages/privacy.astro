@@ -1,0 +1,216 @@
+---
+/* What is measured, in plain words.
+ *
+ * Every claim on this page is a claim about code in this repository, and
+ * checks/site-beacon.js checks each one against a real browser loading the real
+ * build. A privacy page that describes an intention rather than an
+ * implementation is the same failure as a config file that validates and does
+ * nothing.
+ *
+ * ── this page was wrong, and the check could not see it ───────────────
+ * It used to say "no external analytics — nothing on a report page makes a
+ * request to anyone but us", while Vercel Web Analytics was enabled in
+ * astro.config.mjs and shipping on all nine built pages, this one included.
+ *
+ * The check meant to enforce that compared request HOST, and Vercel's script is
+ * served from a same-origin path the platform proxies — so it passed locally
+ * and would have passed in production too. It now compares destination.
+ *
+ * Which means there are two measurement systems described below, not one, and
+ * they behave differently: ours honours Do Not Track, Vercel's does not. Saying
+ * so is the whole job of this page.
+ */
+import Base from "../layouts/Base.astro";
+import { SITE_NAME } from "../lib/config";
+---
+
+<Base
+  title={`Privacy — ${SITE_NAME}`}
+  description="What this site measures, what it does not, and how to stop it."
+>
+  <header class="top no-print">
+    <a class="home" href="/">{SITE_NAME}</a>
+  </header>
+
+  <main class="article">
+    <div class="masthead">
+      <h1>What this site measures</h1>
+      <p class="dek">
+        Short version: a random number in your browser, which pages you looked at, and how
+        far down you got. No advertising, nothing sold, and nothing that identifies you by
+        name. Two systems do the counting — ours, and Vercel's — and they are described
+        separately below because they do not behave the same way.
+      </p>
+    </div>
+
+    <h2>Our own measurement</h2>
+    <ul>
+      <li>
+        <strong>A random identifier</strong> this site generates and keeps in your browser's
+        local storage. It is not derived from anything about you — it identifies a browser, not
+        a person, and clearing site data genuinely resets it.
+      </li>
+      <li>
+        <strong>Which pages you opened</strong>, how far you scrolled, roughly how long the tab
+        was actually visible, and whether you clicked through to the research portal.
+      </li>
+      <li>
+        <strong>Where you arrived from</strong> — the referring site and any campaign tags on
+        the link — recorded once, on your first visit.
+      </li>
+      <li>
+        <strong>A two-letter country</strong>, worked out at the network edge, and a coarse
+        device class (phone, tablet or desktop) based on window width.
+      </li>
+    </ul>
+
+    <h2>What our measurement does not record</h2>
+    <ul>
+      <li>
+        <strong>Your IP address.</strong> The country is resolved at the network edge before the
+        request reaches our code, so the address never arrives at the part of the system that
+        could store it. We do not write it down anywhere.
+      </li>
+      <li><strong>Your user-agent string</strong>, or any browser or device fingerprint.</li>
+      <li><strong>Your name or email</strong>, unless you type one into the form below a report.</li>
+      <li>
+        <strong>Anything sold or shared.</strong> There are no advertising pixels, no data
+        brokers, and nothing here is passed to anyone for marketing.
+      </li>
+    </ul>
+
+    <h2>Vercel Web Analytics</h2>
+    <p>
+      This site is hosted by <strong>Vercel</strong>, and Vercel's own page-view counter is
+      switched on. It is our hosting provider acting as a processor for us — it is not an
+      advertising network and it does not follow you to other sites — but it is a second system
+      and it is not the same as ours, so it is worth being precise:
+    </p>
+    <ul>
+      <li>
+        It records the page, the referrer and any campaign tags, and derives a
+        <strong>country and region from your IP</strong> and a <strong>browser, OS and device
+        from your user-agent</strong>, on Vercel's servers.
+      </li>
+      <li>
+        It combines those into a rotating hash to count returning visitors. Vercel states it
+        does not store the IP address itself.
+      </li>
+      <li>
+        <strong>It does not honour Do Not Track.</strong> Ours does; this one does not, and we
+        cannot make it.
+      </li>
+    </ul>
+
+    <h2>How to stop it</h2>
+    <p>
+      Turn on <strong>Do Not Track</strong> or <strong>Global Privacy Control</strong> in your
+      browser. <strong>Our</strong> measurement checks for both <em>before</em> it generates an
+      identifier or touches storage — so with either set you are not merely un-reported by us,
+      you are un-recorded. Clearing site data removes the identifier and the next visit starts a
+      new one.
+    </p>
+    <p>
+      That does <em>not</em> stop Vercel's counter, which has no such switch. A content blocker
+      that blocks <code>/_vercel/insights/</code> does, and so does blocking scripts on this
+      domain — neither breaks anything you came here to read.
+    </p>
+
+    <h2>Email</h2>
+    <p>
+      Entirely optional, and nothing on this site is behind it. Every report is free to read
+      whether or not you sign up. Ticking the box records that you agreed to be emailed; leaving
+      it records that you did not, and nothing is sent either way until the address has been
+      confirmed by a link sent to it. We also record which report you signed up from, so we know
+      which work was worth reading.
+    </p>
+
+    <h2>Why we measure at all</h2>
+    <p>
+      This site is free and is meant to be found. Knowing which reports get read, and how far,
+      is how we decide what to write next — which is a better arrangement for a reader than
+      putting the work behind a signup form and measuring that instead.
+    </p>
+
+    <p class="fine">
+      Anonymous measurement is processed on the basis of legitimate interest; the optional email
+      is consent. Vercel processes hosting and analytics data on our behalf under their data
+      processing terms. If you want the identifier or an address removed, ask and it will be.
+    </p>
+
+    <p class="back"><a href="/">← Back to the site</a></p>
+  </main>
+</Base>
+
+<style>
+  .top {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--hair);
+  }
+  .home {
+    font-weight: 640;
+    color: var(--ink);
+    text-decoration: none;
+    font-size: 14px;
+  }
+  .article {
+    padding: 34px 0 72px;
+  }
+  .masthead {
+    display: grid;
+    gap: 9px;
+    margin-bottom: 26px;
+  }
+  h1 {
+    margin: 0;
+    font-size: clamp(27px, 1.6rem + 1.8vw, 40px);
+    line-height: 1.13;
+    letter-spacing: -0.015em;
+    font-weight: 660;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+  .dek {
+    margin: 0;
+    font-size: clamp(15px, 1rem + 0.3vw, 18px);
+    line-height: 1.45;
+    color: var(--body);
+    text-wrap: pretty;
+  }
+  h2 {
+    margin: 30px 0 8px;
+    font-size: 17px;
+    font-weight: 640;
+    color: var(--ink);
+  }
+  ul {
+    margin: 0;
+    padding-left: 1.1em;
+    display: grid;
+    gap: 7px;
+  }
+  li,
+  p {
+    line-height: 1.6;
+  }
+  .article > p {
+    margin: 0 0 1em;
+  }
+  strong {
+    font-weight: 650;
+    color: var(--ink);
+  }
+  .fine {
+    margin-top: 28px;
+    padding-top: 14px;
+    border-top: 1px solid var(--hair);
+    font-size: 13px;
+    color: var(--small);
+  }
+  .back {
+    margin-top: 22px;
+    font-size: 13.5px;
+  }
+</style>

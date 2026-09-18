@@ -10,7 +10,7 @@ const path = require("path");
 const { nameMatches } = require("../scripts/resolve-ciks");
 
 const SOURCES = path.resolve(__dirname, "..", "scripts", "sources.json");
-const DECK = path.resolve(__dirname, "..", "affinity-ops-deck.html");
+const { DECK } = require("../scripts/paths");
 
 /* deck name, SEC registrant title, should it match */
 const CASES = [

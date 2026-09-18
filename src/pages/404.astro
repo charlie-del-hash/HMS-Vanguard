@@ -1,0 +1,40 @@
+---
+/* The generated Vercel routing config ends with
+ *   { src: "^/.*$", dest: "/404.html", status: 404 }
+ * so the platform has always been routing misses here. Until now the file did
+ * not exist, and every wrong URL fell through to Vercel's own grey 404 —
+ * off-brand, and on a domain whose whole job is to be circulated.
+ */
+import Base from "../layouts/Base.astro";
+---
+
+<Base title="Not found · Affinity" description="That page does not exist." noindex>
+  <main class="article">
+    <div class="wrap">
+      <p class="label">Error 404</p>
+      <h1 class="display">That page isn't here</h1>
+      <p class="dek">
+        The link may be old, or the report may have moved. The research desk is
+        still where you left it.
+      </p>
+      <p class="links">
+        <a href="/">Back to the front</a>
+        <span aria-hidden="true">·</span>
+        <a href="/ops-deck.html">The ops deck</a>
+      </p>
+    </div>
+  </main>
+</Base>
+
+<style>
+  main { padding-block: 96px 120px; }
+  .wrap { display: grid; gap: 12px; }
+  h1 { font-size: clamp(30px, 7vw, 48px); color: var(--ink); }
+  :global([data-theme="dark"]) h1 { color: var(--light-tl); }
+  .dek { color: var(--small); max-width: 46ch; }
+  .links { margin-top: 12px; display: flex; gap: 12px; flex-wrap: wrap; font-size: 14px; }
+  /* --small, not --rule. --rule is a border colour and measures 1.29:1 as
+     text; a separator being decorative does not stop a contrast checker — or a
+     reader in bright sunlight — from finding it. */
+  .links span { color: var(--small); }
+</style>

@@ -19,7 +19,7 @@ function loadPlaywright(){
 }
 const { chromium } = loadPlaywright();
 
-const URLBASE = process.env.DECK_URL || "http://127.0.0.1:8099/affinity-ops-deck.html";
+const URLBASE = process.env.DECK_URL || "http://127.0.0.1:8099" + require("../scripts/paths").DECK_ROUTE;
 const EXE = process.env.CHROMIUM_PATH || undefined;
 
 async function browser(){

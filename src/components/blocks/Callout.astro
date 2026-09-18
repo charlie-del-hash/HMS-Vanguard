@@ -1,0 +1,83 @@
+---
+/* An aside that is not decoration.
+ *
+ * Three tones, and they mean different things rather than looking different:
+ *
+ *   note    context a reader can skip without being misled
+ *   risk    something that changes how the rest of the page should be read
+ *   method  how a figure was arrived at — the box that makes the difference
+ *           between research and assertion
+ *
+ * `method` earns its place on every report that prints a derived number. The
+ * deck states its derivations in the source string (EBITDA is operating income
+ * plus D&A, only where both share a period); this is the same habit with room
+ * to explain itself.
+ */
+import { inline } from "../../lib/inline";
+import type { CalloutPayload } from "../../lib/blocks";
+
+interface Props {
+  payload: CalloutPayload;
+}
+const { payload } = Astro.props;
+const { tone, title, body } = payload;
+
+const TONE_LABEL: Record<CalloutPayload["tone"], string> = {
+  note: "Note",
+  risk: "What would change this",
+  method: "Method",
+};
+---
+
+<aside class:list={["callout", tone]}>
+  <p class="label">{TONE_LABEL[tone]}</p>
+  {title && <h3>{title}</h3>}
+  {body.map((p) => <p class="body" set:html={inline(p)} />)}
+</aside>
+
+<style>
+  .callout {
+    display: grid;
+    gap: 5px;
+    padding: 15px 17px;
+    border-radius: var(--r);
+    background: var(--tint);
+    /* The tone lives on one edge rather than the whole fill: a full-bleed
+       colour wash competes with the charts, and this has to sit beside them. */
+    border: 1px solid var(--hair);
+    border-left: 3px solid var(--rule);
+  }
+  .callout.risk {
+    border-left-color: var(--amber);
+  }
+  .callout.method {
+    border-left-color: var(--teal);
+  }
+  .label {
+    color: var(--small);
+  }
+  .callout.risk .label {
+    color: var(--amber-dk);
+  }
+  .callout.method .label {
+    color: var(--teal);
+  }
+  h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 620;
+    color: var(--ink);
+  }
+  .body {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .body + .body {
+    margin-top: 6px;
+  }
+  .callout :global(strong) {
+    font-weight: 650;
+    color: var(--ink);
+  }
+</style>

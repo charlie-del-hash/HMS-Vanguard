@@ -1,0 +1,126 @@
+---
+/* Body copy, and the one place Pretext earns its keep.
+ *
+ * Paragraphs come through src/lib/inline.ts, so the only tags on the page are
+ * ones this repo wrote — a payload cannot introduce an element or an attribute.
+ *
+ * `inset` is the variable-width case: a pull-figure the text flows around. A
+ * float does that in CSS, but a float alone gives you the two classic faults —
+ * the first line running under the inset, and a paragraph so short it leaves a
+ * ragged well beside it. The inset is therefore only floated once there is
+ * enough text beside it to fill the well, which is a decision about measured
+ * height rather than a guess.
+ */
+import { inline, plain } from "../../lib/inline";
+import type { ProsePayload } from "../../lib/blocks";
+
+interface Props {
+  payload: ProsePayload;
+}
+const { payload } = Astro.props;
+const { paragraphs, lead = false, inset } = payload;
+
+/* Roughly how many characters sit beside an inset before the well closes.
+   Below this the inset is stacked instead of floated — the layout that cannot
+   look broken. */
+const WELL = 420;
+const besideChars = paragraphs.slice(0, 2).reduce((n, p) => n + plain(p).length, 0);
+const floated = !!inset && besideChars >= WELL;
+---
+
+<div class:list={["prose", { lead }]}>
+  {
+    inset && (
+      <aside class:list={["inset", inset.side ?? "right", { floated }]}>
+        <span class="label">{inset.label}</span>
+        <span class="display value">{inset.value}</span>
+        {inset.note && <span class="note">{inset.note}</span>}
+      </aside>
+    )
+  }
+  {paragraphs.map((p) => <p set:html={inline(p)} />)}
+</div>
+
+<style>
+  .prose > p {
+    margin: 0 0 1.05em;
+    /* Hyphenation only where the measure is narrow enough to need it: a 68ch
+       column with justified-looking rag reads worse hyphenated. */
+    overflow-wrap: break-word;
+  }
+  .prose > p:last-child {
+    margin-bottom: 0;
+  }
+
+  /* The standfirst. Larger, looser, and one per report. */
+  .lead > p {
+    font-size: clamp(17px, 1.05rem + 0.35vw, 21px);
+    line-height: 1.5;
+    color: var(--ink);
+  }
+  .lead > p:first-child::first-letter {
+    /* Not a drop cap — just a little more presence on the opening word. */
+    font-weight: 600;
+  }
+
+  .prose :global(strong) {
+    font-weight: 650;
+    color: var(--ink);
+  }
+  .prose :global(code) {
+    font-family: var(--mono);
+    font-size: 0.86em;
+    padding: 1px 5px;
+    border-radius: var(--r-chip);
+    background: var(--tint);
+  }
+  .prose :global(a) {
+    color: var(--teal);
+  }
+
+  /* ── the inset ──────────────────────────────────────────────────── */
+  .inset {
+    display: grid;
+    gap: 2px;
+    padding: 12px 14px;
+    border-radius: var(--r);
+    background: var(--tint);
+    border: 1px solid var(--hair);
+    margin: 0 0 14px;
+  }
+  .inset .value {
+    font-size: 27px;
+    color: var(--ink);
+  }
+  .inset .note {
+    font-size: 12px;
+    color: var(--small);
+    line-height: 1.4;
+  }
+
+  /* Floated only when there is copy to fill the well, and only when the column
+     is wide enough that the remaining measure is still readable. 28ch beside a
+     180px inset is not a column, it is a gutter with words in it. */
+  @media (min-width: 620px) {
+    .inset.floated {
+      width: 210px;
+      margin-bottom: 10px;
+    }
+    .inset.floated.right {
+      float: right;
+      margin-left: 22px;
+    }
+    .inset.floated.left {
+      float: left;
+      margin-right: 22px;
+    }
+  }
+
+  /* The float has to be cleared inside this block or it reaches into the next
+     one. `display:flow-root` rather than overflow:hidden — HANDOFF.md records
+     that overflow establishes a BFC, and a BFC box SHRINKS to avoid floats,
+     which is how a 638px flow measured 418. */
+  .prose {
+    display: flow-root;
+  }
+</style>

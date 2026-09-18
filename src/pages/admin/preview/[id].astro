@@ -1,0 +1,184 @@
+---
+/* A draft, rendered by the code that will publish it.
+ *
+ * ── the whole point ───────────────────────────────────────────────────
+ * This imports the same `Blocks` component, the same eleven block components
+ * and the same stylesheet as /reports/[slug]. It is not a preview of the
+ * report; it is the report, with a banner on it.
+ *
+ * The alternative — reimplementing the renderer inside the React editor so the
+ * preview updates as you type — gives two renderers that agree until the first
+ * time one of them is fixed, and the one the author is looking at is the one
+ * that is wrong. A preview you cannot trust is worse than no preview, because
+ * it is trusted anyway.
+ *
+ * The cost is that it shows the SAVED draft rather than the unsaved one. That
+ * is a fair trade and it is stated on the banner, so nobody is misled about
+ * which version they are looking at.
+ *
+ * ── it resolves like the public page does ─────────────────────────────
+ * Blocks reference series, events and sources by key; resolving them is the
+ * loader's job on the public side and has to happen here too, or a chart block
+ * would preview as nothing. `resolveForPreview` is the same resolution,
+ * reading as the signed-in user so drafts are visible.
+ */
+export const prerender = false;
+
+import "../../../styles/tokens.css";
+import "../../../styles/base.css";
+import Blocks from "../../../components/blocks/Blocks.astro";
+import { serverClient } from "../../../lib/auth";
+import { resolveForPreview } from "../../../lib/preview";
+import type { ResolvedBlock } from "../../../lib/blocks";
+
+const id = Astro.params.id!;
+const db = serverClient(Astro);
+
+const { data: report } = await db.from("reports").select("*").eq("id", id).maybeSingle();
+if (!report) return Astro.rewrite("/404");
+
+let blocks: ResolvedBlock[] = [];
+let failure: string | null = null;
+try {
+  blocks = await resolveForPreview(db, id);
+} catch (e) {
+  /* parsePayload throws on a block it cannot read, and in the editor that is
+     useful rather than fatal: the author has just typed something wrong and
+     needs to be told which block and why, not handed a blank page. On the
+     PUBLIC side the same throw stops the build, which is also right. */
+  failure = e instanceof Error ? e.message : String(e);
+  blocks = [];
+}
+
+const published = report.published_at ? new Date(report.published_at) : null;
+const dateLong = published
+  ? new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(published)
+  : "no date set";
+---
+
+<!doctype html>
+<html lang="en-GB" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <title>Preview — {report.title}</title>
+    <script is:inline>
+      /* Match whatever theme the editor is in, so a preview is not always
+         light while the desk is dark. */
+      (() => {
+        try {
+          const t = localStorage.getItem("affinity-ops-theme");
+          if (t === "dark" || t === "light") document.documentElement.dataset.theme = t;
+          else if (window.matchMedia?.("(prefers-color-scheme: dark)").matches)
+            document.documentElement.dataset.theme = "dark";
+        } catch {}
+      })();
+    </script>
+  </head>
+  <body>
+    <p class="pvbanner">
+      <span class="chip">{report.status}</span>
+      Preview of the last save — unsaved edits are not shown.
+    </p>
+
+    {failure && (
+      <p class="pvfail">
+        <strong>A block could not be rendered.</strong> {failure}
+      </p>
+    )}
+
+    <article class="article">
+      <div class="masthead">
+        {report.kicker && <p class="label kicker">{report.kicker}</p>}
+        <h1>{report.title}</h1>
+        {report.dek && <p class="dek">{report.dek}</p>}
+        <p class="byline">
+          {report.author && <span>{report.author}</span>}
+          <span>{dateLong}</span>
+          {report.region && <span>{report.region}</span>}
+        </p>
+      </div>
+
+      {blocks.length === 0 && !failure && <p class="pvempty">No blocks yet.</p>}
+      <Blocks blocks={blocks} />
+    </article>
+  </body>
+</html>
+
+<style>
+  .pvbanner {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 14px;
+    background: var(--tint);
+    border-bottom: 1px solid var(--hair);
+    font-size: 12px;
+    color: var(--small);
+  }
+  .chip {
+    font-family: var(--mono);
+    font-size: 8.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: var(--r-chip);
+    border: 1px solid var(--hair);
+    background: var(--surface);
+  }
+  .pvfail {
+    margin: 12px 20px;
+    padding: 11px 13px;
+    border-radius: var(--r-ctl);
+    background: var(--neg-soft);
+    border-left: 3px solid var(--neg);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .article {
+    padding: 26px 0 70px;
+  }
+  .masthead {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 26px;
+  }
+  .kicker {
+    color: var(--teal);
+  }
+  h1 {
+    margin: 0;
+    font-size: clamp(25px, 1.5rem + 2vw, 40px);
+    line-height: 1.13;
+    letter-spacing: -0.015em;
+    font-weight: 660;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+  .dek {
+    margin: 0;
+    font-size: clamp(15px, 1rem + 0.3vw, 18px);
+    line-height: 1.45;
+    color: var(--body);
+  }
+  .byline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px 14px;
+    margin: 3px 0 0;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--small);
+  }
+  .pvempty {
+    color: var(--small);
+  }
+</style>

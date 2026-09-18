@@ -1,16 +1,47 @@
 {
-  "name": "affinity-ops-deck",
+  "name": "affinity-research",
   "version": "1.0.0",
   "private": true,
-  "description": "Affinity Ops Deck — a self-contained ops deck for the shipping desk, and the headless-Chromium checks that hold it",
+  "type": "module",
+  "description": "Affinity research funnel — the Astro site, the ops deck it grew out of, and the checks that hold both",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && node scripts/vercel-config.mjs",
+    "preview": "astro preview",
+    "astro": "astro",
+    "seed": "node --experimental-strip-types scripts/seed-db.mjs",
+    "seed:sql": "node --experimental-strip-types scripts/seed-db.mjs --sql",
     "test": "node checks/run.js",
-    "check": "npm test"
+    "check": "npm test",
+    "typecheck": "astro check",
+    "check:site": "npm run build && node checks/run-site.js",
+    "check:admin": "node checks/run-admin.js",
+    "check:db": "node checks/db-rls.js",
+    "check:all": "npm test && npm run check:site && npm run check:admin && npm run check:db"
+  },
+  "dependencies": {
+    "@astrojs/react": "6.0.5",
+    "@astrojs/rss": "4.0.19",
+    "@astrojs/sitemap": "3.7.4",
+    "@astrojs/vercel": "11.0.10",
+    "@chenglou/pretext": "0.0.9",
+    "@supabase/ssr": "0.8.0",
+    "@supabase/supabase-js": "2.116.0",
+    "@vercel/routing-utils": "6.5.0",
+    "astro": "7.3.2",
+    "motion": "13.2.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
   },
   "devDependencies": {
-    "playwright": "^1.56.0"
-  },
-  "engines": {
-    "node": ">=20"
+    "@astrojs/check": "0.9.4",
+    "@types/node": "24.10.1",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.1",
+    "playwright": "1.56.1",
+    "typescript": "5.9.3"
   }
 }

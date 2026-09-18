@@ -1,0 +1,217 @@
+---
+/* The report reader. This is the product.
+ *
+ * Prerendered: getStaticPaths asks the content layer for every published slug
+ * at build time, so a crawler and a reader with no JavaScript both get the
+ * whole article as text. That is the entire argument for having moved off a
+ * single client-rendered file — a funnel whose pages a search engine sees as
+ * `<div id="app"></div>` is not a funnel.
+ */
+import Base from "../../layouts/Base.astro";
+import Blocks from "../../components/blocks/Blocks.astro";
+import { listReports, loadReport } from "../../lib/content";
+import { plain, readMinutes } from "../../lib/inline";
+import { SITE_NAME } from "../../lib/config";
+import EmailCapture from "../../components/EmailCapture.astro";
+
+export async function getStaticPaths() {
+  const { reports } = await listReports();
+  return reports.map((r) => ({ params: { slug: r.slug } }));
+}
+
+const { slug } = Astro.params;
+const loaded = await loadReport(slug!);
+if (!loaded) return Astro.rewrite("/404");
+
+const { meta, blocks } = loaded;
+
+/* Reading time is computed from the prose actually on the page rather than
+   stored, so it cannot drift from the article the way a hand-set number does. */
+const prose = blocks.flatMap((b) =>
+  b.kind === "prose" ? b.payload.paragraphs : b.kind === "callout" ? b.payload.body : [],
+);
+const minutes = meta.readMinutes ?? readMinutes(prose.map(plain));
+
+const published = new Date(meta.publishedAt);
+const dateLong = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+}).format(published);
+
+const description = plain(meta.summary ?? meta.dek ?? "");
+
+/* Structured data, because the point of this site is to be found. Only fields
+   that are true are emitted — an `image` we do not have would be a lie told to
+   a crawler, which is the same lie told to a reader. */
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "AnalysisNewsArticle",
+  headline: meta.title,
+  description,
+  datePublished: meta.publishedAt,
+  ...(meta.author ? { author: { "@type": "Organization", name: meta.author } } : {}),
+  publisher: { "@type": "Organization", name: SITE_NAME },
+  ...(meta.tags.length ? { keywords: meta.tags.join(", ") } : {}),
+  ...(meta.ogImage ? { image: [new URL(meta.ogImage, Astro.site).href] } : {}),
+  mainEntityOfPage: new URL(Astro.url.pathname, Astro.site).href,
+};
+---
+
+<Base
+  title={`${meta.title} — ${SITE_NAME}`}
+  description={description}
+  ogTitle={meta.title}
+  ogType="article"
+  image={meta.ogImage}
+  imageAlt={meta.title}
+  publishedTime={meta.publishedAt}
+  author={meta.author}
+>
+  <a class="skip" href="#article">Skip to the report</a>
+
+  <header class="top no-print">
+    <a class="home" href="/">{SITE_NAME}</a>
+    <a class="back" href="/reports">All reports</a>
+  </header>
+
+  <article class="article" id="article">
+    <div class="masthead">
+      {meta.kicker && <p class="label kicker">{meta.kicker}</p>}
+      <h1>{meta.title}</h1>
+      {meta.dek && <p class="dek">{meta.dek}</p>}
+      <p class="byline">
+        {meta.author && <span>{meta.author}</span>}
+        <time datetime={meta.publishedAt}>{dateLong}</time>
+        <span>{minutes} min read</span>
+        {meta.region && <span>{meta.region}</span>}
+      </p>
+    </div>
+
+    <Blocks blocks={blocks} />
+
+    <div class="capture">
+      <EmailCapture slug={meta.slug} />
+    </div>
+
+    <footer class="foot">
+      {
+        meta.tags.length > 0 && (
+          <p class="tags">
+            {meta.tags.map((t) => (
+              <span class="tag">{t}</span>
+            ))}
+          </p>
+        )
+      }
+      <a class="back-b" href="/reports">← All reports</a>
+    </footer>
+  </article>
+
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline />
+</Base>
+
+<style>
+  .skip {
+    position: absolute;
+    left: -9999px;
+  }
+  .skip:focus {
+    left: 12px;
+    top: 12px;
+    z-index: 10;
+    background: var(--surface);
+    padding: 10px 14px;
+    border-radius: var(--r-ctl);
+  }
+
+  .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--hair);
+    max-width: 1080px;
+    margin: 0 auto;
+  }
+  .home {
+    font-weight: 640;
+    color: var(--ink);
+    text-decoration: none;
+    font-size: 14px;
+  }
+  .back {
+    font-size: 13px;
+  }
+
+  .article {
+    padding: 34px 0 72px;
+  }
+  .masthead {
+    display: grid;
+    gap: 9px;
+    margin-bottom: 30px;
+  }
+  .kicker {
+    color: var(--teal);
+  }
+  h1 {
+    margin: 0;
+    font-size: clamp(28px, 1.6rem + 2.2vw, 44px);
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    font-weight: 660;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+  .dek {
+    margin: 0;
+    font-size: clamp(16px, 1rem + 0.35vw, 19px);
+    line-height: 1.45;
+    color: var(--body);
+    text-wrap: pretty;
+  }
+  .byline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px 14px;
+    margin: 4px 0 0;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--small);
+  }
+
+  .capture {
+    margin-top: 44px;
+  }
+  .foot {
+    margin-top: 40px;
+    padding-top: 18px;
+    border-top: 1px solid var(--hair);
+    display: grid;
+    gap: 14px;
+  }
+  .tags {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .tag {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--small);
+    border: 1px solid var(--hair);
+    border-radius: var(--r-chip);
+    padding: 3px 8px;
+  }
+  .back-b {
+    font-size: 13px;
+  }
+</style>

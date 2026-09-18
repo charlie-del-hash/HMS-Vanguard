@@ -1,0 +1,124 @@
+---
+/* Every block kind, from literals, including the ones that are trying it on.
+ *
+ * Two jobs. It is the design surface — all eleven kinds on one page, in both
+ * themes, at every width, without needing a database or a published report.
+ * And it is where the escaping is proved: the last fixture is a payload doing
+ * everything a hostile or careless one would do, and checks/site-report.js
+ * asserts that none of it becomes markup.
+ *
+ * noindex, like the other dev sheets.
+ */
+import Base from "../../layouts/Base.astro";
+import Blocks from "../../components/blocks/Blocks.astro";
+import type { ResolvedBlock, Source } from "../../lib/blocks";
+
+const src: Source = {
+  key: "dev-fixture",
+  name: "Dev fixture",
+  publisher: "Affinity Research",
+  licence: "Internal",
+  notes: "Literal fixtures for the block gallery. Not data.",
+  isIndicative: true,
+};
+
+/* The hostile payload. Every one of these is a thing an editor could paste by
+   accident or an attacker could store on purpose, and none of it may reach the
+   page as markup. */
+const NASTY = [
+  `<script>window.__pwned = true;</script> and an <img src=x onerror="window.__pwned=true">`,
+  `A [javascript link](javascript:alert(1)) and a [data link](data:text/html,<script>1</script>) ` +
+    `must render as words, while a [real link](https://example.com/a?b=1&c=2) must not.`,
+  `Quotes " and ' and an ampersand & and a <b>tag</b> — all of it text.`,
+];
+
+const blocks: ResolvedBlock[] = [
+  { kind: "prose", ord: 0, payload: { lead: true, paragraphs: ["A standfirst sets the argument up. It is **larger**, it is one paragraph, and it carries #{1,240} as a figure."] } },
+  {
+    kind: "kpi_row",
+    ord: 1,
+    items: [
+      { label: "With a source", value: "41,200", unit: "USD/day", delta: "+12.4%", sourceKey: "dev-fixture", source: src },
+      { label: "Indicative only", value: "1.61", unit: "% hull", delta: "−0.3", indicative: true },
+      { label: "No delta", value: "8", note: "count", indicative: true },
+      { label: "A very long value indeed", value: "1,234,567,890", indicative: true },
+    ],
+  },
+  { kind: "quote", ord: 2, payload: { text: "A pulled quotation, balanced across its lines rather than left ragged.", who: "Placeholder", role: "Illustrative only" } },
+  { kind: "callout", ord: 3, payload: { tone: "note", title: "A note", body: ["Context a reader can skip."] } },
+  { kind: "callout", ord: 4, payload: { tone: "risk", title: "What would change this", body: ["The thing that would falsify the argument."] } },
+  { kind: "callout", ord: 5, payload: { tone: "method", title: "How the figure was derived", body: ["Operating income plus D&A, **only** where both share a period."] } },
+  {
+    kind: "table",
+    ord: 6,
+    payload: {
+      caption: "Priority columns drop as the panel narrows, and a missing figure is a dash.",
+      sourceKey: "dev-fixture",
+      indicative: true,
+      columns: [
+        { key: "name", label: "Name", priority: 0 },
+        { key: "a", label: "Survives longest", numeric: true, priority: 1 },
+        { key: "b", label: "Drops second", numeric: true, priority: 2 },
+        { key: "c", label: "Drops first", numeric: true, priority: 3 },
+      ],
+      rows: [
+        { name: "A row with a fairly long name", a: "1,024", b: "512", c: "256" },
+        { name: "Missing figures", a: "2,048", b: null, c: "" },
+      ],
+    },
+    source: src,
+  },
+  {
+    kind: "timeline",
+    ord: 7,
+    caption: "Confidence is carried by shape as well as colour.",
+    events: [
+      { ts: "2026-09-01T03:20:00Z", kind: "strike", title: "A confirmed event", summary: "On the record.", confidence: "confirmed", actor: "Unattributed", severity: 4, tags: [] },
+      { ts: "2026-09-04T11:40:00Z", kind: "drone", title: "A reported event", summary: "One credible outlet, undenied.", confidence: "reported", severity: 2, tags: [] },
+      { ts: "2026-09-13T16:45:00Z", kind: "strike", title: "An unconfirmed event", summary: "Circulating, not stood up.", confidence: "unconfirmed", tags: [] },
+    ],
+  },
+  { kind: "sourcebox", ord: 8, sources: [src], note: "Every report ends with one of these." },
+  { kind: "cta", ord: 9, payload: { headline: "A CTA with no configured portal", body: "It says so rather than linking nowhere.", label: "Open the research portal" }, href: "" },
+  { kind: "cta", ord: 10, payload: { headline: "A CTA with a link", body: "The same block once PUBLIC_PORTAL_URL is set.", label: "Open the research portal" }, href: "https://example.com/portal" },
+  { kind: "prose", ord: 11, payload: { paragraphs: NASTY } },
+];
+---
+
+<Base title="Block gallery — dev" noindex>
+  <main class="article">
+    <div class="head">
+      <p class="label">Dev</p>
+      <h1>Block gallery</h1>
+      <p class="sub">
+        Every block kind from literals. The last prose block is a hostile payload;
+        checks/site-report.js asserts none of it becomes markup.
+      </p>
+    </div>
+    <Blocks blocks={blocks} />
+  </main>
+</Base>
+
+<style>
+  .article {
+    padding: 34px 0 80px;
+  }
+  .head {
+    display: grid;
+    gap: 7px;
+    margin-bottom: 28px;
+  }
+  h1 {
+    margin: 0;
+    font-size: clamp(26px, 1.6rem + 1.6vw, 38px);
+    font-weight: 660;
+    color: var(--ink);
+    line-height: 1.12;
+  }
+  .sub {
+    margin: 0;
+    font-size: 14px;
+    color: var(--body);
+    max-width: 60ch;
+  }
+</style>

@@ -1,5 +1,13 @@
 # Staging directory the Pages workflow builds; never committed.
 _site/
 
+# Astro / Node
 node_modules/
+dist/
+.astro/
+.vercel/
+.env
+.env.*
+!.env.example
+
 .DS_Store

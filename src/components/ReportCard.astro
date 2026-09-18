@@ -1,0 +1,110 @@
+---
+/* One report, as a card. Used by the landing page and the index.
+ *
+ * The whole card is the link, but the anchor wraps only the title and is
+ * stretched over the card with a pseudo-element — so assistive technology and
+ * the browser's own link list get "A fortnight of strikes in Hormuz" rather
+ * than the entire card's text read out as one link name.
+ */
+import type { ReportMeta } from "../lib/blocks";
+
+interface Props {
+  report: ReportMeta;
+  /** The first card on the landing page gets more room. */
+  feature?: boolean;
+}
+const { report: r, feature = false } = Astro.props;
+
+const date = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: "UTC",
+}).format(new Date(r.publishedAt));
+---
+
+<article class:list={["card", { feature }]}>
+  {r.kicker && <p class="label kicker">{r.kicker}</p>}
+  <h3>
+    <a href={`/reports/${r.slug}`}>{r.title}</a>
+  </h3>
+  {r.dek && <p class="dek">{r.dek}</p>}
+  <p class="meta">
+    <time datetime={r.publishedAt}>{date}</time>
+    {r.region && <span>{r.region}</span>}
+  </p>
+</article>
+
+<style>
+  .card {
+    position: relative;
+    display: grid;
+    gap: 7px;
+    align-content: start;
+    padding: 18px 19px 17px;
+    border: 1px solid var(--hair);
+    border-radius: var(--r);
+    background: var(--surface);
+    transition:
+      border-color var(--t) var(--ease),
+      box-shadow var(--t) var(--ease);
+  }
+  .card:hover {
+    border-color: var(--teal-lt);
+    box-shadow: var(--shadow-lift);
+  }
+  .card:focus-within {
+    border-color: var(--teal);
+  }
+
+  .kicker {
+    color: var(--teal);
+  }
+  h3 {
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.25;
+    font-weight: 640;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+  .feature h3 {
+    font-size: clamp(21px, 1.2rem + 1vw, 28px);
+  }
+  h3 a {
+    color: inherit;
+    text-decoration: none;
+  }
+  /* The card-wide hit area, without the card becoming the link's name. */
+  h3 a::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: var(--r);
+  }
+  h3 a:hover {
+    color: var(--teal);
+  }
+
+  .dek {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--body);
+    text-wrap: pretty;
+  }
+  .feature .dek {
+    font-size: 15.5px;
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px 12px;
+    margin: 3px 0 0;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--small);
+  }
+</style>

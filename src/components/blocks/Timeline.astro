@@ -1,0 +1,183 @@
+---
+/* What happened, when, and how well we know it.
+ *
+ * `confidence` is drawn, not just written. 0002_data.sql is explicit that a
+ * map or a list which renders confirmed and unconfirmed identically is
+ * asserting something the desk does not know — so the marker differs by shape
+ * as well as by colour, which is also the accessibility rule the deck's
+ * palette validator enforces: colour is never the only carrier.
+ *
+ *   confirmed     filled disc
+ *   reported      open ring
+ *   unconfirmed   dashed ring
+ */
+import type { TimelineEvent } from "../../lib/blocks";
+
+interface Props {
+  events: TimelineEvent[];
+  caption?: string;
+}
+const { events, caption } = Astro.props;
+
+const fmt = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "short",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "UTC",
+});
+
+const CONFIDENCE_TITLE: Record<string, string> = {
+  confirmed: "Confirmed — on the record",
+  reported: "Reported — one credible outlet, undenied",
+  unconfirmed: "Unconfirmed — circulating, not stood up",
+};
+---
+
+<div class="tl cqpanel">
+  {caption && <p class="cap">{caption}</p>}
+  <ol>
+    {
+      events.map((e) => (
+        <li class={e.confidence}>
+          <span class="mark" aria-hidden="true" />
+          <div class="body">
+            <div class="head">
+              <time class="mono when" datetime={e.ts}>
+                {fmt.format(new Date(e.ts))}
+              </time>
+              <span class="kind">{e.kind}</span>
+              <span class="conf" title={CONFIDENCE_TITLE[e.confidence]}>
+                {e.confidence}
+              </span>
+            </div>
+            <h3>{e.title}</h3>
+            {e.summary && <p>{e.summary}</p>}
+            {(e.actor || e.severity != null) && (
+              <p class="meta">
+                {e.actor}
+                {e.actor && e.severity != null && <span aria-hidden="true"> · </span>}
+                {e.severity != null && <>Severity {e.severity}/5</>}
+              </p>
+            )}
+          </div>
+        </li>
+      ))
+    }
+  </ol>
+</div>
+
+<style>
+  .tl {
+    display: grid;
+    gap: 10px;
+  }
+  .cap {
+    font-size: 12px;
+    color: var(--small);
+  }
+  ol {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 2px;
+  }
+  li {
+    position: relative;
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 10px;
+    padding: 12px 0 14px;
+    border-top: 1px solid var(--hair);
+  }
+  li:first-child {
+    border-top: 0;
+  }
+
+  /* The rail. Drawn on the list item so it stops at the last entry rather than
+     running past it into whatever follows. */
+  li::before {
+    content: "";
+    position: absolute;
+    left: 10px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--hair);
+  }
+  li:first-child::before {
+    top: 12px;
+  }
+  li:last-child::before {
+    bottom: calc(100% - 26px);
+  }
+
+  .mark {
+    position: relative;
+    z-index: 1;
+    width: 11px;
+    height: 11px;
+    margin-top: 5px;
+    margin-left: 5px;
+    border-radius: 50%;
+    background: var(--surface);
+    box-shadow: 0 0 0 3px var(--surface);
+  }
+  .confirmed .mark {
+    background: var(--teal);
+    border: 1px solid var(--teal);
+  }
+  .reported .mark {
+    border: 1.5px solid var(--teal);
+  }
+  .unconfirmed .mark {
+    border: 1.5px dashed var(--small);
+  }
+
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 3px 10px;
+    margin-bottom: 3px;
+  }
+  .when {
+    font-size: 11px;
+    color: var(--small);
+  }
+  .kind,
+  .conf {
+    font-family: var(--mono);
+    font-size: 8.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--small);
+  }
+  .conf {
+    padding: 1px 6px;
+    border-radius: var(--r-chip);
+    border: 1px solid var(--hair);
+  }
+  .unconfirmed .conf {
+    color: var(--amber-dk);
+  }
+
+  h3 {
+    font-size: 15px;
+    font-weight: 620;
+    line-height: 1.35;
+    color: var(--ink);
+    margin: 0 0 3px;
+  }
+  .body p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .meta {
+    margin-top: 4px !important;
+    font-size: 11.5px;
+    color: var(--small);
+  }
+</style>

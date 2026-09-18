@@ -2,8 +2,13 @@
 #
 # The deck is one self-contained file with no build step, so this does not
 # publish anything itself: it rewrites the EQ_FIN literal in place and commits,
-# and the existing Pages workflow and Vercel take it from there. Refreshing the
-# feed stays a data change.
+# and the Vercel deployment takes it from there. Refreshing the feed stays a
+# data change.
+#
+# The GitHub Pages workflow this used to name has been retired — Vercel is the
+# only home now, and the deck is served there at /ops-deck.html. The cron stays
+# armed because that page is still published and still shows these figures; it
+# is the first thing to turn off if the deck is ever retired too.
 #
 # It is safe before it is configured. Every EDGAR name has a null CIK until one
 # has been looked up by hand, and the aggregator is skipped without a key, so a
@@ -75,13 +80,13 @@ jobs:
       - name: Commit if anything moved
         if: ${{ !inputs.dry_run }}
         run: |
-          if git diff --quiet -- affinity-ops-deck.html scripts/sources.json; then
+          if git diff --quiet -- public/ops-deck.html scripts/sources.json; then
             echo "no change"
             exit 0
           fi
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add affinity-ops-deck.html scripts/sources.json
+          git add public/ops-deck.html scripts/sources.json
           git commit -m "Refresh the basket's reported figures
 
           Written by scripts/refresh-financials.js. Headline figures only, from

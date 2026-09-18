@@ -1,0 +1,159 @@
+---
+import "../styles/tokens.css";
+import "../styles/base.css";
+
+import { SITE_NAME } from "../lib/config";
+
+interface Props {
+  title: string;
+  description?: string;
+  /** Blocks indexing on dev-only surfaces. */
+  noindex?: boolean;
+  /**
+   * The headline for the share card, when it should differ from `<title>`.
+   * A report's `<title>` carries " — Affinity Research" for the tab and the
+   * search result; repeating that in the card next to `og:site_name`, which
+   * already says it, reads like a stutter.
+   */
+  ogTitle?: string;
+  /** `article` on a report, `website` everywhere else. */
+  ogType?: "website" | "article";
+  /**
+   * Absolute https URL of the share card. Comes from `reports.og_image` on a
+   * report page and is otherwise absent — see the note below on why absent is
+   * the right answer rather than a placeholder.
+   */
+  image?: string | null;
+  /** Alt text for that card, for the platforms that read it. */
+  imageAlt?: string | null;
+  /** ISO timestamps, `article:` only. */
+  publishedTime?: string | null;
+  author?: string | null;
+}
+const {
+  title,
+  description = "",
+  noindex = false,
+  ogTitle = title,
+  ogType = "website",
+  image = null,
+  imageAlt = null,
+  publishedTime = null,
+  author = null,
+} = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+
+/* ── the share card ───────────────────────────────────────────────────
+ *
+ * There was not one og: or twitter: tag in this codebase, which for a site
+ * whose entire job is to be circulated meant every link posted to Slack, X,
+ * LinkedIn or WhatsApp rendered as a bare URL. These tags are the difference
+ * between a link somebody clicks and a link somebody scrolls past.
+ *
+ * `og:image` is emitted only when there is a real image, and there is no
+ * default. A card image that 404s is worse than none — the platforms cache the
+ * failure, and the card degrades to something uglier than the plain link would
+ * have been. Set `reports.og_image` in the editor and it appears.
+ *
+ * Relative image URLs are resolved against `Astro.site`, because a crawler
+ * resolves them against whatever origin it thinks it is on, which on a preview
+ * deployment is not this one.
+ */
+const imageUrl = image ? new URL(image, Astro.site).href : null;
+---
+
+<!doctype html>
+<html lang="en-GB" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+    {/* nofollow and noarchive as well as noindex. A dev sheet or a sign-in page
+        that is merely un-indexed can still be crawled for links and cached by
+        anything that keeps copies. */}
+    {noindex && <meta name="robots" content="noindex, nofollow, noarchive" />}
+    <link rel="canonical" href={canonical} />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title={`${SITE_NAME} — new reports`}
+      href={new URL("/rss.xml", Astro.site).href}
+    />
+
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={ogTitle} />
+    {description && <meta property="og:description" content={description} />}
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:locale" content="en_GB" />
+    {imageUrl && <meta property="og:image" content={imageUrl} />}
+    {imageUrl && imageAlt && <meta property="og:image:alt" content={imageAlt} />}
+    {ogType === "article" && publishedTime && (
+      <meta property="article:published_time" content={publishedTime} />
+    )}
+    {ogType === "article" && author && <meta property="article:author" content={author} />}
+
+    {/* `summary_large_image` only when there IS an image: X renders the
+        large-card layout as an empty grey slab otherwise, which looks broken
+        rather than plain. */}
+    <meta name="twitter:card" content={imageUrl ? "summary_large_image" : "summary"} />
+    <meta name="twitter:title" content={ogTitle} />
+    {description && <meta name="twitter:description" content={description} />}
+    {imageUrl && <meta name="twitter:image" content={imageUrl} />}
+    {/* The deck's own shield, decoded out of its inline data URI into one
+        served file rather than re-inlined on every page. */}
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+    {/* Theme before first paint. The key is the deck's own, so a reader who
+        chose dark on the ops deck keeps it here and vice versa. Wrapped
+        because a file:// origin refuses storage outright in some browsers. */}
+    <script is:inline>
+      (() => {
+        try {
+          const t = localStorage.getItem("affinity-ops-theme");
+          if (t === "dark" || t === "light") {
+            document.documentElement.dataset.theme = t;
+            return;
+          }
+        } catch {}
+        if (window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
+          document.documentElement.dataset.theme = "dark";
+        }
+      })();
+    </script>
+
+    {/* Anything a page needs in the head of its own: an og: tag, structured
+        data, a per-page meta. Named rather than positional so a page cannot
+        accidentally put its body content here. */}
+    <slot name="head" />
+  </head>
+  <body>
+    <slot />
+
+    {
+      /* The beacon, on reader-facing pages only. `noindex` marks the dev
+         sheets and the sign-in page, and measuring our own tooling would put
+         noise straight into the funnel it is meant to measure.
+
+         It respects Do Not Track before it generates an id or touches storage,
+         so a reader who has opted out is not merely un-reported — they are
+         un-recorded. See src/lib/analytics.ts. */
+      !noindex && (
+        <script>
+          /* No `astro:page-load` listener.
+             Nothing imports ClientRouter, so view transitions are off and that
+             event never fires — it was three phases of dead code that read
+             like working code. If view transitions are ever turned on, this is
+             NOT the line to add back on its own: `start()` has a `started`
+             guard, so a second call does nothing and no pageview would ever be
+             recorded for a client-side navigation. The guard has to move
+             first. EmailCapture would need re-binding too. */
+          import { start } from "../lib/analytics";
+          start();
+        </script>
+      )
+    }
+  </body>
+</html>

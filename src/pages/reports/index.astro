@@ -1,0 +1,106 @@
+---
+/* The report index.
+ *
+ * Deliberately plain: a list of what exists, newest first, with the dek so a
+ * reader can tell whether it is for them. Filtering and search belong here
+ * eventually, but not before there are enough reports for either to be worth
+ * a reader's attention — a filter over two items is furniture.
+ */
+import Base from "../../layouts/Base.astro";
+import ReportCard from "../../components/ReportCard.astro";
+import { listReports } from "../../lib/content";
+import { SITE_NAME } from "../../lib/config";
+
+const { reports } = await listReports();
+
+/* Grouped by year, which is the only grouping that stays true as the library
+   grows and needs no decision about what a "section" is. */
+const byYear = new Map<number, typeof reports>();
+for (const r of reports) {
+  const y = new Date(r.publishedAt).getUTCFullYear();
+  byYear.set(y, [...(byYear.get(y) ?? []), r]);
+}
+const years = [...byYear.keys()].sort((a, b) => b - a);
+---
+
+<Base
+  title={`Reports — ${SITE_NAME}`}
+  description="Special reports on shipping, energy and the chokepoints between them."
+>
+  <header class="top no-print">
+    <a class="home" href="/">{SITE_NAME}</a>
+  </header>
+
+  <main class="wrap">
+    <h1>Reports</h1>
+    <p class="sub">
+      {reports.length} published. Each one carries the series, the incident log and the
+      provenance behind every figure it prints.
+    </p>
+
+    {
+      years.map((y) => (
+        <section class="year">
+          <h2 class="label">{y}</h2>
+          <div class="grid">
+            {byYear.get(y)!.map((r) => (
+              <ReportCard report={r} />
+            ))}
+          </div>
+        </section>
+      ))
+    }
+
+    {reports.length === 0 && <p class="empty">No published reports yet.</p>}
+  </main>
+</Base>
+
+<style>
+  .top {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--hair);
+  }
+  .home {
+    font-weight: 640;
+    color: var(--ink);
+    text-decoration: none;
+    font-size: 14px;
+  }
+
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 36px 20px 70px;
+  }
+  h1 {
+    margin: 0 0 8px;
+    font-size: clamp(28px, 1.7rem + 2vw, 42px);
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    font-weight: 660;
+    color: var(--ink);
+  }
+  .sub {
+    margin: 0 0 30px;
+    max-width: 56ch;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--body);
+  }
+  .year {
+    margin-bottom: 30px;
+  }
+  .year h2 {
+    margin: 0 0 12px;
+  }
+  .grid {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr));
+  }
+  .empty {
+    color: var(--small);
+  }
+</style>

@@ -1,0 +1,218 @@
+---
+/* The only door.
+ *
+ * Magic link rather than a password: there is no password to store, reset,
+ * leak or reuse, and the people using this are a small desk who sign in
+ * occasionally. Supabase's own mailer is rate-limited on the free tier, which
+ * is fine at that cadence and is written down in HANDOFF.md rather than
+ * discovered at seven in the morning.
+ *
+ * The page says which of four things went wrong, because "that didn't work" is
+ * the least useful thing a login can tell you:
+ *
+ *   not-staff     signed in, but not on the staff list. A real person with a
+ *                 real session who needs a row adding, not a retry.
+ *   unavailable   the database could not be reached. Nothing to do with them.
+ *   unconfigured  this deployment has no Supabase credentials at all.
+ *   sent          the link is in their inbox.
+ */
+export const prerender = false;
+
+import Base from "../../layouts/Base.astro";
+import { serverClient, access } from "../../lib/auth";
+import { SITE_NAME } from "../../lib/config";
+import { PUBLIC_SUPABASE_URL } from "astro:env/client";
+
+const configured = !!PUBLIC_SUPABASE_URL;
+
+/* Where to go after signing in. A path from our own site only — taking an
+   absolute URL here would make the login an open redirect for anyone who can
+   get a staff member to click a link. */
+const rawNext = Astro.url.searchParams.get("next") ?? "/admin";
+const next = /^\/admin(\/|$)/.test(rawNext) ? rawNext : "/admin";
+
+const why = Astro.url.searchParams.get("why");
+let sent = false;
+let problem: string | null = null;
+
+/* Already signed in and staff? Then this page is just in the way. */
+if (configured) {
+  const who = await access(Astro);
+  if (who.state === "staff") return Astro.redirect(next, 303);
+}
+
+if (Astro.request.method === "POST") {
+  const form = await Astro.request.formData();
+  const email = String(form.get("email") ?? "").trim();
+
+  if (!configured) {
+    problem = "This deployment has no Supabase credentials, so there is nothing to sign in to.";
+  } else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    problem = "That does not look like an email address.";
+  } else {
+    const db = serverClient(Astro);
+    const { error } = await db.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: new URL(
+          `/admin/auth/callback?next=${encodeURIComponent(next)}`,
+          Astro.url,
+        ).href,
+        /* Nobody signs themselves up. A staff row has to exist for the account
+           to be any use, and creating users on demand from a public form is a
+           way to fill auth.users with whatever a crawler types. */
+        shouldCreateUser: false,
+      },
+    });
+    if (error) {
+      problem = /not found|signups? not allowed|disabled/i.test(error.message)
+        ? "No account for that address. An admin creates the account first."
+        : error.message;
+    } else {
+      sent = true;
+    }
+  }
+}
+---
+
+<Base title={`Sign in — ${SITE_NAME}`} noindex>
+  <main class="wrap">
+    <p class="label brand">{SITE_NAME}</p>
+    <h1>Sign in to the desk</h1>
+
+    {
+      why === "not-staff" && (
+        <p class="msg warn">
+          You are signed in, but this account is not on the staff list. An admin adds it;
+          see <code>HANDOFF.md</code> for the one statement that does it.
+        </p>
+      )
+    }
+    {
+      why === "unavailable" && (
+        <p class="msg warn">
+          The database could not be reached, so we could not check who you are. Nothing is
+          wrong with your account. A paused free-tier project looks exactly like this.
+        </p>
+      )
+    }
+    {!configured && <p class="msg warn">This deployment has no Supabase credentials set.</p>}
+    {problem && <p class="msg bad">{problem}</p>}
+
+    {
+      sent ? (
+        <p class="msg good">
+          Check your inbox — the link signs you straight in. It expires, and asking for a
+          new one invalidates the last.
+        </p>
+      ) : (
+        <form method="POST">
+          <label for="email">Work email</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            autocomplete="email"
+            required
+            placeholder="you@affinity"
+            disabled={!configured}
+          />
+          <button type="submit" disabled={!configured}>Email me a link</button>
+        </form>
+      )
+    }
+
+    <p class="foot">
+      <a href="/">Back to the site</a>
+    </p>
+  </main>
+</Base>
+
+<style>
+  .wrap {
+    max-width: 380px;
+    margin: 0 auto;
+    padding: clamp(50px, 12vh, 110px) 20px 60px;
+    display: grid;
+    gap: 12px;
+  }
+  .brand {
+    color: var(--teal);
+  }
+  h1 {
+    margin: 0 0 4px;
+    font-size: 27px;
+    font-weight: 650;
+    color: var(--ink);
+    line-height: 1.15;
+  }
+  form {
+    display: grid;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--small);
+  }
+  input {
+    min-height: 44px;
+    padding: 0 12px;
+    border: 1px solid var(--rule);
+    border-radius: var(--r-ctl);
+    background: var(--field);
+    color: var(--ink);
+  }
+  button {
+    min-height: 44px;
+    border: 0;
+    border-radius: var(--r-ctl);
+    background: var(--teal);
+    color: var(--on-accent);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--t) var(--ease);
+  }
+  button:hover:not(:disabled) {
+    background: var(--accent-hover);
+  }
+  button:disabled,
+  input:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  .msg {
+    margin: 0;
+    padding: 11px 13px;
+    border-radius: var(--r-ctl);
+    font-size: 13.5px;
+    line-height: 1.5;
+    border: 1px solid var(--hair);
+  }
+  .msg code {
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .warn {
+    background: var(--tint);
+    color: var(--body);
+    border-left: 3px solid var(--amber);
+  }
+  .bad {
+    background: var(--neg-soft);
+    color: var(--ink);
+    border-left: 3px solid var(--neg);
+  }
+  .good {
+    background: var(--pos-soft);
+    color: var(--ink);
+    border-left: 3px solid var(--pos);
+  }
+  .foot {
+    margin-top: 6px;
+    font-size: 13px;
+  }
+</style>

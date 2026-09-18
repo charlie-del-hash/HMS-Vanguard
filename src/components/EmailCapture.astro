@@ -1,0 +1,209 @@
+---
+/* Ask for an email, and be easy to ignore.
+ *
+ * The funnel decision was that everything is free and email is optional, so
+ * this is a block on the page rather than anything that interrupts: no modal,
+ * no timed pop-up, no scroll trap, and nothing hidden behind it. A reader who
+ * scrolls past has lost nothing and we have measured them anyway.
+ *
+ * It works with JavaScript off — it is a real form posting to a real endpoint.
+ * With JavaScript it submits in place and keeps the reader where they were,
+ * and it attaches the anon id so the signup attributes back to the report that
+ * earned it.
+ */
+interface Props {
+  /** The report this sits on, carried through to `subscribers.source_report`. */
+  slug?: string;
+  compact?: boolean;
+}
+const { slug, compact = false } = Astro.props;
+---
+
+<aside class:list={["cap", { compact }]} data-subscribe data-slug={slug ?? ""}>
+  <div class="words">
+    <p class="label">The next one, when it lands</p>
+    <h2>{compact ? "Get new reports by email" : "A note when there is something worth reading"}</h2>
+    <p class="sub">
+      No schedule, no digest, nothing else. Every report stays free and open whether you
+      sign up or not.
+    </p>
+  </div>
+
+  <form method="POST" action="/api/subscribe" novalidate>
+    <div class="row">
+      <label class="sr-only" for={`em-${slug ?? "site"}`}>Email address</label>
+      <input
+        id={`em-${slug ?? "site"}`}
+        type="email"
+        name="email"
+        required
+        autocomplete="email"
+        placeholder="you@company"
+      />
+      <button type="submit">Notify me</button>
+    </div>
+    <label class="consent">
+      <input type="checkbox" name="consent" value="yes" />
+      <span>Yes, email me when a new report is published.</span>
+    </label>
+    <p class="out" data-out role="status" aria-live="polite"></p>
+  </form>
+</aside>
+
+<script>
+  /* Progressive enhancement: the form already works without this — and it
+     genuinely does now; checks/site-funnel.js submits it with JS off.
+
+     `track` is imported STATICALLY. It used to be `await import(...)`, which
+     forced the bundler to build a namespace object for the analytics module,
+     and the helper that builds one got parked in the React chunk — so every
+     public page, including /privacy which has no island at all, downloaded
+     7.7KB of React to run a beacon. A named import needs no namespace. */
+  import { track } from "../lib/analytics";
+  for (const box of document.querySelectorAll<HTMLElement>("[data-subscribe]")) {
+    const form = box.querySelector("form");
+    const out = box.querySelector<HTMLElement>("[data-out]");
+    if (!form || !out) continue;
+
+    form.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const data = new FormData(form);
+      const email = String(data.get("email") ?? "").trim();
+      const button = form.querySelector("button");
+      if (button) button.disabled = true;
+      out.textContent = "";
+      out.className = "out";
+
+      /* Read straight from storage rather than asked of the beacon: it is
+         absent when Do Not Track stopped the beacon from ever creating one, and
+         the signup is perfectly valid without it — just unattributed. */
+      let anonId: string | null = null;
+      try {
+        anonId = localStorage.getItem("affinity-anon-id");
+      } catch {
+        /* blocked storage; carry on */
+      }
+
+      try {
+        const res = await fetch("/api/subscribe", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            email,
+            anonId,
+            slug: box.getAttribute("data-slug") || undefined,
+            consent: data.get("consent") === "yes",
+          }),
+        });
+        const body = await res.json().catch(() => ({ ok: false, message: "No reply." }));
+        out.textContent = body.message ?? (res.ok ? "Done." : "That did not save.");
+        out.className = `out ${body.ok ? "good" : "bad"}`;
+        if (body.ok) {
+          form.reset();
+          /* Recorded as an interaction too, so the funnel can show the step
+             without joining two tables on every query. */
+          track("subscribe", { slug: box.getAttribute("data-slug") || undefined });
+        }
+      } catch {
+        out.textContent = "That did not send. Try again in a moment.";
+        out.className = "out bad";
+      } finally {
+        if (button) button.disabled = false;
+      }
+    });
+  }
+</script>
+
+<style>
+  .cap {
+    display: grid;
+    gap: 14px;
+    padding: 20px 22px;
+    border: 1px solid var(--hair);
+    border-radius: var(--r);
+    background: var(--tint);
+  }
+  .compact {
+    padding: 16px 18px;
+  }
+  .words {
+    display: grid;
+    gap: 4px;
+  }
+  h2 {
+    margin: 0;
+    font-size: clamp(16px, 1rem + 0.4vw, 20px);
+    font-weight: 640;
+    line-height: 1.3;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+  .sub {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--body);
+    max-width: 58ch;
+  }
+  form {
+    display: grid;
+    gap: 8px;
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  input[type="email"] {
+    flex: 1 1 15rem;
+    min-width: 0;
+    /* 44px, because the deck's rest check measures touch targets under coarse
+       pointers and these are controls on a reader-facing page. */
+    min-height: 44px;
+    padding: 0 12px;
+    border: 1px solid var(--rule);
+    border-radius: var(--r-ctl);
+    background: var(--surface);
+    color: var(--ink);
+  }
+  button {
+    min-height: 44px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: var(--r-ctl);
+    background: var(--teal);
+    color: var(--on-accent);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--t) var(--ease);
+  }
+  button:hover:not(:disabled) {
+    background: var(--accent-hover);
+  }
+  button:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
+  .consent {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    font-size: 12.5px;
+    color: var(--small);
+    line-height: 1.45;
+  }
+  .out:empty {
+    display: none;
+  }
+  .out {
+    margin: 0;
+    font-size: 13px;
+  }
+  .out.good {
+    color: var(--pos);
+  }
+  .out.bad {
+    color: var(--neg);
+  }
+</style>
