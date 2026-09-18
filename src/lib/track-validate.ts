@@ -30,7 +30,15 @@ export const KINDS = new Set([
 export const MAX_EVENTS = 40;
 export const MAX_BODY = 16 * 1024;
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/**
+ * The shape of an anon id, in one place.
+ *
+ * /api/subscribe carried a byte-identical copy of this until an audit found
+ * the pair. Two regexes for one concept drift the first time either is fixed,
+ * and the drift is invisible: both endpoints keep working, on slightly
+ * different definitions of the same id.
+ */
+export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const DEVICES = ["phone", "tablet", "desktop", "other"];
 const UTM = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"];
 

@@ -243,6 +243,42 @@ async function makeFixtures() {
     assert.ok(error, "is_staff() answered over REST — it should live outside the exposed schema");
   });
 
+  /* ── the two RPCs, from outside ──────────────────────────────────────
+   *
+   * Both are SECURITY INVOKER, so RLS still decides what they can touch — but
+   * that is the second line, not the first. record_events is how /api/track
+   * writes the funnel, and it runs there with the SERVICE role. If a reader's
+   * key could call it, anyone with the page source could write visitors and
+   * interactions rows directly, and every number on the dashboard would be
+   * whatever they decided it was. The publishable key ships in the page, so
+   * "nobody knows the function name" is not a control. */
+  await t("record_events is not callable with a reader's key", async () => {
+    const { error } = await anon.rpc("record_events", {
+      p_anon_id: "00000000-0000-4000-8000-000000000000",
+      p_visitor: {},
+      p_events: [{ kind: "pageview" }],
+    });
+    assert.ok(error, "record_events answered to an anonymous caller");
+  });
+
+  await t("save_report_blocks is not callable with a reader's key", async () => {
+    const { error } = await anon.rpc("save_report_blocks", {
+      p_report_id: "00000000-0000-4000-8000-000000000000",
+      p_blocks: [],
+      p_note: "rls-check",
+    });
+    assert.ok(error, "save_report_blocks answered to an anonymous caller");
+  });
+
+  /* The view is the query a mailer is meant to reach for, so it has to be at
+     least as closed as the table under it. It is security_invoker — but a view
+     created in `public` inherits the project's default privileges, which hand
+     SELECT to anon, and 0010 revokes that explicitly because of this check. */
+  await t("cannot select from mailable_subscribers", async () => {
+    const { error } = await anon.from("mailable_subscribers").select("*").limit(1);
+    assert.ok(error, "the mailable view was readable with a publishable key");
+  });
+
   if (admin) {
     await admin.from("reports").delete().in("slug", [SLUG_PUB, SLUG_DRAFT]);
   }

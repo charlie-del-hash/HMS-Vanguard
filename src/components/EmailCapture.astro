@@ -51,7 +51,15 @@ const { slug, compact = false } = Astro.props;
 </aside>
 
 <script>
-  /* Progressive enhancement: the form already works without this. */
+  /* Progressive enhancement: the form already works without this — and it
+     genuinely does now; checks/site-funnel.js submits it with JS off.
+
+     `track` is imported STATICALLY. It used to be `await import(...)`, which
+     forced the bundler to build a namespace object for the analytics module,
+     and the helper that builds one got parked in the React chunk — so every
+     public page, including /privacy which has no island at all, downloaded
+     7.7KB of React to run a beacon. A named import needs no namespace. */
+  import { track } from "../lib/analytics";
   for (const box of document.querySelectorAll<HTMLElement>("[data-subscribe]")) {
     const form = box.querySelector("form");
     const out = box.querySelector<HTMLElement>("[data-out]");
@@ -66,10 +74,9 @@ const { slug, compact = false } = Astro.props;
       out.textContent = "";
       out.className = "out";
 
-      /* The id is read straight from storage rather than imported, so this
-         script does not pull the whole beacon into every page that shows the
-         form. It is absent when Do Not Track stopped the beacon, and the
-         signup is perfectly valid without it — just unattributed. */
+      /* Read straight from storage rather than asked of the beacon: it is
+         absent when Do Not Track stopped the beacon from ever creating one, and
+         the signup is perfectly valid without it — just unattributed. */
       let anonId: string | null = null;
       try {
         anonId = localStorage.getItem("affinity-anon-id");
@@ -95,7 +102,6 @@ const { slug, compact = false } = Astro.props;
           form.reset();
           /* Recorded as an interaction too, so the funnel can show the step
              without joining two tables on every query. */
-          const { track } = await import("../lib/analytics");
           track("subscribe", { slug: box.getAttribute("data-slug") || undefined });
         }
       } catch {

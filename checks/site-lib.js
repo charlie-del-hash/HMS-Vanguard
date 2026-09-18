@@ -22,8 +22,19 @@ function trackRequests(page) {
   return failed;
 }
 
+/* Noise that is genuinely local, and nothing more.
+ *
+ * This used to hold a bare /_vercel/insights/ pattern, which silenced the 404
+ * that script produces off-Vercel — and, as a side effect, hid the request
+ * itself from every assertion that reads this list. The privacy page claimed
+ * there was no third-party analytics while that request was being filtered out
+ * of the evidence.
+ *
+ * So the tolerance is now scoped to the 404 specifically. A successful insights
+ * request, or any other status, is a real event and site-beacon.js is expected
+ * to have an opinion about it. */
 const EXPECTED = [
-  /\/_vercel\/insights\//,
+  /^404 \S*\/_vercel\/insights\//,
   /\(net::ERR_ABORTED\)/,
 ];
 

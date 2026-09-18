@@ -23,14 +23,21 @@ import type { ChartSpec } from "../../lib/charts/render";
 const staff = Astro.locals.staff!;
 const db = serverClient(Astro);
 
-/** How far back. Short enough to be readable, long enough to show a trend. */
-const DAYS = Math.min(90, Math.max(7, Number(Astro.url.searchParams.get("days") ?? 30)));
+/** How far back. Short enough to be readable, long enough to show a trend.
+ *
+ * Coerced before clamping, because Math.min/max pass NaN straight through and
+ * `new Date(NaN).toISOString()` throws — so ?days=abc was an unhandled 500 on
+ * a page whose whole job is to still be readable when something is wrong. */
+const asked = Number(Astro.url.searchParams.get("days"));
+const DAYS = Number.isFinite(asked) ? Math.min(90, Math.max(7, Math.round(asked))) : 30;
 const since = new Date(Date.now() - DAYS * 86_400_000).toISOString();
 
 const [interactions, visitors, subscribers] = await Promise.all([
   db.from("interactions").select("kind, report_slug, ts, anon_id, meta").gte("ts", since).limit(20000),
   db.from("visitors").select("anon_id, utm_source, referrer, country, device, first_seen").gte("first_seen", since).limit(20000),
-  db.from("subscribers").select("email, created_at, source_report, utm_source, consent").gte("created_at", since).limit(5000),
+  /* No `email`: this page counts subscribers and never shows one, so pulling up
+     to 5,000 addresses into a server render was exposure bought for nothing. */
+  db.from("subscribers").select("created_at, source_report, utm_source, consent").gte("created_at", since).limit(5000),
 ]);
 
 const problem =

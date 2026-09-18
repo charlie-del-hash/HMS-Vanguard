@@ -39,6 +39,19 @@ function t(name, ok, detail) {
   }
 }
 
+/** What the config enables, and what the privacy page admits to. */
+async function disclosure() {
+  const fs = require("fs");
+  const path = require("path");
+  const root = path.resolve(__dirname, "..");
+  const config = fs.readFileSync(path.join(root, "astro.config.mjs"), "utf8");
+  const privacy = fs.readFileSync(path.join(root, "src", "pages", "privacy.astro"), "utf8");
+  return {
+    enabledInConfig: /webAnalytics:\s*\{\s*enabled:\s*true/.test(config),
+    vercel: /Vercel Web Analytics/.test(privacy),
+  };
+}
+
 /** Load a page and collect every beacon body it tried to send. */
 async function watch(ctx, path, { dnt = false } = {}) {
   const page = await ctx.newPage();
@@ -52,13 +65,23 @@ async function watch(ctx, path, { dnt = false } = {}) {
     });
   }
 
+  /* Paths this site actually serves. Anything else is somebody else's, even
+     when it is proxied onto our own domain — which is exactly how Vercel Web
+     Analytics hid from the previous version of this check. */
+  const OURS = [/^\/$/, /^\/reports/, /^\/privacy/, /^\/dev\//, /^\/_astro\//, /^\/api\//,
+                /^\/favicon/, /^\/ops-deck\.html/, /^\/404/];
+  const thirdParty = new Set();
+
   page.on("request", (r) => {
+    const url = r.url();
     try {
-      hosts.add(new URL(r.url()).host);
+      const u = new URL(url);
+      hosts.add(u.host);
+      if (!OURS.some((re) => re.test(u.pathname))) thirdParty.add(url);
     } catch {
       /* data: and blob: urls have no host */
     }
-    if (r.url().includes("/api/track")) sent.push(r.postData() || "");
+    if (url.includes("/api/track")) sent.push(r.postData() || "");
   });
 
   await page.goto(BASE + path, { waitUntil: "networkidle" });
@@ -75,22 +98,49 @@ async function watch(ctx, path, { dnt = false } = {}) {
   }, KEY);
 
   await page.close();
-  return { sent, hosts, stored };
+  return { sent, hosts, stored, thirdParty: [...thirdParty] };
 }
 
 (async () => {
   const b = await browser();
   const ctx = await b.newContext();
 
-  console.log("nothing on a reader's page talks to anyone but us");
+  console.log("every third party on the page is one the privacy page names");
   {
-    const { hosts } = await watch(ctx, REPORT);
+    const { hosts, thirdParty } = await watch(ctx, REPORT);
     const ours = new URL(BASE).host;
-    const foreign = [...hosts].filter((h) => h && h !== ours);
+
+    /* Host is not the question, and asking it was the bug.
+     *
+     * This compared `new URL(url).host !== ours` and reported a clean bill of
+     * health while Vercel Web Analytics shipped on every page — because the
+     * platform proxies it at the SAME-ORIGIN path /_vercel/insights/, so the
+     * host matched ours on localhost and would have matched in production too.
+     * The privacy page's "nothing makes a request to anyone but us" was
+     * enforced by a check that could not see the counter-example.
+     *
+     * So: destination. A request to a path we do not serve ourselves is a third
+     * party regardless of whose domain it wears. */
+    const foreignHosts = [...hosts].filter((h) => h && h !== ours);
+    t("no request to another domain", foreignHosts.length === 0, `contacted ${foreignHosts.join(", ")}`);
+
+    /* Vercel Web Analytics is currently ON by deliberate decision. The rule is
+       not "no third parties" — it is "no UNDISCLOSED third parties". */
+    const disclosed = await disclosure();
+    for (const url of thirdParty) {
+      const named = /_vercel\/insights/.test(url) && disclosed.vercel;
+      t(
+        `${url.replace(BASE, "")} is disclosed on /privacy`,
+        named,
+        named ? "" : `this reaches a third party and /privacy does not say so`,
+      );
+    }
     t(
-      "no third-party request from a report page",
-      foreign.length === 0,
-      `contacted ${foreign.join(", ")}`,
+      "the config and the privacy page agree about Vercel analytics",
+      disclosed.enabledInConfig === disclosed.vercel,
+      disclosed.enabledInConfig
+        ? "webAnalytics is enabled in astro.config.mjs but /privacy does not name Vercel"
+        : "/privacy names Vercel Web Analytics but it is not enabled in astro.config.mjs",
     );
   }
 
@@ -170,7 +220,7 @@ async function watch(ctx, path, { dnt = false } = {}) {
     });
 
     t("there is a subscribe form", !!form);
-    t("it works with JavaScript off", !!form && form.action === "/api/subscribe" && form.method === "POST",
+    t("it is declared as a real POST form", !!form && form.action === "/api/subscribe" && form.method === "POST",
       form ? `action="${form.action}" method="${form.method}"` : "");
     t("consent is not pre-ticked", !form || form.consentChecked === false,
       "marketing consent that defaults to on is not consent");
@@ -180,6 +230,34 @@ async function watch(ctx, path, { dnt = false } = {}) {
     /* The article is readable without ever touching the form. */
     const words = await p.evaluate(() => (document.querySelector("article")?.innerText || "").split(/\s+/).length);
     t("the whole report is readable regardless", words > 500, `${words} words`);
+    await p.close();
+  }
+
+  /* The real submission is tested in site-funnel.js, against the SSR server.
+     It cannot live here: run-site.js serves the STATIC build, where /api/*
+     does not exist as a file, so every post would 404 regardless of whether
+     the form works. What this file can pin down is that the form sends what
+     that test replicates — the encoding and the field names. */
+  {
+    const p = await newPage(b, { w: 1280, h: 900, url: BASE + REPORT });
+    const shape = await p.evaluate(() => {
+      const f = document.querySelector("[data-subscribe] form");
+      if (!f) return null;
+      return {
+        enctype: f.enctype || "application/x-www-form-urlencoded",
+        fields: [...f.querySelectorAll("input,button")].map((e) => e.getAttribute("name")).filter(Boolean),
+      };
+    });
+    t(
+      "it posts urlencoded, which is what the endpoint must accept",
+      !!shape && shape.enctype === "application/x-www-form-urlencoded",
+      shape ? `enctype ${shape.enctype}` : "no form",
+    );
+    t(
+      "it sends the fields the endpoint reads",
+      !!shape && shape.fields.includes("email") && shape.fields.includes("consent"),
+      shape ? `fields: ${shape.fields.join(", ")}` : "",
+    );
     await p.close();
   }
 

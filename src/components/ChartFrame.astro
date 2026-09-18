@@ -128,7 +128,8 @@ const h = chartHeight(spec);
   document.fonts?.ready.then(() => {
     for (const host of slots.keys()) paint(host, true);
   });
-  document.addEventListener("astro:page-load", init);
+  /* No `astro:page-load` listener here either — see the note in Base.astro.
+     Nothing imports ClientRouter, so the event never fires. */
 </script>
 
 <style>

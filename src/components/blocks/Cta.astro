@@ -106,7 +106,19 @@ const live = href !== "";
     display: grid;
     gap: 3px;
     font-size: 12.5px;
-    color: var(--small);
+    /* The panel's OWN text colour, not --small.
+     *
+     * --small is a muted grey for text on --surface; this panel is
+     * --insight-bg, a dark teal, and --small on it measures 2.09:1.
+     * checks/site-contrast.js caught it — a token borrowed across
+     * backgrounds is the commonest way contrast goes wrong, because the
+     * name still reads correctly at the call site. */
+    color: var(--insight-fg);
+  }
+  /* .label is a global rule that pins its own --small, so inheriting from
+     .unset does not reach it. Same fix, said again where it applies. */
+  .unset .label {
+    color: var(--insight-fg);
   }
   .unset code {
     font-family: var(--mono);

@@ -123,7 +123,7 @@ async function reachable(timeoutMs) {
   }
 
   let code = 0;
-  for (const name of ["site-admin", "site-funnel"]) {
+  for (const name of ["site-admin", "site-funnel", "admin-overflow"]) {
     code = (await runCheck(name)) || code;
   }
 

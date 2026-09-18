@@ -32,6 +32,31 @@ select id, 0, 'prose',
        jsonb_build_object('text', case when status = 'published' then 'public' else 'secret' end)
 from public.reports where slug like 'rls-check-%';
 
+-- ── funnel fixtures ──────────────────────────────────────────────────
+-- Added with 0009, which granted `authenticated` the table grant on all three
+-- of these and left RLS as the only thing between a signed-in stranger and the
+-- subscriber list. Nothing here asserted that until now, and "no policy matches
+-- so it denies" is a claim about a file rather than about the database.
+insert into public.visitors (anon_id, country, device)
+values ('99999999-9999-4999-8999-999999999999', 'GB', 'desktop');
+
+insert into public.interactions (anon_id, kind, report_slug)
+values ('99999999-9999-4999-8999-999999999999', 'pageview', 'rls-check-published-fixture');
+
+insert into public.subscribers (email, anon_id, consent)
+values ('rls-check@example.com', '99999999-9999-4999-8999-999999999999', true);
+
+-- ── a staff fixture ──────────────────────────────────────────────────
+-- `staff.user_id` references auth.users, so the account has to be real. Only
+-- `id` is NOT NULL without a default, and the whole script rolls back, so this
+-- is a row that exists for the length of one transaction and never commits.
+--
+-- It is here because "non-staff is refused" on its own is satisfied by a policy
+-- that refuses EVERYONE — including the editor. The negative assertion is only
+-- worth something next to the positive one.
+insert into auth.users (id) values ('11111111-1111-4111-8111-111111111111');
+insert into public.staff (user_id, role) values ('11111111-1111-4111-8111-111111111111', 'admin');
+
 -- ── as an anonymous reader ───────────────────────────────────────────
 set local role anon;
 
@@ -40,7 +65,13 @@ select 'anon: published report visible',  count(*) = 1 from public.reports where
 union all
 select 'anon: DRAFT report invisible',    count(*) = 0 from public.reports where slug = 'rls-check-draft-fixture'
 union all
+-- Counted over the FIXTURES, not over the whole table. This said
+-- `count(*) = 1 from public.report_blocks` and passed against an empty
+-- database; the first real report put 20-odd blocks in there and it started
+-- failing for a reason that had nothing to do with a policy. An assertion
+-- about a shared database has to name its own rows.
 select 'anon: only published block visible', count(*) = 1 from public.report_blocks
+       where payload->>'text' in ('public', 'secret')
 union all
 select 'anon: DRAFT block invisible',     count(*) = 0 from public.report_blocks where payload->>'text' = 'secret'
 union all
@@ -78,7 +109,20 @@ select 'anon: no insert on subscribers',  not has_table_privilege('anon','public
 union all
 select 'anon: no insert on visitors',     not has_table_privilege('anon','public.visitors','insert')
 union all
-select 'anon: cannot use private schema', not has_schema_privilege('anon','private','usage');
+select 'anon: cannot use private schema', not has_schema_privilege('anon','private','usage')
+union all
+-- record_events is SECURITY INVOKER and /api/track calls it with the service
+-- role. If anon could execute it, a browser holding the publishable key could
+-- write the funnel tables directly and every number in the dashboard would be
+-- whatever a stranger decided it was.
+select 'anon: record_events NOT executable',
+       not has_function_privilege('anon','public.record_events(uuid,jsonb,jsonb)','execute')
+union all
+select 'anon: save_report_blocks NOT executable',
+       not has_function_privilege('anon','public.save_report_blocks(uuid,jsonb,text)','execute')
+union all
+select 'anon: mailable_subscribers NOT readable',
+       not has_table_privilege('anon','public.mailable_subscribers','select');
 
 reset role;
 
@@ -116,9 +160,64 @@ select 'auth non-staff: published visible', count(*) = 1 from public.reports whe
 union all
 select 'auth non-staff: DRAFT invisible',   count(*) = 0 from public.reports where slug = 'rls-check-draft-fixture'
 union all
-select 'auth non-staff: is_staff() is false', private.is_staff() = false;
+select 'auth non-staff: is_staff() is false', private.is_staff() = false
+union all
+-- ── the three that 0009 left RLS holding on its own ──────────────────
+-- The grant assertions are not padding. `count(*) = 0` also comes back from a
+-- table nobody may select from at all — except that a missing grant RAISES
+-- rather than returning zero, so without the pair a future migration that
+-- revoked the grant would look identical to a policy that works.
+select 'auth non-staff: HOLDS the select grant on visitors',
+       has_table_privilege('authenticated','public.visitors','select')
+union all
+select 'auth non-staff: visitors invisible',     count(*) = 0 from public.visitors
+union all
+select 'auth non-staff: HOLDS the select grant on interactions',
+       has_table_privilege('authenticated','public.interactions','select')
+union all
+select 'auth non-staff: interactions invisible', count(*) = 0 from public.interactions
+union all
+select 'auth non-staff: HOLDS the select grant on subscribers',
+       has_table_privilege('authenticated','public.subscribers','select')
+union all
+select 'auth non-staff: subscribers invisible',  count(*) = 0 from public.subscribers
+union all
+-- The view is security_invoker, so it inherits the table's policy rather than
+-- becoming a way around it. This is the assertion that says so.
+select 'auth non-staff: mailable_subscribers invisible',
+       count(*) = 0 from public.mailable_subscribers;
 
 reset role;
+
+-- ── as a signed-in account that IS staff ─────────────────────────────
+-- auth.uid() reads `sub` out of request.jwt.claims, so setting that claim and
+-- then becoming `authenticated` is what a real signed-in editor's request looks
+-- like to every policy in the database.
+select set_config(
+  'request.jwt.claims',
+  json_build_object('sub','11111111-1111-4111-8111-111111111111','role','authenticated')::text,
+  true
+);
+set local role authenticated;
+
+insert into rls_res
+select 'staff: is_staff() is true',        private.is_staff() = true
+union all
+select 'staff: DRAFT report visible',      count(*) = 1 from public.reports where slug = 'rls-check-draft-fixture'
+union all
+select 'staff: visitors readable',         count(*) >= 1 from public.visitors
+union all
+select 'staff: interactions readable',     count(*) >= 1 from public.interactions
+union all
+select 'staff: subscribers readable',      count(*) >= 1 from public.subscribers
+union all
+-- Empty on purpose: the fixture consented but is not `verified`, and nothing in
+-- this project sets `verified` because double opt-in is not built. A row here
+-- would mean something had started treating a claim as a permission.
+select 'staff: mailable_subscribers empty', count(*) = 0 from public.mailable_subscribers;
+
+reset role;
+select set_config('request.jwt.claims', '', true);
 
 insert into rls_res
 select 'the published fixture survived intact',

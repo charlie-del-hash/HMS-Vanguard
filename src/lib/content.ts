@@ -87,6 +87,7 @@ function metaOf(r: ReportSeed): ReportMeta {
     region: r.region,
     tags: r.tags,
     readMinutes: r.read_minutes,
+    ogImage: r.og_image,
   };
 }
 
@@ -260,6 +261,7 @@ async function dbBundle(): Promise<Bundle> {
       region: r.region,
       tags: r.tags,
       readMinutes: r.read_minutes,
+      ogImage: r.og_image,
     })),
     blocks: blocksBySlug,
   };

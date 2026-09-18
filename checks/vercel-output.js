@@ -241,6 +241,79 @@ t("no client bundle is unreferenced", () => {
   );
 });
 
+t("no public page pulls in a framework runtime", () => {
+  /* astro.config.mjs says "Public pages ship no framework runtime". They did.
+     Every one of them, /privacy included — a page with no island on it at all —
+     downloaded 7.7KB of React, because EmailCapture did
+     `await import("../lib/analytics")`. A namespace import makes the bundler
+     emit an `__export` helper, the minifier parked that helper in the React
+     chunk, and so the beacon imported React to get it.
+
+     The assertion above cannot see this: the chunk IS referenced, by a real
+     page, so it is not dead weight. It is live weight nobody wanted. This walks
+     the module graph from each public page instead, and recognises React by
+     what is INSIDE a chunk rather than by its filename, so renaming the chunk
+     does not quietly retire the check. */
+  const isFramework = (body) =>
+    /react\.transitional|Minified React error|__SECRET_INTERNALS/.test(body);
+
+  const chunk = (name) => path.join(STATIC, "_astro", name);
+  const read = (name) => {
+    try {
+      return fs.readFileSync(chunk(name), "utf8");
+    } catch {
+      return null;
+    }
+  };
+
+  const framework = new Set(
+    files
+      .filter((f) => f.startsWith("/_astro/") && f.endsWith(".js"))
+      .map((f) => path.basename(f))
+      .filter((n) => isFramework(read(n) ?? "")),
+  );
+  /* Nothing to find would make this pass vacuously for the wrong reason — the
+     editor island is React and must still be in the output. */
+  assert.ok(
+    framework.size > 0,
+    "no React chunk was found at all, so this assertion proved nothing; " +
+      "if the admin editor is no longer a React island, delete this check",
+  );
+
+  const pages = files.filter((f) => f.endsWith(".html"));
+  const bad = [];
+  for (const page of pages) {
+    const html = fs.readFileSync(path.join(STATIC, page.slice(1)), "utf8");
+    /* Entry points: <script type="module" src> and <link rel=modulepreload>. */
+    const seen = new Set();
+    const queue = [...html.matchAll(/\/_astro\/([A-Za-z0-9._-]+\.js)/g)].map((m) => m[1]);
+    const trail = new Map(queue.map((n) => [n, [n]]));
+    while (queue.length) {
+      const name = queue.shift();
+      if (seen.has(name)) continue;
+      seen.add(name);
+      const body = read(name);
+      if (body === null) continue;
+      if (framework.has(name)) {
+        bad.push(`${page} → ${(trail.get(name) ?? [name]).join(" → ")}`);
+        break;
+      }
+      for (const m of body.matchAll(/\.\/([A-Za-z0-9._-]+\.js)/g)) {
+        if (seen.has(m[1])) continue;
+        if (!trail.has(m[1])) trail.set(m[1], [...(trail.get(name) ?? [name]), m[1]]);
+        queue.push(m[1]);
+      }
+    }
+  }
+
+  assert.strictEqual(
+    bad.length,
+    0,
+    `these public pages download a framework runtime they have no island for:\n` +
+      `          ${bad.join("\n          ")}`,
+  );
+});
+
 console.log("the deployed surface is only the build");
 
 t("no repository file is reachable on the domain", () => {

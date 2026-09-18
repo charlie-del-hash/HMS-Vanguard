@@ -8,49 +8,33 @@ runs all of them; see the Verification section below for what they hold.
 
 **Live:** the **`hms-vanguard`** Vercel project is production, and its domain is the link to
 circulate. (This used to say `affinity`; it was wrong, and a hard-coded copy of that URL was
-deciding every canonical link on the site until it was found.) GitHub Pages serves the same deck
-at https://charlie-del-hash.github.io/HMS-Vanguard/ and stays as a mirror. On both,
-`/ops-deck.html` serves the deck.
+deciding every canonical link on the site until it was found.) **GitHub Pages has been retired** —
+see Publishing. The deck is served by Vercel at `/ops-deck.html`, which is the URL that was
+circulated.
 
 ## Publishing
 
-`.github/workflows/static.yml` builds **only from `main`** — a feature branch will push but
-will not publish. The workflow copies the deck into the Pages artifact at build time, so
-there is no second committed copy to drift:
+**Vercel is the only publisher.** It builds from its own git integration on every push, so a
+deployment is a push and nothing in Actions is in the path.
 
-```yaml
-- name: Stage the ops deck as the site
-  run: |
-    mkdir -p _site
-    cp affinity-ops-deck.html _site/index.html
-    cp affinity-ops-deck.html _site/ops-deck.html
-```
+### GitHub Pages is retired
 
-The deck is the site root now that the Macro Topics reader has been removed from the repo;
-`/ops-deck.html` is kept as an alias so the URL that was already circulated still resolves.
+`.github/workflows/static.yml` used to publish the deck as the site ROOT on every push to `main`.
+That was right when the deck WAS the site. It stopped being right the moment `src/pages/index.astro`
+existed: merging this work with that workflow in place would have put a second, stale copy of the
+site at `https://charlie-del-hash.github.io/HMS-Vanguard/`, each address canonicalising to itself,
+which is the same two-projects problem described below and for the same reason.
 
-A push to `main` deploys in roughly 20 seconds — **when the push actually creates a run**, which
-as of 26 Aug 2026 it does not.
+The workflow has been deleted. **The Pages site itself is not deleted by that** — disable it in
+**Settings → Pages** (set Source to *None*), or the last build it made goes on being served from
+that address indefinitely.
 
-**Publishing has a fault right now, and it is GitHub's rather than this repo's.** Push events
-stopped creating Pages runs: merges to `main` produced no run at all, while `workflow_dispatch`
-worked every time. Run #22 has also been wedged since 15:14 in a state before *queued* — it
-accepts neither a re-run (`403 already running`) nor a cancel (`409 not queued yet`).
-
-Two things follow. **Dispatch is the workaround**: Actions → Deploy static content to Pages → Run
-workflow, which builds from `main` and publishes normally. And **#22 is a hazard if it ever
-wakes**: it deploys `757f14e`, so it would republish an older deck over the current one. It did
-not block anything — a dispatched run completed alongside it — so an early diagnosis that it held
-the concurrency group was wrong.
-
-It has already happened once that a long-delayed push run fired late and won the race, leaving
-Pages on `4e90e04` while `main` was `007ed4c`. That was harmless only because those two commits
-carry an identical deck, and the workflow publishes the deck alone. **Check the published ref
-after any merge that changes `affinity-ops-deck.html`**, and dispatch if the push run never came.
-
-Vercel builds from its own integration rather than from Actions, so the Pages fault above does not
-touch it. It is not therefore trouble-free — see **The deploy build is not the build you run**,
-below.
+Its history is kept here because it is a useful record: push events stopped creating Pages runs in
+August 2026 while `workflow_dispatch` worked every time, run #22 wedged in a pre-*queued* state
+that accepted neither re-run nor cancel, and a long-delayed push run once fired late and won the
+race, leaving Pages on `4e90e04` while `main` was `007ed4c`. None of that applies any more, and
+none of it ever touched Vercel — which is not therefore trouble-free; see **The deploy build is
+not the build you run**, below.
 
 Two Vercel projects (`affinity` and `hms-vanguard`) build this repo, both rooted at the repo root
 rather than a subfolder — which is why the reader's old `macro-topics-site/vercel.json` never took
@@ -684,7 +668,7 @@ trusting the file because it lives in the repo, so a non-https URL is refused
 rather than rendered.
 
 **`EQ_FIN` is generated.** `scripts/refresh-financials.js` rewrites it in place
-and commits; the existing Pages workflow and Vercel deploy from that commit. The
+and commits; Vercel deploys from that commit. The
 deck therefore stays one self-contained file with no build step and no network
 call at load — refreshing the feed is a data change, exactly like `RATES` and
 `FFA`. Do not hand-edit it; the script splices between `EQ_FIN:BEGIN` and

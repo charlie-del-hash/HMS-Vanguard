@@ -72,6 +72,13 @@ export interface ReportMeta {
   region?: string | null;
   tags: string[];
   readMinutes?: number | null;
+  /**
+   * The share card. `reports.og_image` has existed since 0001 and nothing read
+   * it, so every link posted to Slack or X rendered as a bare URL. Absolute
+   * https URL or nothing — a relative one resolves against the crawler's idea
+   * of the origin, not ours, and a card image that 404s is worse than none.
+   */
+  ogImage?: string | null;
 }
 
 /** Which grid lane a block occupies. Matches `.article` in base.css. */

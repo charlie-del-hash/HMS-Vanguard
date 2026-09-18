@@ -88,6 +88,14 @@ grant select on public.visitors     to authenticated;
 grant select on public.interactions to authenticated;
 grant select on public.subscribers  to authenticated;
 
+-- `drop … if exists` first, because Postgres has no `create or replace policy`
+-- and every other object in this file is replaceable. Without these three
+-- lines a re-run aborts on "policy already exists" partway through, which
+-- leaves whoever is running it unsure how much of the file took effect.
+drop policy if exists visitors_select_staff     on public.visitors;
+drop policy if exists interactions_select_staff on public.interactions;
+drop policy if exists subscribers_select_staff  on public.subscribers;
+
 create policy visitors_select_staff on public.visitors
   for select to authenticated using (private.is_staff());
 create policy interactions_select_staff on public.interactions

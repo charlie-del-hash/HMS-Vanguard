@@ -78,6 +78,11 @@ const GUARDED = [
   ["GET", "/admin/reports/00000000-0000-4000-8000-000000000000"],
   ["GET", "/admin/data"],
   ["POST", "/admin/data"],
+  /* The most sensitive page in the application — it reads the subscriber list
+     and the whole visitor table — and it was the one admin route with no
+     assertion here. It is protected by the same middleware prefix as the rest,
+     which is exactly the reasoning that makes an untested route feel safe. */
+  ["GET", "/admin/analytics"],
   ["GET", "/admin/preview/00000000-0000-4000-8000-000000000000"],
   ["POST", "/admin/reports/00000000-0000-4000-8000-000000000000/save"],
 ];

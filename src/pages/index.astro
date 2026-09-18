@@ -16,16 +16,58 @@ const { reports, source } = await listReports();
 const [feature, ...rest] = reports;
 const indicative = await allIndicative();
 const portal = portalHref("landing");
+
+/* Structured data for the site itself, matching what a report page already
+   emits for an article. Without it a search engine has the publication's name
+   only from the <title> of whichever page it happened to crawl first.
+
+   `sameAs` names the research portal when one is configured, which is how the
+   two properties get recognised as the same organisation rather than as two
+   unrelated sites that happen to link to each other. Omitted entirely when the
+   portal URL is not set, on the same rule as everything else here: no field we
+   cannot fill truthfully. */
+const site = Astro.site!;
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": new URL("/#organization", site).href,
+      name: SITE_NAME,
+      url: site.href,
+      description: SITE_TAGLINE,
+      ...(PORTAL_URL ? { sameAs: [PORTAL_URL] } : {}),
+    },
+    {
+      "@type": "WebSite",
+      "@id": new URL("/#website", site).href,
+      name: SITE_NAME,
+      url: site.href,
+      description: SITE_TAGLINE,
+      inLanguage: "en-GB",
+      publisher: { "@id": new URL("/#organization", site).href },
+    },
+  ],
+};
 ---
 
-{/* Which content source this deployment built from. Invisible to a reader and
-    one curl away for anyone wondering whether a deploy is serving the database
-    or the committed seed — the question the no-silent-fallback rule exists to
-    make answerable. It was briefly in the footer, which put "Content source:
-    seed" in front of readers who have no idea what a seed is. */}
-<meta name="affinity-content-source" content={source} slot="head" />
-
 <Base title={`${SITE_NAME} — ${SITE_TAGLINE}`} description={SITE_TAGLINE}>
+  {/* Which content source this deployment built from. Invisible to a reader and
+      one curl away for anyone wondering whether a deploy is serving the database
+      or the committed seed — the question the no-silent-fallback rule exists to
+      make answerable.
+
+      It has to be INSIDE <Base> for the slot to bind: a `slot` attribute only
+      means anything on a component's own children, so sitting outside it this
+      rendered before <html> with a literal slot="head" attribute. Browsers
+      reparent it, which is why it still worked and still looked fine. */}
+  <meta name="affinity-content-source" content={source} slot="head" />
+  <script
+    type="application/ld+json"
+    slot="head"
+    set:html={JSON.stringify(jsonLd)}
+    is:inline
+  />
   <header class="hero">
     <div class="inner">
       <p class="label brand">{SITE_NAME}</p>

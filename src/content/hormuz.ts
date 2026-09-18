@@ -69,6 +69,8 @@ export interface ReportSeed {
   region?: string;
   tags: string[];
   read_minutes?: number;
+  /** Absolute https URL of a share card, mirroring `reports.og_image`. */
+  og_image?: string;
   blocks: { kind: string; payload: Record<string, unknown> }[];
 }
 

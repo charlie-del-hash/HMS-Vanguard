@@ -33,5 +33,8 @@ import Base from "../layouts/Base.astro";
   :global([data-theme="dark"]) h1 { color: var(--light-tl); }
   .dek { color: var(--small); max-width: 46ch; }
   .links { margin-top: 12px; display: flex; gap: 12px; flex-wrap: wrap; font-size: 14px; }
-  .links span { color: var(--rule); }
+  /* --small, not --rule. --rule is a border colour and measures 1.29:1 as
+     text; a separator being decorative does not stop a contrast checker — or a
+     reader in bright sunlight — from finding it. */
+  .links span { color: var(--small); }
 </style>

@@ -2,8 +2,13 @@
 #
 # The deck is one self-contained file with no build step, so this does not
 # publish anything itself: it rewrites the EQ_FIN literal in place and commits,
-# and the existing Pages workflow and Vercel take it from there. Refreshing the
-# feed stays a data change.
+# and the Vercel deployment takes it from there. Refreshing the feed stays a
+# data change.
+#
+# The GitHub Pages workflow this used to name has been retired — Vercel is the
+# only home now, and the deck is served there at /ops-deck.html. The cron stays
+# armed because that page is still published and still shows these figures; it
+# is the first thing to turn off if the deck is ever retired too.
 #
 # It is safe before it is configured. Every EDGAR name has a null CIK until one
 # has been looked up by hand, and the aggregator is skipped without a key, so a

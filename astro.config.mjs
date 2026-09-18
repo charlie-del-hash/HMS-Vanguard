@@ -2,6 +2,7 @@
 import { defineConfig, envField } from "astro/config";
 import vercel from "@astrojs/vercel";
 import react from "@astrojs/react";
+import sitemap from "@astrojs/sitemap";
 import { existsSync, copyFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
@@ -41,9 +42,12 @@ function deckAtRoot() {
 }
 
 export default defineConfig({
-  /* Canonical URLs and the sitemap are built from this, so a wrong value here
-     points every canonical at the wrong host — quietly, and for as long as
-     nobody checks. It used to be a hard-coded constant naming a project that
+  /* Canonical URLs, the sitemap and the RSS feed are all built from this, so a
+     wrong value here points every canonical at the wrong host — quietly, and
+     for as long as nobody checks.
+
+     (This comment claimed a sitemap for three phases while @astrojs/sitemap
+     was not installed and not in `integrations`. It is now both.) It used to be a hard-coded constant naming a project that
      turned out not to be production.
 
      VERCEL_PROJECT_PRODUCTION_URL is the project's own production domain, set
@@ -131,7 +135,25 @@ export default defineConfig({
      Public pages are unaffected — they ship no framework runtime, because
      nothing on them is an island. The editor is behind auth and is the only
      thing that pays for React. */
-  integrations: [react(), deckAtRoot()],
+  integrations: [
+    react(),
+    /* Only prerendered pages reach a sitemap at all, so /admin is excluded by
+       being server-rendered rather than by this filter — but the filter says so
+       anyway, because "it happens not to be included" is not a rule and the
+       day one admin page is prerendered for some reason is the day it would
+       quietly appear in a file submitted to Google.
+
+       /dev/* is prerendered and carries `noindex`, which is a request a crawler
+       is free to ignore until it fetches the page; leaving it out of the
+       sitemap means nothing invites it to. */
+    sitemap({
+      filter: (page) => {
+        const { pathname } = new URL(page);
+        return !pathname.startsWith("/dev/") && !pathname.startsWith("/admin");
+      },
+    }),
+    deckAtRoot(),
+  ],
 
   build: { inlineStylesheets: "auto" },
   vite: { build: { cssMinify: "lightningcss" } },

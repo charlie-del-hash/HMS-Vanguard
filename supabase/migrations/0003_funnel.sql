@@ -84,6 +84,6 @@ create index subscribers_report_idx on public.subscribers (source_report);
 comment on table public.visitors is
   'One row per browser. First-party random id, no IP, no user agent, no third-party anything.';
 comment on table public.interactions is
-  'The funnel event stream. Anonymous readers may INSERT and may not SELECT.';
+  'The funnel event stream. No public write surface: /api/track holds the service role and calls record_events. Staff may SELECT (0009).';
 comment on table public.subscribers is
   'Optional email. Never a wall. consent is opt-in and defaults to false.';

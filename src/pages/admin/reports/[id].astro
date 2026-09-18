@@ -35,10 +35,19 @@ if (Astro.request.method === "POST") {
   const publishedAt = when ? new Date(`${when}Z`).toISOString() : null;
   const status = String(f.get("status") ?? "draft") as Status;
 
-  const bad = statusProblem(status, publishedAt);
-  if (bad) {
-    problem = bad;
-  } else {
+  /* The database CHECKs `og_image ~ '^https://'`, so an empty box has to
+     become null rather than "". Refused here with a sentence rather than
+     letting a constraint name reach the editor. */
+  const og = String(f.get("og_image") ?? "").trim();
+  const ogImage = og || null;
+
+  problem =
+    statusProblem(status, publishedAt) ??
+    (ogImage && !/^https:\/\//.test(ogImage)
+      ? "The share image has to be a full https:// URL, or empty."
+      : null);
+
+  if (!problem) {
     const slug = slugify(String(f.get("slug") ?? ""));
     const tags = String(f.get("tags") ?? "")
       .split(",")
@@ -58,6 +67,7 @@ if (Astro.request.method === "POST") {
         tags,
         status,
         published_at: publishedAt,
+        og_image: ogImage,
       })
       .eq("id", id);
 
@@ -91,6 +101,32 @@ const { data: blockRows } = await db
   .eq("report_id", id)
   .order("ord", { ascending: true });
 
+/* ── the history, shown ───────────────────────────────────────────────
+ *
+ * save_report_blocks snapshots the report and its blocks into
+ * report_revisions BEFORE it writes (0008), so a bad save has never been
+ * unrecoverable — but nothing in the UI said so, which for the person who has
+ * just overwritten someone else's paragraph is the same as it not existing.
+ *
+ * There is no restore button yet and this does not pretend otherwise: it says
+ * what exists and where, so the recovery is a query rather than a resurrection.
+ * Two editors are still last-write-wins; this is what makes that survivable
+ * rather than what fixes it. */
+const { data: revisions } = await db
+  .from("report_revisions")
+  .select("id, created_at, note")
+  .eq("report_id", id)
+  .order("created_at", { ascending: false })
+  .limit(10);
+
+const revisionTime = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "short",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "UTC",
+});
+
 const initial = (blockRows ?? []).map((b) => ({
   kind: b.kind as BlockKind,
   payload: (b.payload ?? {}) as Record<string, unknown>,
@@ -123,16 +159,34 @@ const localValue = report.published_at
         <label><span>Author</span><input name="author" value={report.author ?? ""} /></label>
         <label><span>Region</span><input name="region" value={report.region ?? ""} /></label>
         <label class="wide"><span>Tags — comma separated</span><input name="tags" value={report.tags.join(", ")} /></label>
+        <label class="wide">
+          <span>Share image — the card Slack, X and LinkedIn draw</span>
+          <input
+            name="og_image"
+            type="url"
+            value={report.og_image ?? ""}
+            placeholder="https://… 1200×630 PNG or JPEG"
+          />
+        </label>
         <label>
           <span>Published at (UTC)</span>
           <input type="datetime-local" name="published_at" value={localValue} />
         </label>
         <label>
           <span>Status</span>
+          {/* No "scheduled" option. The status exists in the enum and the
+              database will accept it, but NOTHING promotes a scheduled report
+              to published — there is no cron, and the only scheduled workflow
+              in the repo refreshes the equities feed. Offering it meant a
+              report could be set to publish and then silently never publish.
+              The option comes back the day something implements it. */}
           <select name="status">
-            {["draft", "scheduled", "published", "archived"].map((s) => (
+            {["draft", "published", "archived"].map((s) => (
               <option value={s} selected={s === report.status}>{s}</option>
             ))}
+            {report.status === "scheduled" && (
+              <option value="scheduled" selected>scheduled (not implemented)</option>
+            )}
           </select>
         </label>
       </div>
@@ -160,6 +214,63 @@ const localValue = report.published_at
     initial={initial}
     previewSrc={`/admin/preview/${id}`}
   />
+
+  <details class="history">
+    <summary>
+      <span class="label">History</span>
+      <span class="count">
+        {revisions?.length
+          ? `${revisions.length} snapshot${revisions.length === 1 ? "" : "s"}`
+          : "no snapshots yet"}
+      </span>
+    </summary>
+    {
+      revisions?.length ? (
+        <>
+          <ol>
+            {revisions.map((r) => (
+              <li>
+                <time datetime={r.created_at}>{revisionTime.format(new Date(r.created_at))}</time>
+                <span class="note">{r.note || "Save"}</span>
+                <code>#{r.id}</code>
+              </li>
+            ))}
+          </ol>
+          <p class="fine">
+            Every save snapshots the report and its blocks before it writes, so an overwrite is
+            recoverable. There is no restore button here yet — recovery is a query against
+            <code>report_revisions</code> by the id above. Two people editing at once is still
+            last-write-wins.
+          </p>
+        </>
+      ) : (
+        <p class="fine">
+          Snapshots are written by the save, so the first one appears after the next save of this
+          report's blocks.
+        </p>
+      )
+    }
+  </details>
+
+<script is:inline>
+  /* Saving the details is a full-page POST, so it reloads — and the block
+     editor's state is client-side, so unsaved blocks go with it. The editor
+     sets data-blocks-dirty on <html>; this asks before throwing that away.
+
+     `is:inline` and no imports: it is four lines of page glue, and routing it
+     through the bundler would put a module on a page that needs none. */
+  document.addEventListener("submit", (e) => {
+    const form = e.target;
+    if (!(form instanceof HTMLFormElement) || !form.closest(".meta")) return;
+    if (document.documentElement.dataset.blocksDirty !== "1") return;
+    const go = window.confirm(
+      "There are unsaved block edits. Saving the details reloads this page and loses them.\n\n" +
+        "Save the blocks first, or continue and lose them?",
+    );
+    if (!go) e.preventDefault();
+  });
+</script>
+
 </Admin>
 
 <style is:global>
@@ -284,12 +395,91 @@ const localValue = report.published_at
     gap: 3px;
   }
   .ed .tools button {
-    min-width: 30px;
+    /* 44px square, because the public form is careful about this and the admin
+       was not — and the editor is the surface most likely to be used on a
+       tablet at a desk. min-width alone left a 30x26 target with Delete three
+       pixels from Duplicate. */
+    min-width: 44px;
+    min-height: 44px;
     padding: 0 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
   .ed .tools .del:hover {
     color: var(--neg);
     border-color: var(--neg);
+  }
+  .history {
+    margin-top: 22px;
+    border: 1px solid var(--hair);
+    border-radius: var(--r);
+    background: var(--surface);
+  }
+  .history > summary {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 11px 14px;
+    cursor: pointer;
+  }
+  .history .count {
+    font-size: 12.5px;
+    color: var(--small);
+  }
+  .history ol {
+    margin: 0;
+    padding: 0 14px 4px 30px;
+    display: grid;
+    gap: 5px;
+    font-size: 13px;
+  }
+  .history li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: baseline;
+  }
+  .history time {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--small);
+  }
+  .history .note {
+    color: var(--ink);
+  }
+  .history code {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--small);
+  }
+  .history .fine {
+    margin: 10px 14px 14px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--small);
+  }
+  .ed .undo {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border: 1px solid var(--hair);
+    border-radius: var(--r-ctl);
+    background: var(--tint);
+    font-size: 13px;
+    color: var(--body);
+  }
+  .ed .undo button {
+    min-height: 34px;
+    padding: 0 12px;
+    font-weight: 600;
+  }
+  .ed .undo .quiet {
+    font-weight: 400;
+    color: var(--small);
   }
   .ed .body {
     padding: 4px 11px 12px;

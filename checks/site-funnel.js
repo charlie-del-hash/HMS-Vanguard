@@ -44,8 +44,6 @@ const post = (path, body, init = {}) =>
     ...init,
   });
 
-const beacon = (events, extra = {}) => post("/api/track", { anonId: UUID, events, ...extra });
-
 (async () => {
   console.log("/api/track answers the same way to everything");
 
@@ -119,6 +117,66 @@ const beacon = (events, extra = {}) => post("/api/track", { anonId: UUID, events
     const a = await (await post("/api/subscribe", { email: "a@example.com" })).json();
     const b = await (await post("/api/subscribe", { email: "a@example.com" })).json();
     assert.strictEqual(a.message, b.message, `"${a.message}" vs "${b.message}"`);
+  });
+
+  console.log("the form works with JavaScript off");
+
+  /* The component's header promised this and it was false: the form posts
+     urlencoded, the endpoint did JSON.parse on everything, and a reader with JS
+     off was navigated off the article to a page of raw JSON. The check that was
+     supposed to cover it read the form's `action` and `method` attributes and
+     never submitted — a form can have both and still be broken.
+     This replicates exactly what a browser sends. */
+  const formPost = (fields) =>
+    fetch(BASE + "/api/subscribe", {
+      method: "POST",
+      redirect: "manual",
+      headers: { "content-type": "application/x-www-form-urlencoded", Origin: BASE,
+                 Referer: `${BASE}/reports/hormuz-strikes-tanker-economics/` },
+      body: new URLSearchParams(fields).toString(),
+    });
+
+  await t("a urlencoded post is not rejected as 'not JSON'", async () => {
+    const res = await formPost({ email: "nojs@example.com", consent: "yes" });
+    assert.notStrictEqual(res.status, 400, "the endpoint still demands JSON");
+    const body = await res.text();
+    assert.ok(!/did not arrive as JSON/.test(body), body.slice(0, 120));
+  });
+
+  await t("it redirects the reader back to a page, not to a JSON blob", async () => {
+    const res = await formPost({ email: "nojs@example.com", consent: "yes" });
+    assert.strictEqual(res.status, 303, `got ${res.status}`);
+    const to = res.headers.get("location") || "";
+    assert.ok(to.startsWith("/"), `redirected to ${to}`);
+    assert.ok(!to.includes("/api/"), `redirected back to the endpoint: ${to}`);
+    assert.match(to, /subscribed=(ok|bad)/, `no outcome in ${to}`);
+  });
+
+  await t("a bad address from the form redirects rather than serving JSON", async () => {
+    const res = await formPost({ email: "nope" });
+    assert.strictEqual(res.status, 303, `got ${res.status}`);
+    assert.match(res.headers.get("location") || "", /subscribed=bad/);
+  });
+
+  await t("the redirect target cannot be pointed off-site", async () => {
+    /* Referer is attacker-influenceable; an open redirect out of a subscribe
+       form is a phishing primitive. */
+    const res = await fetch(BASE + "/api/subscribe", {
+      method: "POST",
+      redirect: "manual",
+      headers: { "content-type": "application/x-www-form-urlencoded", Origin: BASE,
+                 Referer: "https://evil.example/phish" },
+      body: new URLSearchParams({ email: "x@example.com" }).toString(),
+    });
+    const to = res.headers.get("location") || "";
+    assert.ok(!/^https?:\/\//.test(to), `redirected to an absolute URL: ${to}`);
+    assert.ok(!to.includes("evil.example"), `followed the Referer off-site: ${to}`);
+  });
+
+  await t("JSON still works, so the island is unaffected", async () => {
+    const res = await post("/api/subscribe", { email: "json@example.com" });
+    assert.ok([200, 503].includes(res.status), `got ${res.status}`);
+    assert.match(res.headers.get("content-type") || "", /application\/json/);
   });
 
   console.log("what the endpoint accepts, tested directly");

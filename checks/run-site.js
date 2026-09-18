@@ -26,7 +26,15 @@ const ROOT = path.resolve(__dirname, "..");
  * vercel-output.js already treats as authoritative, and it does not move when
  * the rendering mode changes. */
 const DIST = path.join(ROOT, ".vercel", "output", "static");
-const ORDER = ["vercel-output", "site-report", "site-beacon", "site-charts", "site-overflow"];
+const ORDER = [
+  "vercel-output",
+  "site-meta",
+  "site-report",
+  "site-beacon",
+  "site-charts",
+  "site-overflow",
+  "site-contrast",
+];
 
 const MIME = {
   ".html": "text/html; charset=utf-8",

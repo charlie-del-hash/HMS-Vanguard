@@ -54,11 +54,21 @@ const jsonLd = {
   ...(meta.author ? { author: { "@type": "Organization", name: meta.author } } : {}),
   publisher: { "@type": "Organization", name: SITE_NAME },
   ...(meta.tags.length ? { keywords: meta.tags.join(", ") } : {}),
+  ...(meta.ogImage ? { image: [new URL(meta.ogImage, Astro.site).href] } : {}),
   mainEntityOfPage: new URL(Astro.url.pathname, Astro.site).href,
 };
 ---
 
-<Base title={`${meta.title} — ${SITE_NAME}`} description={description}>
+<Base
+  title={`${meta.title} — ${SITE_NAME}`}
+  description={description}
+  ogTitle={meta.title}
+  ogType="article"
+  image={meta.ogImage}
+  imageAlt={meta.title}
+  publishedTime={meta.publishedAt}
+  author={meta.author}
+>
   <a class="skip" href="#article">Skip to the report</a>
 
   <header class="top no-print">
