@@ -183,18 +183,37 @@ t("every dest the config routes to exists", () => {
   }
 });
 
-t("the deck is served, and served at / too", () => {
+t("the deck is served, byte-identical to its source", () => {
   assert.ok(files.includes("/ops-deck.html"), "the ops deck is missing from the build");
-  assert.ok(files.includes("/index.html"), "/ has no file");
+  const src = fs.readFileSync(path.join(ROOT, "public", "ops-deck.html"));
+  const out = fs.readFileSync(path.join(STATIC, "ops-deck.html"));
+  assert.ok(
+    out.equals(src),
+    "/ops-deck.html is not byte-identical to public/ops-deck.html. It is the URL that was " +
+      "circulated before the site existed, and it is copied verbatim rather than rebuilt.",
+  );
 });
 
-t("the deck in the output is byte-identical to the source", () => {
-  const src = fs.readFileSync(path.join(ROOT, "public", "ops-deck.html"));
-  for (const f of ["/ops-deck.html", "/index.html"]) {
-    const out = fs.readFileSync(path.join(STATIC, f.slice(1)));
-    if (f === "/index.html" && !out.equals(src)) return; // a real landing page took over
-    assert.ok(out.equals(src), `${f} is not byte-identical to public/ops-deck.html`);
-  }
+t("/ is the landing page, not the deck", () => {
+  /* ── what this replaced, and why it is stronger ──────────────────────
+   *
+   * astro.config.mjs used to carry a `deckAtRoot` hook that copied the deck
+   * over index.html "only when nothing else claims /". src/pages/index.astro
+   * claimed it in Phase 2, so the hook could never fire again — and the two
+   * assertions here were written around it, one of them ending in
+   * `if (f === "/index.html" && !out.equals(src)) return;  // a real landing
+   * page took over`, which is an assertion that passes either way.
+   *
+   * The hook is gone. This is the assertion that notices if it comes back:
+   * serving 224KB of ops deck at / would be a silent, total regression of the
+   * front page, and every check here would otherwise still be green. */
+  assert.ok(files.includes("/index.html"), "/ has no file");
+  const deck = fs.readFileSync(path.join(ROOT, "public", "ops-deck.html"));
+  const root = fs.readFileSync(path.join(STATIC, "index.html"));
+  assert.ok(
+    !root.equals(deck),
+    "/ is serving the ops deck rather than the landing page — deckAtRoot is back",
+  );
 });
 
 console.log("nothing ships that nothing uses");

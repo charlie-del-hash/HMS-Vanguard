@@ -1,12 +1,25 @@
-# Runs the deck's checks. They drive headless Chromium against a served copy
-# of `affinity-ops-deck.html` and read the live DOM, so they need a browser —
-# which is why this is a separate workflow from the Pages deploy rather than a
-# job in front of it.
+# Every suite that can run without a credential.
 #
-# The deploy in static.yml is deliberately not gated on this: the deck is one
-# committed file with no build step, so a red check never stops a hand-edit
-# from reaching the site. What it does do is say so, on the commit and on the
-# pull request.
+# These drive headless Chromium against a served copy of the build and read the
+# live DOM, so they need a browser — which is why this is its own workflow
+# rather than a job in front of something.
+#
+# ── what runs here, and the one that does not ────────────────────────
+#   npm test          the ops deck   (checks/run.js)
+#   npm run check:site  the built site (checks/run-site.js)
+#   npm run check:admin the SSR admin  (checks/run-admin.js)
+#
+# NOT `npm run check:all`. That chains `check:db`, which talks to Supabase over
+# the network with credentials this workflow does not have — and it exits 2
+# when it cannot connect, deliberately, because every assertion in it reads
+# "refused" as a pass and a request that never left the machine is also
+# refused. Running it here would turn "could not test" into a red build, which
+# is the one thing that reliably teaches people to ignore a red build.
+#
+# Neither of the site suites needs a credential: with no Supabase configured,
+# the content loader renders the committed seed and says so, and the admin
+# checks assert the guard REFUSES when the database is unreachable — which is
+# the interesting case rather than a degraded one.
 name: Checks
 
 on:
@@ -41,5 +54,13 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Run the checks
+      - name: The ops deck
         run: npm test
+
+      # Builds first — run-site.js serves .vercel/output/static, the artifact
+      # that actually deploys, so this covers the build as well as the pages.
+      - name: The site
+        run: npm run check:site
+
+      - name: The admin
+        run: npm run check:admin
