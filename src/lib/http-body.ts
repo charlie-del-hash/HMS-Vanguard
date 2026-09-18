@@ -24,6 +24,14 @@
  * cancels the stream the moment the total passes the cap, which is the
  * assertion checks/site-funnel.js makes: a stream that keeps offering chunks
  * stops being pulled.
+ *
+ * ── what the cap actually bounds, precisely ──────────────────────────
+ * `max` plus at most one transport chunk. The total is tested after each chunk
+ * arrives, so a caller can always land the chunk that crosses the line — undici
+ * hands these over in tens of kilobytes, so the real ceiling is `max` plus that,
+ * not `max`. Stating it that way because the whole point of this file is that
+ * the previous limit described something it was not doing, and "bounded by max
+ * plus one chunk" is a guarantee; "bounded by max" would be another wrong one.
  */
 
 /**
