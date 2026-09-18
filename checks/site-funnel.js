@@ -277,6 +277,107 @@ const post = (path, body, init = {}) =>
     });
   }
 
+  console.log("an oversized body is refused before it is buffered");
+
+  /* ── why this is measured and not just asserted ───────────────────────
+   *
+   * Both endpoints declared a body cap and neither enforced one: they called
+   * `request.text()`, which buffers everything, and consulted the limit
+   * afterwards. A test that only checks the RETURN VALUE cannot tell that
+   * version from this one — both refuse an oversized body, one of them after
+   * allocating it. So these count how much of the stream was actually pulled.
+   *
+   * That is the same lesson as the rest of this audit: assert the behaviour,
+   * not the shape of the answer. */
+  {
+    const { readCapped } = await import("../src/lib/http-body.ts");
+
+    /** A request whose body is `chunks` x `size` bytes, counting what is read. */
+    const streaming = (chunks, size, headers = {}) => {
+      const state = { pulled: 0, cancelled: false };
+      const body = new ReadableStream(
+        {
+          pull(controller) {
+            if (state.pulled >= chunks) return controller.close();
+            state.pulled++;
+            controller.enqueue(new Uint8Array(size));
+          },
+          cancel() {
+            state.cancelled = true;
+          },
+        },
+        /* highWaterMark 0, or the stream fills its own queue on construction
+           and `pulled` is already 1 before readCapped has run — which reads
+           exactly like the bug under test. */
+        { highWaterMark: 0 },
+      );
+      const req = new Request("http://x/api/track", {
+        method: "POST",
+        body,
+        headers,
+        duplex: "half",
+      });
+      return { req, state };
+    };
+
+    await t("a body under the cap is returned whole", async () => {
+      const req = new Request("http://x/api/track", { method: "POST", body: "hello" });
+      assert.strictEqual(await readCapped(req, 1024), "hello");
+    });
+
+    await t("a declared oversized length is refused without reading a byte", async () => {
+      const { req, state } = streaming(1000, 1024, { "content-length": String(1000 * 1024) });
+      assert.strictEqual(await readCapped(req, 4096), null, "an oversized body came back");
+      assert.strictEqual(state.pulled, 0, `read ${state.pulled} chunk(s) of a body it had refused`);
+    });
+
+    await t("a LYING content-length is still refused, by the stream", async () => {
+      /* The header is the caller's own number. This is the case the cap has to
+         survive: it says 10 bytes and then sends a megabyte. */
+      const { req, state } = streaming(1000, 1024, { "content-length": "10" });
+      assert.strictEqual(await readCapped(req, 4096), null);
+      assert.ok(
+        state.pulled * 1024 <= 4096 + 1024,
+        `pulled ${state.pulled * 1024} bytes past a 4096-byte cap`,
+      );
+    });
+
+    await t("an undeclared oversized body stops being pulled at the cap", async () => {
+      /* Chunked upload: no content-length at all, so the stream is the only
+         thing standing between the caller and the function's memory. */
+      const { req, state } = streaming(1000, 1024);
+      assert.strictEqual(await readCapped(req, 4096), null);
+      assert.ok(
+        state.pulled < 20,
+        `pulled ${state.pulled} of 1000 chunks — the cap is not stopping the read`,
+      );
+      assert.ok(state.cancelled, "the stream was abandoned rather than cancelled");
+    });
+
+    await t("both endpoints route their body through it", async () => {
+      /* The helper is only worth anything if it is the ONLY way a body is
+         read. A stray `request.text()` re-opens the hole silently. */
+      const fs = require("fs");
+      const path = require("path");
+      /* Comments stripped first. Both files EXPLAIN the old `request.text()`
+         in prose, and matching that prose failed this assertion while the code
+         was already correct — a check reporting a bug that is not there costs
+         the same trust as one missing a bug that is. */
+      const code = (src) =>
+        src.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:])\/\/[^\n]*/g, "$1 ");
+      for (const route of ["track.ts", "subscribe.ts"]) {
+        const src = code(
+          fs.readFileSync(path.resolve(__dirname, "..", "src", "pages", "api", route), "utf8"),
+        );
+        assert.ok(src.includes("readCapped("), `${route} does not use readCapped`);
+        assert.ok(
+          !/request\.text\(\)/.test(src),
+          `${route} still calls request.text(), which buffers the whole body first`,
+        );
+      }
+    });
+  }
+
   console.log(`\nsite-funnel: ${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);
 })();

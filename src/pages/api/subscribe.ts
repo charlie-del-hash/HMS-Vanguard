@@ -23,6 +23,7 @@ import { PUBLIC_SUPABASE_URL } from "astro:env/client";
 import type { Database } from "../../lib/database.types";
 /* The same id shape /api/track validates — imported rather than retyped. */
 import { UUID } from "../../lib/track-validate";
+import { readCapped } from "../../lib/http-body";
 
 export const prerender = false;
 
@@ -30,6 +31,10 @@ export const prerender = false;
    sentence rather than a constraint name. The database still has the final
    say, which is the point of having it there too. */
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+/* An address, a slug and a checkbox. Four kilobytes is already generous, and
+   the endpoint truncates every field it keeps well below it. */
+const MAX_SUBSCRIBE_BODY = 4096;
 
 function json(status: number, body: Record<string, unknown>) {
   return new Response(JSON.stringify(body), {
@@ -97,8 +102,11 @@ function backToPage(ctx: Parameters<APIRoute>[0], status: "ok" | "bad", slug: un
 
 export const POST: APIRoute = async (ctx) => {
   const contentType = ctx.request.headers.get("content-type") ?? "";
-  const raw = await ctx.request.text().catch(() => "");
-  if (!raw || raw.length > 4096) return json(400, { ok: false, message: "No." });
+  /* Capped as it arrives. This used to be `request.text()` followed by a
+     length check, which refuses an oversized body only after buffering all of
+     it — a limit that described what it was failing to do. */
+  const raw = await readCapped(ctx.request, MAX_SUBSCRIBE_BODY);
+  if (!raw) return json(400, { ok: false, message: "No." });
 
   const parsed = parseBody(raw, contentType);
   if (!parsed) return json(400, { ok: false, message: "That did not arrive as JSON." });

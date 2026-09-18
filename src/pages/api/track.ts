@@ -23,7 +23,8 @@ import type { APIRoute } from "astro";
 import { createClient } from "@supabase/supabase-js";
 import { PUBLIC_SUPABASE_URL } from "astro:env/client";
 import type { Database, Json } from "../../lib/database.types";
-import { parseBeacon } from "../../lib/track-validate";
+import { MAX_BODY, parseBeacon } from "../../lib/track-validate";
+import { readCapped } from "../../lib/http-body";
 
 export const prerender = false;
 
@@ -31,7 +32,12 @@ export const prerender = false;
 const noContent = () => new Response(null, { status: 204 });
 
 export const POST: APIRoute = async (ctx) => {
-  const raw = await ctx.request.text().catch(() => "");
+  /* Capped as it arrives, not after. `request.text()` buffers the whole body
+     first, so MAX_BODY was being consulted about bytes this function had
+     already been allocated. `parseBeacon` still checks the length too — that
+     is the pure function's own contract, and it is tested on its own. */
+  const raw = await readCapped(ctx.request, MAX_BODY);
+  if (raw === null) return noContent();
 
   /* The country is resolved at the edge, so the IP never enters this function
      at all — a stronger guarantee than resolving it here and choosing not to
