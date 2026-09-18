@@ -2,7 +2,7 @@
 import "../styles/tokens.css";
 import "../styles/base.css";
 
-import { SITE_NAME } from "../lib/config";
+import { SITE_NAME, SITE_TAGLINE } from "../lib/config";
 
 interface Props {
   title: string;
@@ -19,9 +19,9 @@ interface Props {
   /** `article` on a report, `website` everywhere else. */
   ogType?: "website" | "article";
   /**
-   * Absolute https URL of the share card. Comes from `reports.og_image` on a
-   * report page and is otherwise absent — see the note below on why absent is
-   * the right answer rather than a placeholder.
+   * The share card, when this page has one of its own — `reports.og_image` on
+   * a report. Left unset, every page falls back to the site card; see the note
+   * below.
    */
   image?: string | null;
   /** Alt text for that card, for the platforms that read it. */
@@ -50,16 +50,25 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
  * LinkedIn or WhatsApp rendered as a bare URL. These tags are the difference
  * between a link somebody clicks and a link somebody scrolls past.
  *
- * `og:image` is emitted only when there is a real image, and there is no
- * default. A card image that 404s is worse than none — the platforms cache the
- * failure, and the card degrades to something uglier than the plain link would
- * have been. Set `reports.og_image` in the editor and it appears.
+ * ── there is a default now, and why there was not before ─────────────
+ * This used to emit `og:image` only when a report had set one, on the
+ * reasoning that a card image which 404s is worse than none — the platforms
+ * cache the failure. That reasoning is still right; what was wrong was
+ * treating "no image" as the only alternative to a broken one.
+ *
+ * public/og.jpg is a real, committed 1200x630 file, rendered from
+ * scripts/og-card.html by `npm run og` using the Playwright already in
+ * devDependencies. Nothing new is installed, at build time or at runtime, and
+ * checks/site-meta.js asserts the file every card points at exists in the
+ * build — so the 404 this guarded against is now checked rather than avoided.
  *
  * Relative image URLs are resolved against `Astro.site`, because a crawler
  * resolves them against whatever origin it thinks it is on, which on a preview
  * deployment is not this one.
  */
-const imageUrl = image ? new URL(image, Astro.site).href : null;
+const SITE_CARD = "/og.jpg";
+const imageUrl = new URL(image || SITE_CARD, Astro.site).href;
+const cardAlt = image ? imageAlt : `${SITE_NAME} — ${SITE_TAGLINE}`;
 ---
 
 <!doctype html>
@@ -88,20 +97,22 @@ const imageUrl = image ? new URL(image, Astro.site).href : null;
     <meta property="og:url" content={canonical} />
     <meta property="og:site_name" content={SITE_NAME} />
     <meta property="og:locale" content="en_GB" />
-    {imageUrl && <meta property="og:image" content={imageUrl} />}
-    {imageUrl && imageAlt && <meta property="og:image:alt" content={imageAlt} />}
+    <meta property="og:image" content={imageUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    {cardAlt && <meta property="og:image:alt" content={cardAlt} />}
     {ogType === "article" && publishedTime && (
       <meta property="article:published_time" content={publishedTime} />
     )}
     {ogType === "article" && author && <meta property="article:author" content={author} />}
 
-    {/* `summary_large_image` only when there IS an image: X renders the
-        large-card layout as an empty grey slab otherwise, which looks broken
-        rather than plain. */}
-    <meta name="twitter:card" content={imageUrl ? "summary_large_image" : "summary"} />
+    {/* Always the large card now, because there is always an image. The
+        conditional this replaced existed so X would not render an empty grey
+        slab on a page with no card. */}
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={ogTitle} />
     {description && <meta name="twitter:description" content={description} />}
-    {imageUrl && <meta name="twitter:image" content={imageUrl} />}
+    <meta name="twitter:image" content={imageUrl} />
     {/* The deck's own shield, decoded out of its inline data URI into one
         served file rather than re-inlined on every page. */}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />

@@ -314,6 +314,87 @@ t("no public page pulls in a framework runtime", () => {
   );
 });
 
+console.log("one site, at one address");
+
+/* ── the duplicate-site problem, asserted ─────────────────────────────
+ *
+ * Two Vercel projects build this repository. Retiring GitHub Pages removed one
+ * copy of the site and left two, each on its own production domain, each
+ * emitting a self-referencing canonical — the same failure, moved.
+ *
+ * scripts/hosts.mjs decides two things from the build environment: where
+ * canonical links point, and whether this build's production domain should
+ * 308 everything to the other one. Neither is observable by looking at a
+ * successful build, which is exactly the shape of bug this file exists for, so
+ * both are asserted here: the decision as a pure function, and its consequence
+ * in the output that ships. */
+const hosts = require("../scripts/hosts.mjs");
+
+t("the redirect fires for a mirror's production domain and nothing else", () => {
+  const canonical = `https://${hosts.CANONICAL_HOST}`;
+  const mirror = hosts.MIRROR_HOSTS[0];
+  assert.ok(mirror, "no mirror host is declared, so this assertion proves nothing");
+
+  const cases = [
+    ["a local build", {}, null],
+    [
+      "production on the canonical project",
+      { VERCEL_ENV: "production", VERCEL_PROJECT_PRODUCTION_URL: hosts.CANONICAL_HOST },
+      null,
+    ],
+    [
+      "production on a mirror",
+      { VERCEL_ENV: "production", VERCEL_PROJECT_PRODUCTION_URL: mirror },
+      canonical,
+    ],
+    [
+      "a mirror's PREVIEW, which reviewers still need",
+      { VERCEL_ENV: "preview", VERCEL_PROJECT_PRODUCTION_URL: mirror },
+      null,
+    ],
+    [
+      "a mirror pinned as production by PUBLIC_SITE_URL",
+      {
+        VERCEL_ENV: "production",
+        VERCEL_PROJECT_PRODUCTION_URL: mirror,
+        PUBLIC_SITE_URL: `https://${mirror}`,
+      },
+      null,
+    ],
+    /* The one that matters most. If this returned a target, renaming the
+       production project would make PRODUCTION redirect to a domain that no
+       longer exists — which is why MIRROR_HOSTS is an allowlist rather than
+       "anything that is not canonical". */
+    [
+      "production on a project named in neither list",
+      { VERCEL_ENV: "production", VERCEL_PROJECT_PRODUCTION_URL: "renamed-later.vercel.app" },
+      null,
+    ],
+  ];
+
+  const wrong = cases
+    .map(([name, env, want]) => [name, want, hosts.redirectTarget(env)])
+    .filter(([, want, got]) => want !== got)
+    .map(([name, want, got]) => `${name}: expected ${want ?? "no redirect"}, got ${got ?? "no redirect"}`);
+  assert.strictEqual(wrong.length, 0, wrong.join("\n          "));
+});
+
+t("this build ships no redirect off its own origin", () => {
+  /* Whatever produced THIS output — a local build, CI, or the canonical
+     project — it is not a mirror, so nothing in it may send a reader
+     somewhere else. A stray 308 in the routing config takes the whole site
+     off the air, and it would look exactly like a successful build. */
+  const away = (config.routes ?? []).filter((r) => {
+    const loc = r?.headers?.Location ?? r?.headers?.location;
+    return loc && /^https?:\/\//.test(loc);
+  });
+  assert.strictEqual(
+    away.length,
+    0,
+    `these routes redirect off-origin: ${away.map((r) => `${r.src} → ${r.headers.Location}`).join(", ")}`,
+  );
+});
+
 console.log("the deployed surface is only the build");
 
 t("no repository file is reachable on the domain", () => {
