@@ -42,9 +42,27 @@ effect. **`hms-vanguard` is production.** Vercel builds every branch, so its pre
 before `main` does, which is how a branch gets tested before it is merged.
 
 **A second project building the same repo is not free, now that the repo has a build.** Each one
-canonicalises to its own production domain, so two domains serve the same site each claiming to be
-the original. Either pin `PUBLIC_SITE_URL` to the `hms-vanguard` domain in both projects, or stop
-`affinity` building. Left alone, the site competes with itself.
+canonicalised to its own production domain, so two domains served the same site, each claiming to
+be the original — the same fault GitHub Pages was retired for, surviving the retirement.
+
+**That is now decided in the repo rather than in the dashboard**, because the Vercel API answers
+403 from a session here (see below) and a fix that needs a dashboard login is a fix nobody can
+apply from where the work happens.
+
+- `scripts/hosts.mjs` holds `CANONICAL_HOST` and `MIRROR_HOSTS`. `astro.config.mjs` builds `site`
+  from it, so canonical links, `og:url`, the sitemap and the feed name one domain on **both**
+  projects, in previews as well as production.
+- `scripts/vercel-config.mjs` prepends a catch-all `308` to the canonical origin when, and only
+  when, this is a **production** deployment of a host named in `MIRROR_HOSTS`. The route is built
+  by `getTransformedRoutes` like the header routes, so it is the platform's own regex rather than
+  one guessed at, and it is deduplicated by the same deep-equality rule.
+- `PUBLIC_SITE_URL` still overrides everything, which is what a custom domain will use.
+
+**`MIRROR_HOSTS` is an allowlist on purpose, and this is the part to not "simplify".** The obvious
+version — *redirect whenever this build is not the canonical host* — turns a project rename into a
+production site that 308s itself to a domain that no longer exists. Naming the mirrors means the
+same mistake degrades to a stale canonical, which is visible and survivable.
+`checks/vercel-output.js` tests all six cases as a pure function, including the renamed one.
 
 **Vercel no longer serves the repo root, and that changes an old conclusion.** It used to, which is
 why `checks/`, `HANDOFF.md` and everything else answered on the shared domain. The Astro adapter

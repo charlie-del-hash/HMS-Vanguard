@@ -119,6 +119,28 @@ t("og:url and the canonical are the same URL", () => {
   assert.strictEqual(bad.length, 0, `two claims about the same page's URL disagree:\n          ${bad.join("\n          ")}`);
 });
 
+t("every page names the same origin as its canonical", () => {
+  /* Two Vercel projects build this repo. When `site` was each project's own
+     production domain, the two builds were internally consistent and
+     collectively wrong — two domains, two sets of canonicals, each claiming to
+     be the original. This cannot see across two builds, but it can see a page
+     that disagrees with its neighbours inside one, which is the same class of
+     fault and the one a future per-page override would introduce. */
+  const origins = new Map();
+  for (const p of pages) {
+    if (!p.canonical) continue;
+    const o = new URL(p.canonical).origin;
+    if (!origins.has(o)) origins.set(o, p.f);
+  }
+  assert.ok(origins.size > 0, "not one page has a canonical link");
+  assert.strictEqual(
+    origins.size,
+    1,
+    `this build serves ${origins.size} origins at once: ` +
+      [...origins].map(([o, f]) => `${o} (${f})`).join(", "),
+  );
+});
+
 t("no card points at an image that is not there", () => {
   const origin = new URL(indexable[0].canonical).origin;
   const bad = [];

@@ -3,6 +3,7 @@ import { defineConfig, envField } from "astro/config";
 import vercel from "@astrojs/vercel";
 import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
+import { siteUrl } from "./scripts/hosts.mjs";
 import { existsSync, copyFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
@@ -47,24 +48,18 @@ export default defineConfig({
      for as long as nobody checks.
 
      (This comment claimed a sitemap for three phases while @astrojs/sitemap
-     was not installed and not in `integrations`. It is now both.) It used to be a hard-coded constant naming a project that
-     turned out not to be production.
+     was not installed and not in `integrations`. It is now both.)
 
-     VERCEL_PROJECT_PRODUCTION_URL is the project's own production domain, set
-     by the platform on preview builds as well as production ones, so a preview
-     canonicalises to the real site rather than to itself. That makes the common
-     case self-configuring: nothing to set, and nothing to get wrong when the
-     domain changes.
+     This used to be the BUILDING PROJECT's own production domain — which is
+     self-configuring, and wrong: two Vercel projects build this repo, so the
+     two of them canonicalised to two different domains and the site competed
+     with itself for its own readers. That is the same failure GitHub Pages was
+     retired for, and retiring Pages only moved it.
 
-     PUBLIC_SITE_URL overrides it, and that override is what you want if a
-     SECOND Vercel project is still building this repo — otherwise each project
-     canonicalises to itself and Google sees two copies of the same site. Pin
-     both to the production domain, or stop the second project building. */
-  site:
-    process.env.PUBLIC_SITE_URL ||
-    (process.env.VERCEL_PROJECT_PRODUCTION_URL
-      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-      : "http://localhost:4321"),
+     scripts/hosts.mjs names the one domain this site is published at, and is
+     the single place to change it. PUBLIC_SITE_URL still overrides, which is
+     what a custom domain will use. */
+  site: siteUrl(),
   output: "static",
   adapter: vercel({
     webAnalytics: { enabled: true },

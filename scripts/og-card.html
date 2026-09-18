@@ -1,0 +1,131 @@
+<!doctype html>
+<!--
+  The source of public/og.png. Screenshotted at 1200x630 by scripts/make-og.mjs.
+
+  This is checked in as HTML as well as PNG on purpose: a binary committed with
+  no source is a thing nobody can change six months from now. Edit this, run
+  `npm run og`, commit both.
+
+  The colours are the site's own light-theme tokens, copied rather than
+  imported — this file is opened directly by a headless browser with no build
+  step and no stylesheet resolution, and a card that silently loses its palette
+  because a relative import moved would be worse than a copy that is obviously
+  a copy. The values are from src/styles/tokens.css and there are five of them.
+-->
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @page {
+        size: 1200px 630px;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1200px;
+        height: 630px;
+      }
+      body {
+        /* --page / --main-grad */
+        background: linear-gradient(163deg, #fcfdfe 0%, #f5fafb 42%, #e9f1f4 100%);
+        font-family: "Segoe UI", "Segoe UI Variable Text", system-ui, -apple-system,
+          "Helvetica Neue", Arial, sans-serif;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        padding: 64px 72px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* A single wash of the accent, bottom-right, so the card is not a white
+         rectangle in a timeline of white rectangles. Kept well away from every
+         piece of text, because a gradient behind text is the one thing the
+         contrast checker cannot measure. */
+      .wash {
+        position: absolute;
+        right: -180px;
+        bottom: -280px;
+        width: 760px;
+        height: 760px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(25, 101, 121, 0.13), rgba(25, 101, 121, 0) 70%);
+      }
+
+      header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .mark {
+        width: 44px;
+        height: 44px;
+        flex: none;
+      }
+      .name {
+        font-size: 26px;
+        font-weight: 640;
+        letter-spacing: -0.005em;
+        color: #0e4152; /* --ink */
+      }
+
+      main {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      h1 {
+        font-size: 62px;
+        line-height: 1.12;
+        letter-spacing: -0.02em;
+        font-weight: 660;
+        color: #0e4152; /* --ink */
+        max-width: 19ch;
+        text-wrap: balance;
+      }
+
+      footer {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-size: 21px;
+        color: #3d4e54; /* --body */
+      }
+      .rule {
+        width: 56px;
+        height: 3px;
+        background: #196579; /* --teal */
+        border-radius: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wash"></div>
+
+    <header>
+      <!-- The favicon's OUTER shield path, filled solid. favicon.svg carries a
+           mask with a mast and rigging cut out of it; at 44px on a card that
+           is read at thumbnail size none of it survives, so this is the
+           silhouette rather than a copy that pretends to be the full mark. -->
+      <svg class="mark" viewBox="-147 -40 1120 1200" xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M4 255 L272 255 Q272 185 160 185 L160 95 L328 95 A87 87 0 0 1 502 95 L668 95 L668 185 Q556 185 556 255 L823 255 L823 860 C823 1000 690 1105 415 1118 C140 1105 4 1000 4 860 Z"
+          fill="#196579"
+        />
+      </svg>
+      <span class="name">Affinity Research</span>
+    </header>
+
+    <main>
+      <h1>Special reports on shipping, energy and the chokepoints between them</h1>
+    </main>
+
+    <footer>
+      <span class="rule"></span>
+      <span>Every report carries the data behind it</span>
+    </footer>
+  </body>
+</html>
