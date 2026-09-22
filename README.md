@@ -7,7 +7,7 @@ Every report is free and open. There is no signup wall, deliberately: the growth
 detailed first-party analytics rather than a form standing between a reader and the work. Email is
 offered and easy to ignore.
 
-**Live:** the `hms-vanguard` Vercel project is production, and its domain is the link to share.
+**Live:** <https://affinity-wine.vercel.app> — the `affinity` Vercel project, the only publisher.
 
 ## Quick start
 
@@ -66,11 +66,16 @@ that never left the machine is also refused.
 
 ## Publishing
 
-Vercel is the only publisher. Two projects build this repository and exactly one of them serves it:
-`scripts/hosts.mjs` names the canonical host, every canonical link and sitemap entry is built from
-it, and a mirror's production deployment answers a single `308` to the canonical origin. GitHub
-Pages is retired and unpublished. The reasoning, and the week of failed deployments that produced
-it, are in [`HANDOFF.md`](HANDOFF.md).
+One repository, one Vercel project, one address. The `affinity` project publishes
+<https://affinity-wine.vercel.app>; `scripts/hosts.mjs` names that host, and every canonical link,
+sitemap entry, `robots.txt` Sitemap line and feed URL is built from it. `PUBLIC_SITE_URL` overrides
+it without a code change if the site ever moves.
+
+This used to be two projects with the second one 308ing to the first. The second project
+(`hms-vanguard`) has been deleted, so the redirect machinery is gone too — what replaced it is an
+assertion that the build ships **no** off-origin redirect at all, since with one project there is
+no longer a legitimate one. GitHub Pages is retired and unpublished. The reasoning, and the week of
+failed deployments that produced it, are in [`HANDOFF.md`](HANDOFF.md).
 
 `vercel.json` holds headers only, and they are merged into the build output by
 `scripts/vercel-config.mjs` — the Astro adapter does not read them. Anything added there needs the

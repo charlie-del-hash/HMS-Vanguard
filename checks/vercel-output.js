@@ -337,72 +337,52 @@ console.log("one site, at one address");
 
 /* ── the duplicate-site problem, asserted ─────────────────────────────
  *
- * Two Vercel projects build this repository. Retiring GitHub Pages removed one
- * copy of the site and left two, each on its own production domain, each
- * emitting a self-referencing canonical — the same failure, moved.
+ * This repository was once built by two Vercel projects, each on its own
+ * production domain, each emitting a self-referencing canonical — the same
+ * failure GitHub Pages was retired for, moved rather than solved. It is solved
+ * by there being one project: `hms-vanguard` is gone and `affinity` is the only
+ * publisher.
  *
- * scripts/hosts.mjs decides two things from the build environment: where
- * canonical links point, and whether this build's production domain should
- * 308 everything to the other one. Neither is observable by looking at a
- * successful build, which is exactly the shape of bug this file exists for, so
- * both are asserted here: the decision as a pure function, and its consequence
- * in the output that ships. */
+ * What is left to get wrong is the canonical host itself, which is not
+ * observable by looking at a successful build — exactly the shape of bug this
+ * file exists for. So both halves are asserted: the decision as a pure
+ * function, and the consequence in the output that ships. */
 const hosts = require("../scripts/hosts.mjs");
 
-t("the redirect fires for a mirror's production domain and nothing else", () => {
+t("canonical links name the one domain this site is published at", () => {
   const canonical = `https://${hosts.CANONICAL_HOST}`;
-  const mirror = hosts.MIRROR_HOSTS[0];
-  assert.ok(mirror, "no mirror host is declared, so this assertion proves nothing");
 
   const cases = [
-    ["a local build", {}, null],
+    ["a local build", {}, "http://localhost:4321"],
+    ["a Vercel build", { VERCEL: "1" }, canonical],
     [
-      "production on the canonical project",
+      "production on the publishing project",
       { VERCEL_ENV: "production", VERCEL_PROJECT_PRODUCTION_URL: hosts.CANONICAL_HOST },
-      null,
-    ],
-    [
-      "production on a mirror",
-      { VERCEL_ENV: "production", VERCEL_PROJECT_PRODUCTION_URL: mirror },
       canonical,
     ],
+    /* The escape hatch: moving the site to a new domain must not need a code
+       change, so PUBLIC_SITE_URL wins over the committed constant. */
     [
-      "a mirror's PREVIEW, which reviewers still need",
-      { VERCEL_ENV: "preview", VERCEL_PROJECT_PRODUCTION_URL: mirror },
-      null,
-    ],
-    [
-      "a mirror pinned as production by PUBLIC_SITE_URL",
-      {
-        VERCEL_ENV: "production",
-        VERCEL_PROJECT_PRODUCTION_URL: mirror,
-        PUBLIC_SITE_URL: `https://${mirror}`,
-      },
-      null,
-    ],
-    /* The one that matters most. If this returned a target, renaming the
-       production project would make PRODUCTION redirect to a domain that no
-       longer exists — which is why MIRROR_HOSTS is an allowlist rather than
-       "anything that is not canonical". */
-    [
-      "production on a project named in neither list",
-      { VERCEL_ENV: "production", VERCEL_PROJECT_PRODUCTION_URL: "renamed-later.vercel.app" },
-      null,
+      "a build pinned elsewhere by PUBLIC_SITE_URL",
+      { VERCEL: "1", PUBLIC_SITE_URL: "https://elsewhere.example/" },
+      "https://elsewhere.example",
     ],
   ];
 
   const wrong = cases
-    .map(([name, env, want]) => [name, want, hosts.redirectTarget(env)])
+    .map(([name, env, want]) => [name, want, hosts.siteUrl(env)])
     .filter(([, want, got]) => want !== got)
-    .map(([name, want, got]) => `${name}: expected ${want ?? "no redirect"}, got ${got ?? "no redirect"}`);
+    .map(([name, want, got]) => `${name}: expected ${want}, got ${got}`);
   assert.strictEqual(wrong.length, 0, wrong.join("\n          "));
 });
 
 t("this build ships no redirect off its own origin", () => {
-  /* Whatever produced THIS output — a local build, CI, or the canonical
-     project — it is not a mirror, so nothing in it may send a reader
-     somewhere else. A stray 308 in the routing config takes the whole site
-     off the air, and it would look exactly like a successful build. */
+  /* Whatever produced THIS output — a local build, CI, or the publishing
+     project — nothing in it may send a reader somewhere else. A stray 308 in
+     the routing config takes the whole site off the air, and it would look
+     exactly like a successful build. This is the guard that replaced the
+     mirror-redirect machinery: with one project there is no legitimate
+     off-origin redirect, so any at all is a bug. */
   const away = (config.routes ?? []).filter((r) => {
     const loc = r?.headers?.Location ?? r?.headers?.location;
     return loc && /^https?:\/\//.test(loc);

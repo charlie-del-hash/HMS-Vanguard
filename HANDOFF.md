@@ -8,9 +8,11 @@ For the ops deck's own internals — its layout model, tables, colour rules and 
 [`docs/ops-deck.md`](docs/ops-deck.md). For what every check asserts, see
 [`checks/README.md`](checks/README.md). For getting it running, see [`README.md`](README.md).
 
-**Live:** the **`hms-vanguard`** Vercel project is production, and its domain is the link to
-circulate. (This used to say `affinity`; it was wrong, and a hard-coded copy of that URL was
-deciding every canonical link on the site until it was found.)
+**Live:** <https://affinity-wine.vercel.app>, the **`affinity`** Vercel project — now the only
+one. (This has moved twice. It once said `affinity` while `hms-vanguard` was production, with a
+hard-coded copy of the wrong URL deciding every canonical link on the site; it then said
+`hms-vanguard`. The ambiguity is gone now rather than corrected: there is one project, and
+`hms-vanguard` has been deleted.)
 
 ## Contents
 
@@ -48,33 +50,36 @@ race, leaving Pages on `4e90e04` while `main` was `007ed4c`. None of that applie
 none of it ever touched Vercel — which is not therefore trouble-free; see **The deploy build is
 not the build you run**, below.
 
-Two Vercel projects (`affinity` and `hms-vanguard`) build this repo, both rooted at the repo root
-rather than a subfolder — which is why a `vercel.json` in a subdirectory, as an earlier iteration
-of this repo had, never took effect. **`hms-vanguard` is production.** Vercel builds every branch, so its previews show a branch
-before `main` does, which is how a branch gets tested before it is merged.
+**One Vercel project (`affinity`) builds this repo**, rooted at the repo root rather than a
+subfolder — which is why a `vercel.json` in a subdirectory, as an earlier iteration of this repo
+had, never took effect. Vercel builds every branch, so its previews show a branch before `main`
+does, which is how a branch gets tested before it is merged.
 
-**A second project building the same repo is not free, now that the repo has a build.** Each one
-canonicalised to its own production domain, so two domains served the same site, each claiming to
-be the original — the same fault GitHub Pages was retired for, surviving the retirement.
+**It used to be two, and a second project building the same repo is not free once the repo has a
+build.** Each one canonicalised to its own production domain, so two domains served the same site,
+each claiming to be the original — the same fault GitHub Pages was retired for, surviving the
+retirement. That was papered over with a catch-all `308` from the mirror to the canonical host,
+declared in the repo (`MIRROR_HOSTS`) rather than the dashboard, because the Vercel API answers 403
+from a session here and a fix needing a dashboard login is one nobody can apply from where the work
+happens.
 
-**That is now decided in the repo rather than in the dashboard**, because the Vercel API answers
-403 from a session here (see below) and a fix that needs a dashboard login is a fix nobody can
-apply from where the work happens.
+**The `hms-vanguard` project has now been deleted, so that machinery is gone rather than
+re-pointed.** `MIRROR_HOSTS`, `redirectTarget()` and the redirect-prepending half of
+`scripts/vercel-config.mjs` no longer exist. What remains:
 
-- `scripts/hosts.mjs` holds `CANONICAL_HOST` and `MIRROR_HOSTS`. `astro.config.mjs` builds `site`
-  from it, so canonical links, `og:url`, the sitemap and the feed name one domain on **both**
-  projects, in previews as well as production.
-- `scripts/vercel-config.mjs` prepends a catch-all `308` to the canonical origin when, and only
-  when, this is a **production** deployment of a host named in `MIRROR_HOSTS`. The route is built
-  by `getTransformedRoutes` like the header routes, so it is the platform's own regex rather than
-  one guessed at, and it is deduplicated by the same deep-equality rule.
-- `PUBLIC_SITE_URL` still overrides everything, which is what a custom domain will use.
+- `scripts/hosts.mjs` holds `CANONICAL_HOST`, and nothing else about hosts. `astro.config.mjs`
+  builds `site` from it, so canonical links, `og:url`, the sitemap, `robots.txt` and the feed all
+  name that one domain, in previews as well as production.
+- `PUBLIC_SITE_URL` still overrides it, which is what a custom domain will use, and is the escape
+  hatch that means moving the site needs no code change.
+- `checks/vercel-output.js` asserts both halves: the host decision as a pure function, and — the
+  guard that replaced the allowlist — that the shipped routing config contains **no** off-origin
+  redirect at all. With one project there is no legitimate one, so any is a bug.
 
-**`MIRROR_HOSTS` is an allowlist on purpose, and this is the part to not "simplify".** The obvious
-version — *redirect whenever this build is not the canonical host* — turns a project rename into a
-production site that 308s itself to a domain that no longer exists. Naming the mirrors means the
-same mistake degrades to a stale canonical, which is visible and survivable.
-`checks/vercel-output.js` tests all six cases as a pure function, including the renamed one.
+**If a second project is ever added, delete it rather than reintroducing the redirect.** The old
+allowlist existed because the alternative (*redirect whenever this build is not the canonical
+host*) turns a project rename into a production site that 308s itself to a domain that no longer
+exists. One project has neither failure mode.
 
 **Vercel no longer serves the repo root, and that changes an old conclusion.** It used to, which is
 why `checks/`, `HANDOFF.md` and everything else answered on the shared domain. The Astro adapter
@@ -437,10 +442,10 @@ the database and needs no egress.
 
 Recorded so nobody reports a clean sweep that was not one:
 
-- **The mirror redirect firing.** Asserted against the generated routing config and the pure
-  function behind it, never against a live request — the Vercel API answers 403 from here and
+- **That the live domain serves the site.** Asserted against the generated routing config and the
+  pure function behind it, never against a live request — the Vercel API answers 403 from here and
   `vercel.app` is unreachable. `curl -sI https://affinity-wine.vercel.app/` after a production
-  deploy is the real check.
+  deploy is the real check: it must answer `200`, not the `308` the retired mirror used to send.
 - **Anything needing a Supabase connection**, including `check:db`.
 - **The admin editor's layout.** `admin-overflow` reaches 1 of 6 routes without a staff session and
   names the five it cannot. `ADMIN_SESSION_COOKIE` closes that.
