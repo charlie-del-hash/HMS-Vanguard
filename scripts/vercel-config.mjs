@@ -24,7 +24,6 @@
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { getTransformedRoutes } from "@vercel/routing-utils";
-import { redirectTarget } from "./hosts.mjs";
 
 const root = new URL("../", import.meta.url);
 const vercelJsonPath = fileURLToPath(new URL("vercel.json", root));
@@ -45,10 +44,10 @@ const config = JSON.parse(readFileSync(configPath, "utf8"));
 config.routes ??= [];
 
 /* ── routes built through Vercel's own transformer ────────────────────
- * Both the header routes and the mirror redirect go through
- * getTransformedRoutes, which is the function the platform itself applies to
- * vercel.json. Hand-written `src` regexes would be a second implementation of
- * a thing Vercel already does, differing in exactly the cases nobody tests. */
+ * The header routes go through getTransformedRoutes, which is the function the
+ * platform itself applies to vercel.json. Hand-written `src` regexes would be a
+ * second implementation of a thing Vercel already does, differing in exactly
+ * the cases nobody tests. */
 function transform(what, input) {
   const { routes, error } = getTransformedRoutes(input);
   if (error) {
@@ -61,29 +60,6 @@ function transform(what, input) {
 const merged = transform("vercel.json headers", { headers: vercelJson.headers ?? [] })
   .filter((r) => r.headers) // getTransformedRoutes also emits phase markers
   .map((r) => ({ ...r, continue: true }));
-
-/* ── the mirror redirect ──────────────────────────────────────────────
- *
- * Two Vercel projects build this repository, so without this both production
- * domains serve the whole site and each claims to be the original. Canonical
- * links now name one host (scripts/hosts.mjs), which tells a crawler which
- * copy to keep — but a reader handed the other URL still reads the other copy,
- * and analytics still splits in two.
- *
- * So the mirror's PRODUCTION domain serves nothing: everything 308s to the
- * canonical origin, method and body preserved. Previews are untouched, because
- * a preview is how a branch gets reviewed and it is not a public address
- * competing for readers.
- *
- * This is deliberately first in the route list. A redirect that runs after
- * `handle: filesystem` only fires for requests that missed a file, which is
- * the opposite of what it is for. */
-const target = redirectTarget();
-const redirects = target
-  ? transform("the mirror redirect", {
-      redirects: [{ source: "/:path*", destination: `${target}/:path*`, permanent: true }],
-    }).filter((r) => r.status)
-  : [];
 
 /* Idempotent, and deliberately WITHOUT a marker of our own on the route.
  *
@@ -101,7 +77,7 @@ const redirects = target
  * run's and are dropped by comparison. Serialised rather than compared field by
  * field because both sides are built by the same code path in the same order. */
 const fingerprint = (r) => JSON.stringify(r);
-const mine = new Set([...merged, ...redirects].map(fingerprint));
+const mine = new Set(merged.map(fingerprint));
 config.routes = config.routes.filter((r) => !mine.has(fingerprint(r)));
 
 /* Before `handle: filesystem`. A header route placed after it only runs for
@@ -114,10 +90,6 @@ if (fsIndex === -1) {
   config.routes.splice(fsIndex, 0, ...merged);
 }
 
-/* Ahead of everything, including the headers: there is no point setting a
-   security header on a response that is only a Location. */
-config.routes.unshift(...redirects);
-
 writeFileSync(configPath, JSON.stringify(config, null, 2) + "\n");
 console.log(
   `[vercel-config] merged ${merged.length} header route(s) into .vercel/output/config.json`,
@@ -125,11 +97,6 @@ console.log(
 for (const r of merged) {
   console.log(`  ${r.src}  →  ${Object.keys(r.headers).join(", ")}`);
 }
-if (redirects.length) {
-  console.log(
-    `[vercel-config] this is a MIRROR project (${process.env.VERCEL_PROJECT_PRODUCTION_URL}) — ` +
-      `its production domain 308s everything to ${target}`,
-  );
-} else if (process.env.VERCEL_ENV === "production") {
-  console.log("[vercel-config] production build of the canonical project — serving normally");
+if (process.env.VERCEL_ENV === "production") {
+  console.log("[vercel-config] production build — serving normally, no redirect");
 }
